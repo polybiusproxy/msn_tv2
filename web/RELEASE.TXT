@@ -1,0 +1,1 @@
+The content in this directory will only be included in RELEASE flavor builds.
