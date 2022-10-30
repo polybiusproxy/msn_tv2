@@ -1,0 +1,201 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Settings</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/parameters.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT>
+	var parameters = FindParameters(TVShell.PanelManager);
+	var WANProvider = TVShell.ConnectionManager.WANProvider;
+	TVShell.Message("In ConnectionSettings.html WANProvider is " + WANProvider);
+	if (BYOAModemProviderName != WANProvider && 
+		BYOAEthernetProviderName != WANProvider &&
+		MSNIAModemProviderName != WANProvider) {
+		TVShell.Message("ERROR ********************** Invalid WANProvider = " + WANProvider + "!  Setting WANProvider to " + MSNIAModemProviderName);
+		SetConnectionType(MSNIAModemProviderName);
+	}
+
+	var Title;
+
+	if (parameters["LANSetup"])
+		Title = "Home network connection settings";
+	else
+		Title = "Connection settings";
+</SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+
+<STYLE>
+.block
+{
+	display:none;
+}
+</STYLE>
+</HEAD>
+
+<BODY>
+
+<SCRIPT>OpenSettingsTable( Title , "" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton onclick="ConnectionManagerSave(); history.go(-1)" class=sideBarButton id="default" label="Done" />
+	<script>document.all("default").focus();</script>
+</DIV>
+
+<DIV id=scrollArea>
+	<DIV id=MSNIANB class=block>
+		<!--DIV id=subTitle>MSN Internet Access connection settings</DIV-->
+
+		<A href="AdvancedDialingIndex.html" class=topic id=AdvancedDialing>Dialing options and troubleshooting</A>
+		<DIV class=description>Change dialing options to solve common connection problems (involving call waiting, dialing prefixes, and more)</DIV>
+
+		<A href="AccessNumbers.html" class=topic id=AccessNumbers><script>document.write( ServiceShortName );</script> access numbers</A>
+		<DIV class=description>View or change the phone numbers your <SCRIPT>document.write(ProductShortName);</SCRIPT> uses to connect to the <SCRIPT>document.write(ServiceFullName);</SCRIPT></DIV>
+
+		<A href="ChangeConnection.html" class=topic id=ChangeConnection>How you connect to <script>document.write( ServiceShortName );</script></A>
+		<DIV class=description>Switch to use your own Internet Service Provider's dial-up service or to use a broadband connection (like cable or DSL)</DIV>
+	</DIV>
+
+	<DIV id=BYOANB class=block>
+		<!--DIV id=subTitle>ISP dial-up connection settings</DIV-->
+
+		<A href="AdvancedDialingIndex.html" class=topic id=AdvancedDialing>Dialing options and troubleshooting</A>
+		<DIV class=description>Change dialing options to solve common connection problems (involving call waiting, dialing prefixes, and more)</DIV>
+
+		<A href="ISPInfo.html" class=topic id=ISPInfo>Your ISP information</A>
+		<DIV class=description>View or change the information about the Internet Service Provider you use to connect to <script>document.write( ServiceShortName );</script></DIV>
+
+		<A href="ChangeConnection.html" class=topic id=ChangeConnection>How you connect to <script>document.write( ServiceShortName );</script></A>
+		<DIV class=description>Switch to MSN Dial-up Internet Access or to a broadband connection (like cable or DSL)</DIV>
+	</DIV>
+	
+	<DIV id=BYOABB class=block>
+		<DIV id=NBNetworkSetup>
+			<A onClick="GotoLANPage('msntv:/Settings/Network/HomeNetworking.html');" class=topic>Find computers on your home network</A>
+			<DIV class=description>Find computers that connect to the same broadband router as your <SCRIPT>document.write(ProductShortName);</SCRIPT></DIV>
+		</DIV>
+
+		<A href="Network/DHCP.html" class=topic id=DHCP>Change broadband settings</A>
+		<DIV class=description>
+		Automatically detect your broadband connection settings, or enter your settings manually
+		</DIV>
+
+		<A href="Network/Wireless.html" class=topic id=Wireless>Change wireless settings</A>
+		<DIV class=description>
+		Set up a USB wireless network adapter (sold separately)
+		</DIV>
+
+		<DIV id=UseProxy>
+		<A href="Network/Proxy.html" class=topic id=Proxy>Use proxy servers</A>
+		<DIV class=description>View or change the information for proxy servers (this is an uncommon task)</DIV>
+		</DIV>
+
+		<DIV id=ConfigureRouter>
+		<A href="Network/Router.html" class=topic id=Router>Configure Router</A>
+		<DIV class=description>Access your router set-up screen (this is an uncommon task)</DIV>
+		</DIV>
+
+		<A href="Network/EthernetAdapter.html" class=topic id=EtherStatus>Check broadband status</A>
+		<DIV class=description>Check the status of your broadband connection</DIV>
+
+		<A href="ResetBroadband.html" id=ResetBroad class=topic>Reset connection settings</A>
+		<DIV class=description>Return to your <SCRIPT>document.write(ProductShortName);</SCRIPT>'s original 
+		<SCRIPT>WANProvider == BYOAEthernetProviderName?document.write("broadband"):document.write("home networking");
+		</SCRIPT> settings</DIV>
+
+		<!--A href="IMProxy/IMProxySettings.html" class=topic id=IMProxy>IM Proxy settings</A>
+		<DIV class=description>View or change IM proxy settings</DIV-->
+
+		<DIV id=ChangeWAN>
+
+		<SCRIPT>
+		var ConnectText;
+
+		if (BYOAEthernetProviderName == WANProvider) {
+			ConnectText = "Connect to " + ServiceShortName + " over your phone line using a dial-up service";
+		} else if (BYOAModemProviderName == WANProvider) {
+			ConnectText = "Switch to MSN Dial-up Internet Access or to a broadband connection (like cable or DSL)";
+		} else {
+			// MSNIAModemProviderName
+			ConnectText = "Connect to " + ServiceShortName + " over your phone line using a dial-up service " +
+				" or a broadband connection (like cable or DSL)";
+		}
+		</SCRIPT>
+
+		<A href="ChangeConnection.html" class=topic id=ChangeConnection>Change how you connect to <SCRIPT>document.write(ServiceShortName);</SCRIPT></A>
+		<DIV class=description><SCRIPT>document.write(ConnectText);</SCRIPT></DIV>
+		</DIV>
+	</DIV>
+</DIV>
+
+
+	<SCRIPT>
+		var Provider;
+
+		if (parameters["LANSetup"]) {
+			Provider = BYOAEthernetProviderName;
+			document.all.ChangeWAN.style.display = "none";
+			document.all.UseProxy.style.display = "none";
+		} else
+			Provider = WANProvider;
+
+		if (BYOAEthernetProviderName == WANProvider) {
+			document.all.NBNetworkSetup.style.display = "none";
+		}
+
+		switch (Provider)
+		{
+		case MSNIAModemProviderName:
+			document.all.MSNIANB.style.display = "block";
+			break;
+		case BYOAModemProviderName:
+			document.all.BYOANB.style.display = "block";
+			break;
+		case BYOAEthernetProviderName:
+			if (TVShell.ConnectionManager.EthernetAdapter &&
+				TVShell.ConnectionManager.EthernetAdapter.Settings &&
+				TVShell.ConnectionManager.EthernetAdapter.Settings.DHCPEnabled &&
+				TVShell.ConnectionManager.EthernetAdapter.CheckStatus() == ConnectError_NoError)
+				document.all.DHCP.href = "Network/ChangeWarning.html";
+			else
+				document.all.DHCP.href = "Network/DHCP.html";
+
+			if (TVShell.ConnectionManager.WirelessAdapter &&
+				TVShell.ConnectionManager.WirelessAdapter.CheckStatus() != ConnectError_NoAdapter)
+				document.all.Wireless.href = "Network/Wireless.html";
+			else
+				document.all.Wireless.href = "Network/NoWireless.html";
+
+			document.all.BYOABB.style.display = "block";
+			break;
+		}
+
+		if (parameters["confirm"])
+		{
+			for (var i = 0; i < document.links.length; i++)
+			{
+				if (document.links[i].href.indexOf("?") >= 0)
+					document.links[i].href += "&confirm=true";
+				else if (document.links[i].href != "")
+					document.links[i].href += "?confirm=true";
+			}
+		}
+
+		if (parameters["LANSetup"])
+		{
+			for (var i = 0; i < document.links.length; i++)
+			{
+				if (document.links[i].href.indexOf("?") >= 0)
+					document.links[i].href += "&LANSetup=1";
+				else if (document.links[i].href != "")
+					document.links[i].href += "?LANSetup=1";
+			}
+		}
+	</SCRIPT>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>

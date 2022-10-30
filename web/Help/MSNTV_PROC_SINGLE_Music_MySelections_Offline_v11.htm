@@ -1,0 +1,69 @@
+<html xmlns:msntv>
+<head>
+	<title>My Seklections</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="My Selections" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+        You can store music tracks on your <script>document.write( ProductShortName );</script> and arrange them in playlists. Arrange your playlists by music genre, artist, song title, or any method you like.
+	<p>
+        <p>
+        You don't have to sign in to the <script>document.write( ServiceFullName )</script> to create your own music playlists. Just turn on your <script>document.write( ProductShortName );</script> and choose <b>Music</b> from the Sign-in page.
+        </p>
+        </p>
+        <p>
+        <p>
+        To save music tracks in a playlist, you must first select the tracks from a memory card or from a shared folder on a computer that's connected to your home network.
+        </span>
+	<p>
+        <p>
+        For information on listening to tracks that are on a memory card, choose the link below:
+        <br>
+        <span class="customBullet"><a id="addrbookEmail1ID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Music_MemoryCard_Offline_v11.htm');">Listening to music from a memory card</a><br>
+        </span>
+        <p>
+        <p>
+        For information on connecting your <script>document.write( ProductShortName );</script> to your home network, choose the link below:
+        <br>
+        <span class="customBullet"><a id="addrbookEmail1ID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm');">Connecting to a home network</a>
+        </span>
+        <p>
+        <p>
+        To save copies of music tracks on your <script>document.write( ProductShortName );</script>, follow these steps:
+        </p>
+        </p>
+        <ol>
+        <li>Connect your <script>document.write( ProductShortName );</script> to a home network with shared music folders, or attach a memory card reader and insert a card that contains music files.</li>
+	<li>Check the boxes next to the tracks you want to put in a playlist, choose <b>Add Selections</b>.</li>
+        <p>
+        <p>
+        The selected tracks are added to a playlist.
+        </p>
+        </p>
+        <li>To see the playlist, choose <b>Music</b> from the Sign-in page, and then choose the tracks in the <b>My selections</b> section of the Music page,</li>
+        <li>Check the box next to each track you want to play, and then choose <b>Play</b>.</li>
+        <p>
+        <p>
+        For detailed instructions on using playlists, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Music</b>.
+        </p>
+        </p>
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

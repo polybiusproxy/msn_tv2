@@ -1,0 +1,161 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/IPAddress.htc"> <TITLE>Enter your wireless settings</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <STYLE> table.controlTable td { padding: 5px 5px 0px 0px; } #scrollArea { width: 95%; bottom: 58px; } </STYLE> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/Wireless.js"></SCRIPT> <SCRIPT>
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+var WirelessAdapter = TVShell.ConnectionManager.WirelessAdapter;
+var WirelessSettings = null;
+if (WirelessAdapter) {
+	WirelessSettings = WirelessAdapter.Settings;
+}
+
+var didChangeKey = false;
+var chosenSSID = "";
+var onSuccess = "javascript:history.go(-2)";
+
+
+function onLoadPage()
+{
+	var params = location.href.split("?");
+	chosenSSID = "";
+		
+	if ( params && params.length > 1 ) {
+		var i,st;
+		if ( params[1].indexOf("&") > 0 ) {
+			params = params[1].split("&");
+		}
+		for ( var i=0; i < params.length; i++ ) {
+			if ( (st=params[i].indexOf("ssid=")) == 0 ) {
+				chosenSSID = params[i].substring(st+5);
+				chosenSSID = unescape(chosenSSID);
+			}
+			else if ( (st=params[i].indexOf("onSuccess=")) == 0 ) {
+				var v = params[i].substring(st+10);
+				onSuccess = unescape(v);
+			}
+		}		
+	}
+	TVShell.Message("SSID passed in was " + chosenSSID);
+		
+	if (WirelessSettings) {
+		var curKey = "";
+		if (WirelessSettings.SSID == chosenSSID ) { 
+			if (WirelessSettings.KeyIdx == 1 ) {
+				curKey = WirelessSettings.KeyMaterial1;
+			} else {
+				TVShell.Message("Not showing key since index is " + WirelessSettings.KeyIdx);
+			}
+		}
+		if ( chosenSSID == ""  ) {
+			chosenSSID = WirelessSettings.SSID;
+		}
+		var key=CheckKey(curKey,104);
+		if ( key != "" ) {
+			if ( curKey.length == 13 ) 
+				key = TVShell.Utilities.EscapeHTML(curKey);
+		} else {
+			key=CheckKey(curKey,40);
+			if ( key != "" ) {
+				if ( curKey.length == 5 ) 
+					key = TVShell.Utilities.EscapeHTML(curKey);
+			}
+		}
+
+		DisplayKey(key);
+		SetFocusSafely(document.all.Key);
+		var textRange = document.all.Key.createTextRange();
+		textRange.expand("textedit");
+		textRange.select();
+	}
+		
+	if ( chosenSSID != "" ) {
+		document.all.cssid.innerHTML = "(<em> " + TVShell.Utilities.EscapeHTML(chosenSSID) + " </em>) ";
+	}
+}
+
+function AdvancedSettings()
+{
+	TVShell.Message("Go to advanced settings");
+	TVShell.Url = "msntv:/Settings/Network/WirelessAdvanced.html";
+}
+	
+
+
+function Cancel()
+{
+	history.go(-1);
+}
+
+function SetSettings()
+{
+	if ( WirelessSettings ) {
+	// need to check to make sure we can connect to network
+		var key;
+		var wasHex = false;
+		var rawKey = "";
+		
+		if ( !didChangeKey ) {
+			rawKey = WirelessSettings.KeyMaterial1;
+			TVShell.Message("Using original key " + rawKey);
+			key=CheckKey(rawKey,104);
+		} else {
+			rawKey = GetEnteredKey();
+			TVShell.Message("Using entered key " + rawKey);
+			key=CheckKey(rawKey,104);
+		}
+		if ( key != "" ) {
+			
+			if ( rawKey.length >= 26 ) {
+				wasHex = true;
+			}
+			TVShell.Message("128-bit key entered: " + key );
+		} else {
+			key=CheckKey(rawKey,40);
+			if ( key != "" ) {
+				if ( rawKey.length >= 10 ) {
+					wasHex = true;
+				}
+				TVShell.Message("64-bit key entered: " + key );
+			} else {
+				ShowWEPKeyError(rawKey);
+				WirelessSettings.KeyMaterial1 = "";
+				return;
+			}
+		}
+		WirelessSettings.KeyIdx = 1;
+		WirelessSettings.KeyMaterial1 = wasHex ? key : rawKey;
+		WirelessSettings.WEPEnable = true;
+		WirelessSettings.WPAEnable = false;
+		WirelessSettings.SSID = chosenSSID;
+		WirelessSettings.IsDirty = true;
+		WirelessSettings.AuthenticationMode	= WirelessAuth_Ndis802_11AuthModeOpen;
+		CheckWirelessConnection(onSuccess,"");
+	}
+}
+
+function FocusKey()
+{
+	var textRange = document.all.Key.createTextRange();
+	textRange.collapse(false);
+}
+
+function
+KeyEntryKey()
+{
+	var e = window.event;
+	if (e.altKey || e.ctrlKey )
+		return;
+
+	if (!e.shiftKey && e.keyCode == 13){
+		SetSettings();
+		return;
+	} else {
+		didChangeKey = true;
+	}
+	OnKeyEntryChanged(false);
+}
+
+</SCRIPT><BODY> <SCRIPT>OpenSettingsTable( "Settings" , "Enter wireless network key" , 
+				"WirelessHelpWEP.html" , true );</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:SetSettings();" class=buttonBarButton id=done tabindex=2 label="Save Changes" /> <msntv:CustomButton href="javascript:Cancel();" class=buttonBarButton id=cancel tabindex=3 label="Cancel" /> </DIV><DIV id=scrollArea><DIV class=description> The network that you want to connect to <span id=cssid></span> requires the WEP key. <br> The key must meet one of the following guidelines: <br> <br><table cellpadding=0 cellspacing=0 > <tr> <td colspan=3> Either, 5 or 13 characters (case-sensitive) </td> </tr> <tr> <td width=40> &nbsp; </td> <td nowrap width=150> e.g.&nbsp;<em>SeCrT</em> </td> <td nowrap> or&nbsp;<em>LuckyThirteen</em> </td> </tr> <tr> <td colspan=3> Or, 10 or 26 characters using 0-9 and A-F only </td> </tr> <tr> <td> </td> <td nowrap nowrap width=150> e.g.&nbsp;<em>4A81FC1654</em> </td> <td nowrap> or&nbsp;<em>FA2E03688C6AD2BFD11706A9C1</em> </td> </tr> </table><TABLE class=controlTable cellpadding=0 cellspacing=0> <TR> <TD width=64 nowrap>Key 1:</td> <TD width=320> <input onfocus="FocusKey();" TYPE="TEXT" CLASS=inputText ID="Key" onclick="SetSettings();" tabindex=1 onkeyup="KeyEntryKey();" SIZE=26 MAXLENGTH=26> </td> <td width=130 nowrap id="KeyCharCountHint"></td> </tr> </TABLE> <P> If you consult your wireless access point or router's documentation, look for "Key 1". </P> </DIV> </DIV> <SCRIPT>
+	CloseSettingsTable();
+
+	onLoadPage();
+</SCRIPT> </BODY> </html>

@@ -1,0 +1,134 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"><HEAD> <TITLE>Broadband connection status</TITLE> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/Parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT><LINK REL=StyleSheet TYPE="text/css" HREF="msntv:/CSS/Settings.css"> <style> table.statTable { margin-top:0px; margin-bottom:9px; border-collapse:collapse; } </style><HEAD> </HEAD><BODY> <SCRIPT>OpenSettingsTable( "Settings" , "Broadband connection status" , "" , true );</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id=Done label="Done" /> <script>document.all("Done").focus();</script> </DIV><DIV id=nonScrollArea><DIV class=description><div id=theTable></div> <SCRIPT>
+
+	function WriteTable(usingWireless)
+	{
+		var n;
+		var t = "<TABLE class=statTable>";
+		var p = new Array();
+		n = 0;
+		p[n++] = "Connection status:" + "_" + "Status";
+		p[n++] = "Connection:" + "_" + "AdapterName";
+		if ( usingWireless ) {
+			p[n++] = "Network name:" + "_" + "SSID";
+		}
+		p[n++] = "Device name:" + "_" + "FQDN";
+		p[n++] = "Physical address (MACID): " + "_" + "MacID";
+		p[n++] = "Address type:" + "_" + "DHCP";
+		p[n++] = "IP address:" + "_" + "IPAddress";
+		p[n++] = "Subnet mask:" + "_" + "NetMask";
+		p[n++] = "Default gateway:" + "_" + "GateAddress";
+		p[n++] = "Preferred DNS server:" + "_" + "PrimaryDNS";
+		p[n++] = "Alternate DNS server:" + "_" + "SecondaryDNS";
+		p[n++] = "Proxy:" + "_" + "Proxy";
+		p[n++] = "Packets:" + "_" + "Packets";
+		p[n++] = "Speed:" + "_" + "Speed";
+		
+		for ( n=0; n < p.length; n++ ) {
+			var s = p[n].split("_");
+			var l = "<TR><TD>" + s[0] + "</td><td ID='" +s[1] + "'></td></tr>";
+			t += l;
+		}
+		t += "</TABLE>";
+		theTable.innerHTML = t;
+	}
+	var parameters = FindParameters(TVShell.PanelManager);
+
+	function UpdateAdapter(adapter)
+	{
+		var AdapterStatus = adapter.CheckStatus();
+		var UsingWireless = false;
+
+		if (TVShell.ConnectionManager.WirelessAdapter == adapter)
+			UsingWireless = true;
+
+		WriteTable(UsingWireless);
+		switch (AdapterStatus) {
+			case ConnectError_NoError:
+				Status.innerText = "Okay";
+				break;
+			case ConnectError_NoLine:
+				if (UsingWireless)
+					Status.innerText = "Not connected";
+				else
+					Status.innerText = "No broadband connection detected";
+				break;
+			case ConnectError_NoDHCPResponse:
+				Status.innerText = "Waiting for DHCP response from router";
+				break;
+			case ConnectError_GatewayUnreachable:
+				Status.innerText = "Network router not responding";
+				break;
+			default:
+				Status.innerText = "Not connected";
+				break;
+		}
+
+		//
+		// IP settings always come from the Ethernet adapter settings, even
+		// if we are using wireless.
+		//
+		if (TVShell.ConnectionManager.EthernetAdapter.Settings.DHCPEnabled) {
+			if (adapter.IPAddress == "" || adapter.IPAddress == "0.0.0.0")
+				DHCP.innerText = "None";
+			else
+			if (adapter.IPAddress.indexOf("169.254.") == 0)
+				DHCP.innerText = "Assigned automatically";
+			else
+				DHCP.innerText = "Assigned by DHCP";
+		} else
+			DHCP.innerText = "Manual";
+
+		if (UsingWireless) {
+			var name = "External USB wireless adapter";
+			AdapterName.innerText = name;
+
+			var s = TVShell.ConnectionManager.WirelessAdapter.Settings.SSID;
+			if ( s != "" ) {
+				SSID.innerText = TVShell.Utilities.EscapeHTML(s);
+			}
+			
+		} else
+			AdapterName.innerText = "Built-in Ethernet";
+
+		if (TVShell.ConnectionManager.Resolver.HostName != "") {
+			//if (TVShell.ConnectionManager.Resolver.DomainName != "")
+			//	FQDN.innerText = TVShell.ConnectionManager.Resolver.HostName + "." +
+			//					 TVShell.ConnectionManager.Resolver.DomainName;
+			//else
+				FQDN.innerText = TVShell.ConnectionManager.Resolver.HostName;
+		} else
+			FQDN.innerText = "Unknown";
+		
+		if (TVShell.ConnectionManager.HTTPProxy.Enabled)
+			Proxy.innerText = TVShell.ConnectionManager.HTTPProxy.Server + ", port: " + TVShell.ConnectionManager.HTTPProxy.Port;
+		else
+			Proxy.innerText = "None";
+
+		MacID.innerText = adapter.MacID;
+		IPAddress.innerText = adapter.IPAddress;
+		GateAddress.innerText = adapter.Gateway;
+		NetMask.innerText = adapter.NetMask;
+		PrimaryDNS.innerText = adapter.PrimaryDNS;
+		SecondaryDNS.innerText = adapter.SecondaryDNS;
+
+		Packets.innerText = adapter.OutPackets + " sent, " + adapter.InPackets + " received";
+		if ( AdapterStatus == ConnectError_NoError ) {
+			TVShell.Message("RX speed " + adapter.RXSpeed);
+			TVShell.Message("TX speed " + adapter.TXSpeed);
+			
+			Speed.innerText = (adapter.RXSpeed / 1000000) + " Mbps" ;
+		}
+	}
+
+	function UpdatePage()
+	{
+		var adapter = TVShell.ConnectionManager.LANAdapter;
+
+		if (!adapter)
+			adapter = TVShell.ConnectionManager.EthernetAdapter;
+
+		UpdateAdapter(adapter);
+	}
+
+	UpdatePage();
+</SCRIPT> </DIV> </DIV> <SCRIPT>CloseSettingsTable();</SCRIPT> </BODY>

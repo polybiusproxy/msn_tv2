@@ -1,0 +1,50 @@
+<html xmlns:msntv>
+<head>
+	<title>CompNameXP</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Introduction to Photos" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+MSN TV Photos lets you view, organize, and print your photos, create slideshows, and send photos along with e-mail messages. You can store up to 100 photos on your <script>document.write( ProductShortName );</script>, and arrange them in albums for easy viewing.
+<p>
+<p>
+Some Photos features require additional equipment that's sold separately:
+</p>
+</p>
+<ul>
+<li>To view photos you take with your digital camera, you'll need a compatible USB memory card reader.</li>
+<li>To print your photos, you'll need a compatible USB printer.</li>
+<li>To view photos that are on your home computer, you'll need to connect your <script>document.write( ProductShortName );</script> to a home network using a hub, router, or wireless connection.</li>
+</ul>
+You can use many Photos features without signing in to the <script>document.write( ServiceFullName )</script>. Simply turn on your <script>document.write( ProductShortName );</script> and choose <b>Photos</b> from the Sign-in page to:
+</p>
+</p>
+<ul>
+<li>View photos from a memory card</li>
+<li>View photos that are on your home computer (if you've connected your <script>document.write( ProductShortName );</script> to a home network and set up file sharing on your computer)</li>
+<li>Copy photos from a memory card or a shared folder on your home computer to your <script>document.write( ProductShortName );</script>, and arrange them in albums</li>
+<li>Watch a slideshow of selected photos</li>
+<li>Create a screen saver that displays your favorite photos on your TV when your <script>document.write( ProductShortName );</script> is not in use</li>
+</ul>
+For more information about using Photos, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Photos</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

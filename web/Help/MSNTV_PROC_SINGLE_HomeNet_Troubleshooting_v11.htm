@@ -1,0 +1,39 @@
+<html xmlns:msntv>
+<head>
+	<title>Emoticons</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Home network troubleshooting" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+If you're having trouble setting up or using your home network, make sure that:
+<ul>
+<li>the computer you are trying to access and the network hub/router are both powered on</li>
+<li>the Ethernet cable (or USB wireless dongle) is properly connected to the <script>document.write( ProductShortName );</script></li>
+<li>your computer is properly connected to your hub/router and is configured correctly</li>
+<li>file sharing is enabled on your computer</li>
+<li>the folder you want to access is designated as a shared resource. (For Windows XP Professional users, we recommend that in the settings you set Share Permissions to <b>Everyone</b>)</li>
+<li>The username and password you are entering match those assigned on the computer (and/or the folder you're trying to access). These are not the user name and password for your MSN TV account.</li>
+<li>For more information about your home network setup, go to www.msntv.com</li>
+</ul>
+
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

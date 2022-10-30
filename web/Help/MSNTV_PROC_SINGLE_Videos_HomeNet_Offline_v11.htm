@@ -1,0 +1,57 @@
+<html xmlns:msntv>
+<head>
+	<title>Videos HomeNet</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Watching videos from your computer" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+If your <script>document.write( ProductShortName );</script> is connected to your home network, you can use it to watch videos that are stored on your computer.
+<p>
+<p>
+To learn more about connecting your <script>document.write( ProductShortName );</script> to a home network, choose the link below:
+<br>
+<span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm');">Introduction to home networking</a>
+</span>
+</p>
+</p>
+<p>
+<p>
+You don't have to sign in to the <script>document.write( ServiceFullName )</script> to watch videos that are stored on your computer. Just turn on your <script>document.write( ProductShortName );</script> and follow these steps:
+<ol>
+<li>Make sure your <script>document.write( ProductShortName );</script> and your computer are connected to your home network, and that the videos folder on the computer is a shared folder.</li>
+<li>Choose <b>Videos</b> from the bottom of the Sign-in page.</li>
+<p>
+<p>
+The Videos page appears.
+</p>
+</p>
+<li>In the <b>Videos on home network</b> section, choose the computer folder that contains the videos you want to watch.</li>
+<p>
+<p>
+A list of videos appears on screen. (If any of the files on the memory card are in folders, the folder names are listed as well. Choose a folder to open it.)
+</p>
+</p>
+<li>Check the box next to each video you want to play, and then choose <b>Play</b>.</li>
+</ol>
+For more information about using Videos, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Videos</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

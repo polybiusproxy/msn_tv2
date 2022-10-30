@@ -1,0 +1,76 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <TITLE>Broadband settings</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT><BODY onLoad="onLoadPage();"> <SCRIPT>OpenSettingsTable( "Settings" , "Broadband settings" , "" , true );</SCRIPT> <SCRIPT>
+	var parameters = FindParameters(TVShell.PanelManager);
+	var pageText;
+
+	if (parameters["LANSetup"]) {
+		pageText = 
+		"<P> " +
+			"To connect to your home network, your " + ProductShortName + " needs to connect to a broadband router. " +
+			"This router, in turn, needs to connect to the computers in your household. Most broadband routers and home networks assign " +
+			"these settings automatically." +
+		"</P>";
+	} else {
+		pageText = 
+		"<P> " +
+			"To connect to the " + ServiceFullName + ", your " + ProductShortName + 
+			" needs accurate broadband settings. Most broadband service providers and home networks assign these settings automatically." +
+		"</P>";
+	}
+</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:SetSettings()" class=buttonBarButton id=Done label="Continue" /> <msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" /> <script>document.all("Done").focus();</script> </DIV><DIV id=nonScrollArea><DIV class=description> <SCRIPT>document.write(pageText);</SCRIPT> <P> If you need to enter your broadband settings manually (for example, to assign a static IP address), choose <EM>Enter settings manually</EM>, and then choose <EM>Continue</EM>. </P> <FORM NAME=Settings><TABLE class=controlTable> <TR> <TD><INPUT TYPE=RADIO NAME=DHCP VALUE=1> <TD>Detect settings automatically (this means DHCP is on) <TR> <TD><INPUT TYPE=RADIO NAME=DHCP VALUE=0> <TD>Enter settings manually (this means DHCP is off) </TABLE> </FORM> </DIV> </DIV> <SCRIPT>CloseSettingsTable();</SCRIPT> <SCRIPT>
+
+	function NavigateBack()
+	{
+		history.go(-1);
+	}
+
+	function SaveCompleted()
+	{
+		TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.",
+												 "msntv:/Panels/Images/TaskCompleted.gif",
+												 "Task_Complete", 2000);
+
+		NavigateBack();
+	}
+
+	function SetSettings()
+	{
+		if (document.Settings.DHCP[0].checked) {
+
+			// If it was already on, then we're done
+			if (TVShell.ConnectionManager.EthernetAdapter.Settings.DHCPEnabled) {
+				history.go(-1);
+			}
+
+			// Enable DHCP
+			TVShell.ConnectionManager.EthernetAdapter.Settings.DHCPEnabled = true;
+
+			ConnectionManagerSave();
+
+			// Apply new settings
+			TVShell.ConnectionManager.EthernetAdapter.ApplySettings();
+
+			if (parameters["confirm"] && !parameters["LANSetup"])
+				location.replace("../ConfirmAndTryAgain.html?DHCP=1");
+			else
+				SaveCompleted();
+		} else {
+			// Disable DHCP
+
+			// Must complete IP Address entry before any change is committed
+			var search = document.location.search;
+
+			if (search && search != "")
+				document.location.replace("msntv:/Settings/Network/IPAddress.html?"+search);
+			else
+				document.location.replace("msntv:/Settings/Network/IPAddress.html");
+		}
+	}
+
+	function onLoadPage()
+	{
+		if (TVShell.ConnectionManager.EthernetAdapter.Settings.DHCPEnabled)
+			document.Settings.DHCP[0].checked = true;
+		else
+			document.Settings.DHCP[1].checked = true;
+	}
+</SCRIPT> </BODY>

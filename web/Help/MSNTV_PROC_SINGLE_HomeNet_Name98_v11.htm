@@ -1,0 +1,33 @@
+<html xmlns:msntv>
+<head>
+	<title>CompName98</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Windows 98" showScrollTop="false" />
+
+<div id="nonScrollArea">
+	<span class="description">
+To find your computer's name in Windows 98, follow these steps:
+<ol>
+	<li>Click <b>Start</b>, point to <b>Settings</b>, and then click <b>Control Panel</b>.</li>
+	<li>Double-click the Network icon, or use the previously created shortcut on the desktop.</li>
+	<li>Click the <b>Network Identification</b> tab.</li>
+</ol>
+
+	</span>
+</div>
+
+<div id="buttonBar">
+        <msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+
+</div>
+
+</body>
+</html>

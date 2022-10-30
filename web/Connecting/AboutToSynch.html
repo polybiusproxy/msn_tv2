@@ -1,0 +1,114 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>About to Synch</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript src="../Javascript/parameters.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript src="../Javascript/TaskScheduler.js"></SCRIPT>
+
+<SCRIPT>
+	var interval;
+	var timeLeft;
+
+var updateCheckEnabled=false;
+var nextMailCheckTime=0;
+if(GetTask(TVShell.TaskScheduler,UPDATE_TASK_CALLER_NAME))
+	updateCheckEnabled=true;
+var mailCheckTask=GetTask(TVShell.TaskScheduler,EMAILCHECK_TASK_CALLER_NAME)
+if(mailCheckTask)
+   nextMailCheckTime=mailCheckTask.Next/60;
+   
+
+
+    var caller="updatecheck";
+	var descriptionHTML ="Your "+ProductShortName+ " is ready to automatically connect to the " +
+	              ServiceFullName +" so that it can check for updates."+
+				  "<P><p>To turn your "+ProductShortName+" off, choose <EM>Power Off</EM>.  Your "+
+				  ProductShortName+" will automatically connect to the service again at this time tomorrow."+
+				  "<P>Otherwise, your "+ProductShortName+" will automatically connect in <SPAN id=time>30 seconds</SPAN>.  ";
+	var title="Ready to check for updates";
+	caller=parameters["caller"];
+    if(caller=="mailcheck0")
+	{
+	    descriptionHTML ="Your "+ProductShortName+ " is ready to automatically connect to the " +
+	              ServiceFullName +" so that it can check for new mail"; 
+	    if(updateCheckEnabled)
+		          descriptionHTML +=" and updates";
+         descriptionHTML += ".<P><p>To turn your Player off, choose <EM>Power Off</EM>.  Your Player will automatically connect in "+nextMailCheckTime+
+				  ((nextMailCheckTime>1)?" hours":" hour")+
+				  ".<P>Otherwise, your Player will automatically connect in <SPAN id=time>30 seconds</SPAN>.  ";
+        if(updateCheckEnabled)
+		  title="Ready to check for new mail and updates";
+        else
+		  title="Ready to check for new mail";
+	}
+    else if(caller=="mailcheck1")
+	{
+	    descriptionHTML ="Your "+ProductShortName+ " is ready to automatically connect to the " +
+	              ServiceFullName +" so that it can check for new mail."+
+				  "<P><P>To turn your Player off, choose <EM>Power Off</EM>.  Your Player will automatically connect in "+nextMailCheckTime+
+				  ((nextMailCheckTime>1)?" hours":" hour")+
+				  ".<P>Otherwise, your Player will automatically connect in <SPAN id=time>30 seconds</SPAN>.  ";			      
+        title="Ready to check for new mail";
+	}
+	
+	descriptionHTML += "To connect sooner, choose <EM>Connect Now</EM>.";
+
+
+	function StartInterval()
+	{
+		interval = window.setInterval(ShowTime, 1000);
+		timeLeft = 30;
+	}
+	
+	function ShowTime()
+	{
+		timeLeft--;
+
+		if (timeLeft > 1)
+			time.innerText = timeLeft + " seconds";
+		else if (timeLeft == 1)
+			time.innerText = timeLeft + " second";
+		else
+			ConnectNow();
+	}
+	
+	function PowerOff()
+	{
+		TVShell.PowerOff();
+	}
+
+	function ConnectNow()
+	{
+		clearInterval(interval);
+		if(caller=="mailcheck0" || caller=="mailcheck1")
+		   LoginToService("mail::check");
+		else
+		   LoginToService("connection::nightly_login");
+	}
+	
+</SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="msntv:/Shared/CSS/SynchMan.css">
+
+</HEAD>
+
+<BODY onload="StartInterval();">
+<SCRIPT>OpenSettingsTable( title , "" , "" );</SCRIPT>
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton onclick="PowerOff();" class=buttonBarButton id="Off" label="Power Off" />
+		<msntv:CustomButton onclick="ConnectNow();" class=buttonBarButton id=Now label="Connect Now" />
+		<script>document.all("Now").focus();</script>
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description id="descriptionDiv">
+        <script>document.write(descriptionHTML)</script>
+		</DIV>
+	</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+	
+</BODY>

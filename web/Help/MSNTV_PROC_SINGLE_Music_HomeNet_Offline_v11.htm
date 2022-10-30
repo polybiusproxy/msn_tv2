@@ -1,0 +1,61 @@
+<html xmlns:msntv>
+<head>
+	<title>Music HomeNet</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Playing music that's on your computer" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+If your <script>document.write( ProductShortName );</script> is connected to your home network, you can use it to listen to music that's stored on your computer.
+<p>
+<p>
+To learn more about connecting your <script>document.write( ProductShortName );</script> to a home network, choose the link below:
+<br>
+<span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm');">Introduction to home networking</a>
+</span>
+</p>
+</p>
+<p>
+<p>
+You don't have to sign in to the <script>document.write( ServiceFullName )</script> to listen to the music tracks that are stored on your computer. Just turn on your <script>document.write( ProductShortName );</script> and follow these steps:
+<ol>
+<li>Make sure your <script>document.write( ProductShortName );</script> and your computer are connected to your home network, and that the music folder on the computer is a shared folder.</li>
+<li>Choose <b>Music</b> from the bottom of the Sign-in page.</li>
+<p>
+<p>
+The Music page appears.
+</p>
+</p>
+<li>In the <b>Music on home network</b> section, choose the computer folder that contains the music you want to hear.</li>
+<p>
+<p>
+A list of music tracks appears on screen. (If there are subfolders within a music folder on the computer, you'll need to choose a subfolder to see the clips it contains.)
+</p>
+</p>
+</ol>
+Check the boxes next to the tracks you want to work with. Then you can do the following:
+<ul>
+<li>Choose <b>Play</b> to play the selected track(s).</li>
+<li>Choose <b>Add Selections</b> to save copies of the selected tracks in a playlist on your <script>document.write( ProductShortName );</script>. (Choose <b>Music</b> from the Sign-in page, and go to <b>My selections</b> to see your playlist.</li>
+</ul>
+For more information about using Music, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Music</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

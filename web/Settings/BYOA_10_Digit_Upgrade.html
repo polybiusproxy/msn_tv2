@@ -1,0 +1,167 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+
+<HEAD>
+<TITLE>BYOA 10 Digit Upgrade</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/PhoneValidation.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+
+<SCRIPT LANGUAGE=Javascript>
+var primaryBYOA = TVShell.ConnectionManager.BYOASettings.PrimaryNumber;
+var secondaryBYOA = TVShell.ConnectionManager.BYOASettings.SecondaryNumber;
+var strippedPrimary = StripPhoneFormatting(primaryBYOA);
+var strippedSecondary = StripPhoneFormatting(secondaryBYOA);
+
+function FormatEntryAsDialed(Number, LongDistance)
+{
+	var AsDialed = "";
+	var DialPrefix = TVShell.ConnectionManager.ModemAdapter.Settings.DialPrefix;
+
+	if (DialPrefix.length > 0) {
+		AsDialed =  DialPrefix + ", ";
+	}
+	
+	if (LongDistance) {
+		AsDialed += "1-";
+	}
+	
+	AsDialed += ( "("+Number.substr(0,3)+")-" );
+	AsDialed += Number.substr(3,3)+"-"+Number.substr(6,4);
+	return AsDialed;
+}
+
+function UpdateAllAsDialed()
+{
+	if (10 == strippedPrimary.length) {
+		clickCB("primary", strippedPrimary);
+	}
+
+	if (10 == strippedSecondary.length) {
+		clickCB("secondary", strippedSecondary);
+	}
+}
+
+function clickCB(i, Number)
+{
+	document.all["AsDialed"+i].innerText = "Number to be dialed: " +
+		FormatEntryAsDialed(Number, document.all["LDCB"+i].checked);
+}
+
+function entryHTML(i, Number)
+{
+	// top spacing
+	document.write( "<TR><TD colspan=8 height=15px></TD></TR>" );
+
+	// show the access number
+	document.write( "<TR><TD colspan=8>" );
+	document.write("Number:&nbsp");
+	document.write( FormatPhoneByVal(Number) );
+	document.write("</TD></TR>");
+
+	// spacing per spec
+	document.write( "<TR><TD colspan=8 height=10px></TD></TR>" );
+
+	// check box [sp] dial 1
+	document.write( "<TR><TD>" );
+	document.write( "<INPUT TYPE=\"checkbox\" NAME=LDCB"+i);
+	document.write( " onClick=\"clickCB(\'"+i+"\', \'"+Number+"\');\" ");
+	document.write(" CHECKED ");
+	document.write( "></TD>" );
+	document.write("<TD width=8px></TD>");
+	document.write("<TD>Dial 1</TD>");
+	document.write("<TD width=195px></TD></TR>");
+
+	// spacing per spec
+	document.write( "<TR><TD colspan=8 height=10px></TD></TR>" );
+	
+	// number to be dialed
+	document.write("<TR><TD colspan=8 id=AsDialed"+i+"></TD></TR>");
+
+	// 15 px spacing with border
+	document.write("<TR><TD width=100% colspan=8 height=15px style='border-bottom:2px solid #5981b3;'>&nbsp</TD></TR>" );
+}
+
+function fillInTable()
+{
+	document.write("<P>These are the access numbers your "+ProductShortName+" " +
+								"dials to connect to the " + ServiceFullName + ". " + 
+								"Please review the access numbers to make sure they are in the correct format.</P>");			
+	document.write("<TABLE cellspacing=0 cellpadding=0 height=100% width=100%>");
+	document.write("<TR><TD colspan=7 height=5px></TD></TR>");
+
+	if (10 == strippedPrimary.length) {
+		entryHTML("primary", strippedPrimary);
+	}
+
+	if (10 == strippedSecondary.length) {
+		entryHTML("secondary", strippedSecondary);
+	}
+
+	document.write("</TABLE>");
+}
+</SCRIPT>
+
+</HEAD>
+
+<BODY onload="UpdateAllAsDialed();">
+
+
+<SCRIPT>OpenSettingsTable( "Update" , "Review your ISP settings" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton onclick="submitChanges()" label="Save Changes" id="Done" />
+	<msntv:CustomButton onclick="history.go(-1)" label="Cancel" id="Cancel" />
+	<script>document.all("Cancel").focus();</script>
+</DIV>
+
+<DIV id=scrollArea>
+	<DIV class=description>
+		<SCRIPT LANGUAGE=Javascript>
+			fillInTable();
+		</SCRIPT>
+	</DIV>
+</DIV>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>
+
+<SCRIPT LANGUAGE=Javascript>
+
+function saveSettings()
+{
+	var dirty = false;
+
+	if (10 == strippedPrimary.length && document.all["LDCBprimary"].checked) {
+		TVShell.ConnectionManager.BYOASettings.PrimaryNumber = "1-" + primaryBYOA;
+		dirty = true;
+	}
+
+	if (10 == strippedSecondary.length && document.all["LDCBsecondary"].checked) {
+		TVShell.ConnectionManager.BYOASettings.SecondaryNumber = "1-" + secondaryBYOA;
+		dirty = true;
+	}
+
+	if (dirty) {
+		ClearBootromAccessNumber();
+	}
+
+	TVShell.ConnectionManager.BYOASettings.SettingsVersion = 1;
+	ConnectionManagerSave();
+	return true;
+}
+
+function submitChanges()
+{
+	if (!saveSettings())
+		return false;
+
+	history.go(-1);
+	return true;
+}
+</SCRIPT>

@@ -1,0 +1,311 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/IPAddress.htc"> <TITLE>Advanced wireless settings</TITLE> </HEAD><LINK REL="StyleSheet" TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE="Javascript" SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE="Javascript" SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE="Javascript" SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE="Javascript" SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE="Javascript" SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE="Javascript" SRC="../../Javascript/Wireless.js"></SCRIPT> <SCRIPT>
+	var WirelessAdapter = TVShell.ConnectionManager.WirelessAdapter;
+	var WirelessSettings;
+
+	if (WirelessAdapter) {
+		WirelessSettings = WirelessAdapter.Settings;
+	}
+
+	function ValidKeyIndex()
+	{
+		if ( document.all.WEPEnable.checked ) {
+			var i = document.all.KeyIdx.value;
+			i = parseInt(i,10);
+			TVShell.Message("ValidKeyIndex: " + i);
+			if ( i != 1 && i != 2 && i != 3 && i != 4 ) {
+				WSAlert("Key index must be a number from 1 to 4");
+				document.all.KeyIdx.value = "";
+				document.all.KeyIdx.focus();
+			}
+		}
+	}
+	
+	
+	function OnWEPEnable()
+	{
+		TVShell.Message("OnWEPEnable " + document.all.WEPEnable.checked);
+		if (document.all.WEPEnable.checked) {
+			var wasWPA = document.all.WPAEnable.checked;
+			document.all.WPAEnable.checked = false;
+			document.all.NoPrivacy.checked = false;
+			document.all.KeyIdx.disabled = false;
+			document.all.Key.disabled = false;
+			document.all.AuthMode.disabled = false;
+			if ( document.all.KeyIdx.value == "" ) {
+				document.all.KeyIdx.value = 1;
+			}
+			if ( wasWPA )
+				DisplayKey("");
+		} 
+	}
+	
+	function OnWPAEnable()
+	{
+		
+		if (document.all.WPAEnable.checked) {
+			var wasWEP = document.all.WEPEnable.checked;
+			document.all.WEPEnable.checked = false;
+			document.all.NoPrivacy.checked = false;
+			document.all.KeyIdx.value = "";
+			document.all.KeyIdx.disabled = true;
+			document.all.AuthMode.checked = true;
+			document.all.AuthMode.disabled = true;
+			document.all.Key.disabled = false;
+			if ( wasWEP )
+				DisplayKey("");
+		} 
+	}
+	
+	function OnNoPrivacy()
+	{
+		if (document.all.NoPrivacy.checked) {
+			document.all.WPAEnable.checked = false;
+			document.all.WEPEnable.checked = false;
+			document.all.KeyIdx.value = "";
+			document.all.KeyIdx.disabled = true;
+			document.all.AuthMode.checked = false;
+			document.all.AuthMode.disabled = true;
+			document.all.Key.disabled = true;
+		} 
+	}
+	
+	function IsWPA()
+	{
+		return document.all.WPAEnable.checked;
+	}
+	
+	function IsConnected()
+	{
+		if ( WirelessSettings &&  WirelessSettings.SSID != "" ) {
+			 if ( TVShell.ConnectionManager.LANAdapter == TVShell.ConnectionManager.WirelessAdapter &&
+			 TVShell.ConnectionManager.LANState == ConnectState_Connected ) {
+					
+				var AdapterStatus = TVShell.ConnectionManager.WirelessAdapter.CheckStatus();
+				if ( AdapterStatus == ConnectError_NoError )  {
+						// we could also ignore non-wireless errors ( DHCP, gateway )
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	function onLoadPage()
+	{
+		
+		var params = location.href.split("?");
+		var chosenSSID = "";
+		
+		if ( params && params.length > 1 && params[1].indexOf("ssid=") == 0 ) {
+			chosenSSID = params[1].substring(params[1].indexOf("=")+1);
+			chosenSSID = unescape(chosenSSID);
+		}
+		TVShell.Message("SSID passed in was " + chosenSSID);
+		
+		
+		if ( chosenSSID == "" && WirelessSettings ) {
+			chosenSSID = WirelessSettings.SSID;
+		}
+
+		if ( WirelessAdapter == null || WirelessSettings == null || WirelessAdapter.CheckStatus() == ConnectError_NoAdapter  ) {
+			TVShell.Message("no wireless adpater");
+			document.all.nonScrollArea.innerHTML = "Your " + ProductShortName + " does not have a USB wireless adapter attached."
+		} else  {
+			TVShell.Message("wireless adapter " + WirelessAdapter.MacID);
+			
+			document.all.SSID.value = chosenSSID;
+			
+			
+			if ( IsConnected() )
+				ConnectionState.innerText = "Connected";
+			else
+				ConnectionState.innerText = "Disconnected";
+
+			document.all.NetMode.checked = ( WirelessSettings.InfrastructureMode == WirelessMode_Ndis802_11IBSS);
+			document.all.AuthMode.checked = ( WirelessSettings.AuthenticationMode == WirelessAuth_Ndis802_11AuthModeShared);
+			if (WirelessSettings.WEPEnable) {
+			
+				document.all.WEPEnable.checked = true;
+				if (  WirelessSettings.KeyIdx) {
+					document.all.KeyIdx.value = WirelessSettings.KeyIdx;
+					switch (WirelessSettings.KeyIdx) {
+					case 1:
+						DisplayKey(WirelessSettings.KeyMaterial1);
+						break;
+					case 2:
+						DisplayKey(WirelessSettings.KeyMaterial2);
+						break;
+					case 3:
+						DisplayKey(WirelessSettings.KeyMaterial3);
+						break;
+					case 4:
+						DisplayKey(WirelessSettings.KeyMaterial4);
+						break;
+					}
+				} 
+				else {
+					document.all.KeyIdx.value = 1;
+				}
+				OnWEPEnable();
+			} else if ( WirelessSettings.WPAEnable ) {
+				document.all.WPAEnable.checked = true;
+				DisplayKey(WirelessSettings.KeyMaterial1);
+				OnWPAEnable();
+			}
+			else {
+				DisplayKey("");
+				document.all.NoPrivacy.checked = true;
+				document.all.KeyIdx.disabled = true;
+				document.all.Key.disabled = true;
+				document.all.AuthMode.disabled = true;
+				document.all.WEPEnable.checked = false;
+				document.all.KeyIdx.value = "";
+				OnNoPrivacy();
+			}
+		}
+
+	}
+
+	function CheckEnteredkKey()
+	{
+		var val = GetEnteredKey();
+			
+			
+		if ( val == "" ) {
+			if ( document.all.WPAEnable.checked ) { 
+				WSAlert("A WPA pass phrase is required. It is between 8 and 63 characters.");
+				return;
+			} else if (document.all.WEPEnable.checked ) {
+				WSAlert("A WEP key is required. A WEP key is either 10 or 26 characters (0-9 and A-F only) or 5 or 13 case-sensitive characters.");
+				return;
+			
+			}
+		}
+		var key=CheckKey(val,104);
+		if ( key == "" ) {
+			key=CheckKey(val,40);
+			if ( key == "" ) {
+				ShowWEPKeyError(val);
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	function SetSettings()
+	{
+		var isdirty = false;
+
+		WirelessSettings.SSID = document.all.SSID.value;
+		WirelessSettings.InfrastructureMode = document.all.NetMode.checked ? WirelessMode_Ndis802_11IBSS : WirelessMode_Ndis802_11Infrastructure ;
+		WirelessSettings.AuthenticationMode	= document.all.AuthMode.checked ? WirelessAuth_Ndis802_11AuthModeShared : WirelessAuth_Ndis802_11AuthModeOpen ;
+
+		if (document.all.WEPEnable.checked != WirelessSettings.WEPEnable) {
+			WirelessSettings.WEPEnable = document.all.WEPEnable.checked;
+			isdirty = true;
+			TVShell.Message("Change WEP to " + WirelessSettings.WEPEnable);
+		}
+		if (document.all.WPAEnable.checked != WirelessSettings.WPAEnable) {
+			WirelessSettings.WPAEnable = document.all.WPAEnable.checked;
+			isdirty = true;
+			TVShell.Message("Change WPA  to " + WirelessSettings.WPAEnable);
+		}
+		if ( document.all.SSID.value == "" ) {
+			WSAlert("You must enter an SSID for the wireless network you want to connect to.");
+			document.all.SSID.focus();
+			return;
+		}
+		
+		if ( document.all.WEPEnable.checked ) {
+			var i = document.all.KeyIdx.value;
+			i = parseInt(i,10);
+			if ( i >= 1 && i <= 4 ) {
+				if (WirelessSettings.KeyIdx != i ) {
+					WirelessSettings.KeyIdx = i;
+					isdirty = true;
+				}
+			}
+			for ( i=1; i <= 4; i++ ) {
+				var val = "";
+				TVShell.Message("WirelessSettings.KeyIdx " + WirelessSettings.KeyIdx);
+				if ( i == WirelessSettings.KeyIdx ) {
+					val = GetEnteredKey();
+					if ( val == "" ) {
+						WSAlert("If WEP is enabled, you must also enter the WEP key. A WEP key is 10 or 26 characters (0-9 and A-F only) or 5 or 13 case-sensitive characters.");
+						document.all.Key.focus();
+						return;
+					}
+					if ( !CheckEnteredkKey() || val == "" ) {
+						document.all.Key.focus();
+						return;
+					}
+				}
+				
+				switch (i ) {
+				case 1:
+					WirelessSettings.KeyMaterial1 = val;
+					break;
+				case 2:
+					WirelessSettings.KeyMaterial2 = val;
+					break;
+				case 3:
+					WirelessSettings.KeyMaterial3 = val;
+					break;
+				case 4:
+					WirelessSettings.KeyMaterial4 = val;
+					break;
+				}
+				isdirty = true;
+			}
+		} else if ( document.all.WPAEnable.checked ) {
+			var pp = GetEnteredKey();
+			
+			if ( pp == "" ) {
+				WSAlert("A WPA pass phrase is required. It is between 8 and 63 characters.");
+				document.all.Key.focus();
+				return;
+			}
+			if ( pp.length < 8 || pp.length > 63) {
+				WSAlert("A WPA pass phrase must be between 8 and 63 characters long.");
+				document.all.Key.focus();
+				return;
+			}
+			
+			WirelessSettings.KeyMaterial4 = "";
+			WirelessSettings.KeyMaterial3 = "";
+			WirelessSettings.KeyMaterial2 = "";
+			WirelessSettings.KeyMaterial1 = pp;
+			WirelessSettings.KeyIdx = 1;
+			WirelessSettings.AuthenticationMode = WirelessAuth_Ndis802_11AuthModeWPAPSK;
+		} else {	
+			WirelessSettings.KeyMaterial4 = "";
+			WirelessSettings.KeyMaterial3 = "";
+			WirelessSettings.KeyMaterial2 = "";
+			WirelessSettings.KeyMaterial1 = "";
+			WirelessSettings.KeyIdx = 1;
+		}
+			
+	
+		isdirty = true; //always apply settings
+
+		if (isdirty) {
+
+			WirelessSettings.IsDirty = true;
+
+			// Save new settings
+			
+			var mainPanel = TVShell.PanelManager.Item('main');
+			mainPanel.NoBackToMe = true;
+			var backTo = "javascript:GotoSignOn();";
+			CheckWirelessConnection(backTo,"");
+
+
+		}
+		return;
+	}
+		</SCRIPT><BODY> <SCRIPT>OpenSettingsTable( "Settings" , "Advanced wireless settings" , "WirelessHelpAdvanced.html" , true );</SCRIPT><DIV id="buttonBar"> <msntv:CustomButton href="javascript:GotoSignOn()" class="buttonBarButton" id="default" label="Cancel" /> <msntv:CustomButton href="javascript:SetSettings()" class="buttonBarButton" id="Done" label="Save Changes" /> <script>document.all("Done").focus();</script> </DIV><DIV id="nonScrollArea"><DIV class="description"> <P> Enter the settings, then choose <EM>Save Changes</EM>. </P><TABLE class="controlTable" ID="Table1"> <tr> <TD> MAC address:<td> <script>
+				document.write(WirelessAdapter.MacID);
+								</script> <TR> <TD> SSID: <td><INPUT TYPE="TEXT" CLASS="inputText" ID="SSID" onkeyup="CheckSSIDEntry(document.all.SSID.value);" SIZE="32" MAXLENGTH="32" NAME="SSID"> <TR> <TD> Connection state: <TD ID="ConnectionState"> <TR> <TD> Privacy: <TD> <INPUT TYPE="RADIO" ID="NoPrivacy" onClick="OnNoPrivacy();" NAME="NoPrivacy">&nbsp;None <INPUT TYPE="RADIO" ID="WEPEnable" onClick="OnWEPEnable();" NAME="WEPEnable">&nbsp;WEP <INPUT TYPE="RADIO" ID="WPAEnable" onClick="OnWPAEnable();" NAME="WPAEnable">&nbsp;WPA <TR> <TD>WEP key index:<TD> <INPUT TYPE="TEXT" CLASS="inputText" ID="KeyIdx" onblur="ValidKeyIndex();" SIZE="1" MAXLENGTH="1" NAME="KeyIdx"> <TR> <TD> Key: <TD> <INPUT TYPE="TEXT" CLASS="inputText" ID="Key" onclick="CheckEnteredkKey()" onkeyup="OnKeyEntryChanged(IsWPA());" SIZE="63" MAXLENGTH="63"> <tr> <td> &nbsp; <td id="KeyCharCountHint"> &nbsp; <TR> <TD> Authentication: <TD><INPUT TYPE="CHECKBOX" ID="AuthMode" NAME="AuthMode"> &nbsp;&nbsp;Shared key authentication <TR> <TD> Network mode: <TD><INPUT TYPE="CHECKBOX" ID="NetMode" NAME="NetMode"> &nbsp;&nbsp;Ad hoc network </TABLE> <SCRIPT>
+					</SCRIPT> </DIV> </DIV> <SCRIPT>CloseSettingsTable();
+	onLoadPage();
+			</SCRIPT> </BODY>

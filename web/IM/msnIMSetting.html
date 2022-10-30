@@ -1,0 +1,37 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<head>
+<title>IM Setting</title>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+
+</HEAD>
+
+<BODY>
+<SCRIPT>OpenSettingsTable( "Messenger Settings" , "" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton onClick="history.go(-1);" class=sideBarButton id=Done label="Done" />
+</DIV>
+<DIV id=scrollArea>
+	<A href="msnIMContactList.html" class=topic id="default">Edit your contact list</A>
+	<script>document.all("default").focus();</script>
+	<DIV class=description>View or remove contacts</DIV>
+
+	<A href="msnIMAllowBlockList.html" class=topic id=EditAllowBlockList>Edit your Allow and Block lists</A>
+	<DIV class=description>View or make changes to the lists of people you've chosen to Allow and Block</DIV>
+
+	<A href="msnIMAlerts.html" class=topic id=EditAlert>Change your Messenger alerts</A>
+	<DIV class=description>Turn Messenger alerts off or on</DIV>
+
+	<A href="msnIMChangeNickName.html" class=topic id=ChangeDisplayName>Change your display name</A>
+	<DIV class=description>Change the name others see when they send you instant messages</DIV>
+
+</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>
+</html>

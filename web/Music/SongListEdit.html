@@ -1,0 +1,381 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/DMRHeading.htc">
+<head>
+	<title>Song List Edit</title>
+	<link rel=StyleSheet type="text/css" href="../css/Base.css">	
+	<link rel=StyleSheet type="text/css" href="../css/Music.css">
+	
+	<style type="text/css">
+		#selectedCountField
+		{
+			height: auto;
+			margin-left: 0px;
+		}
+	</style>
+
+	<script language="Javascript" src="../Javascript/TVShell.js"></script>
+	<script language="Javascript" src="../Javascript/VKCodes.js"></script>
+	<script language="Javascript" src="../Javascript/Parameters.js"></script>
+	<script language="javascript" src="../Javascript/DMRCommon.js"></script>
+	<script language="javascript" src="../Javascript/DMRNavigate.js"></script>
+	<script language="Javascript" src="../Javascript/ContentPaneHelp.js"></script>
+	<script language="Javascript" src="Music.js"></script>
+	
+	<script language="javascript">
+		var playlist = GetSongList();
+		var itemsText = "";
+		var g_fTruncated = false;
+		var changed = false;
+		var showConfirmation = false;
+
+		function BuildArray()
+		{
+			if (DMRItemArray == null || DMRItemArray.length == 0) {			
+				DMRItemArray = new Array();
+
+				var count = playlist.count;
+
+				TVShell.Message("BuildArray " + count + " items");
+				for (var i = 0; i < count; i++) {
+					var item = playlist.item(i);
+					var name = item.getItemInfo("DisplayTitle");
+				
+					DMRItemArray.push(new DMRItem(name, "", "", false));
+				}
+			}
+			
+			scrollFrame.document.body.innerHTML = "";
+
+			var length = DMRItemArray.length
+
+			if (length > 1) {
+				selectAllCell.style.display = "block";
+				selectCountCell.style.display = "block";
+				selectAllElement = document.all.selectAll;
+			}
+			else {
+				selectCountCell.style.display = "none";
+				selectAllCell.style.display = "none";
+			}
+			if (length > 0) {
+				itemsText = "song" + (length != 1 ? "s" : "");
+				BuildItemList(scrollFrame.document.body, null, null, "left", null, true);
+			}
+		}
+
+		function RemoveArrayItem(array, i)
+		{
+			// Shift items after removed item up one slot.
+			for (; i < (array.length - 1); i++) {
+				array[i] = array[i + 1];
+			}
+			array.pop();
+		}
+
+		function MoveArrayItem(array, oldIndex, newIndex)
+		{
+			var item = array[oldIndex];
+			
+			if (newIndex > oldIndex) {
+				for (var i = oldIndex; i < newIndex; i++) {
+					array[i] = array[i + 1];
+				}
+			}
+			else if (newIndex < oldIndex) {
+				for (var i = oldIndex; i > newIndex; i--) {
+					array[i] = array[i - 1];
+				}
+			}
+			
+			array[newIndex] = item;
+		}
+		
+		function MoveHTMLItem(parent, oldIndex, newIndex)
+		{
+			if (oldIndex != newIndex) {
+				var children = parent.children;
+				var item = parent.removeChild(children[oldIndex]);
+				var checkbox = item.all.check;
+				var insertBefore = newIndex < children.length ? children[newIndex] : null;
+				
+				parent.insertBefore(item, insertBefore);
+				checkbox.checked = true;
+			}
+		}
+		
+		function ScrollIntoView(index)
+		{
+			// Compute current offset
+			var parent = scrollFrame.document.all.itemListDiv;
+			var children = parent.children;
+			var item = children[index];
+			var offsetTop = item.offsetTop + parent.offsetTop - 2;
+			var offsetHeight = item.offsetHeight + 2;
+			var scrollTop = scrollFrame.document.body.scrollTop;
+			var clientHeight = scrollFrame.document.body.clientHeight;
+			
+			TVShell.Message("oTop:" + offsetTop + ", oHeight:" + offsetHeight + ", sTop:" + scrollTop + ", cHeight:" + clientHeight);
+			
+			if (offsetTop - scrollTop < 0) {
+				scrollTop = offsetTop;
+			}
+			else if (offsetTop + offsetHeight - scrollTop > clientHeight) {
+				scrollTop = offsetTop + offsetHeight - clientHeight;
+			}
+			scrollFrame.document.body.scrollTop = scrollTop;
+		}
+		
+		function UpdateIndices(startIndex, endIndex)
+		{
+			// Indices are disabled for now due to the performance of updates.
+			return;
+			
+			var st = new Date().getTime();
+			
+			// Approximate calculation for size where rebuilding is faster than updating indices.
+			if ((endIndex - startIndex) > (100 + DMRItemArray.length / 10)) {
+				BuildArray();
+			}
+			else {
+				var indices = scrollFrame.document.all.itemListDiv.all.tags("FONT");
+			
+				endIndex = Math.min(endIndex, indices.length - 1);
+				for (var i = startIndex; i <= endIndex; i++) {
+					indices[i].innerHTML = (i + 1) + "&nbsp;";
+				}
+				
+				var et = new Date().getTime();
+				TVShell.Message( "UpdateIndices time=" + (et-st) );
+			}
+		}
+		
+		function DoMoveToTop()
+		{
+			var length = DMRItemArray.length;
+			if (playlist.count == length) {
+				var insert = 0;
+				var endIndex = 0;
+				for (var i = 0; i < length; i++) {
+					if (DMRItemArray[i].checked) {
+						MoveArrayItem(DMRItemArray, i, insert);
+						MoveHTMLItem(scrollFrame.document.all.itemListDiv, i, insert);
+						playlist.moveItem(i, insert);
+						insert++;
+						endIndex = Math.max(i, endIndex);
+					}
+				}
+				
+				UpdateIndices(0, endIndex);
+				if (showConfirmation) {
+					selectAll.checked = false;
+				}
+				else {
+					scrollFrame.scrollTo(0, 0);
+				}
+				changed = true;
+			}
+		}
+		
+		function MoveToTop()
+		{
+			if (CheckSelection("Move to Top", "song")) {
+				if (showConfirmation) {
+					PanelManager.AnimationMessageBox("Moving to top...", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+					setTimeout(DoMoveToTop, 2000);
+				}
+				else {
+					DoMoveToTop();
+				}
+			}
+		}
+		
+		function MoveUp()
+		{
+			if (CheckSelection("Move Up", "song")) {
+				var length = DMRItemArray.length;
+				if (playlist.count == length && !DMRItemArray[0].checked) {
+					var startIndex = length;
+					var endIndex = 0;
+					for (var i = 1; i < length; i++) {
+						if (DMRItemArray[i].checked) {
+							MoveArrayItem(DMRItemArray, i, i - 1);
+							MoveHTMLItem(scrollFrame.document.all.itemListDiv, i, i - 1);
+							playlist.moveItem(i, i - 1);
+							startIndex = Math.min(i - 1, startIndex);
+							endIndex = Math.max(i, endIndex);
+						}
+					}
+					
+					UpdateIndices(startIndex, endIndex);
+					ScrollIntoView(startIndex);
+					changed = true;
+				}
+			}
+		}
+		
+		function MoveDown()
+		{
+			if (CheckSelection("Move Down", "song")) {
+				var length = DMRItemArray.length;
+				if (playlist.count == length && !DMRItemArray[length - 1].checked) {
+					var startIndex = length;
+					var endIndex = 0;
+					for (var i = length - 2; i >= 0; i--) {
+						if (DMRItemArray[i].checked) {
+							MoveArrayItem(DMRItemArray, i, i + 1);
+							MoveHTMLItem(scrollFrame.document.all.itemListDiv, i, i + 1);
+							playlist.moveItem(i, i + 1);
+							startIndex = Math.min(i, startIndex);
+							endIndex = Math.max(i + 1, endIndex);
+						}
+					}
+					
+					UpdateIndices(startIndex, endIndex);
+					ScrollIntoView(endIndex);
+					changed = true;
+				}
+			}
+		}
+		
+		function DoMoveToBottom()
+		{
+			var length = DMRItemArray.length;
+			if (playlist.count == length) {
+				var insert = length - 1;
+				var startIndex = insert;
+				for (var i = length - 1; i >= 0; i--) {
+					if (DMRItemArray[i].checked) {
+						MoveArrayItem(DMRItemArray, i, insert);
+						MoveHTMLItem(scrollFrame.document.all.itemListDiv, i, insert);
+						playlist.moveItem(i, insert);
+						insert--;
+						startIndex = Math.min(i, startIndex);
+					}
+				}
+				
+				UpdateIndices(startIndex, length);
+				if (showConfirmation) {
+					selectAll.checked = false;
+				}
+				else {
+					setTimeout("scrollFrame.scrollTo(0, 100000);", 1);
+				}
+				changed = true;
+			}
+		}
+		
+		function MoveToBottom()
+		{
+			if (CheckSelection("Move to Bottom", "song")) {
+				if (showConfirmation) {
+					PanelManager.AnimationMessageBox("Moving to bottom...", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+					setTimeout(DoMoveToBottom, 2000);
+				}
+				else {
+					DoMoveToBottom();
+				}
+			}
+		}
+		
+		function Delete()
+		{
+			var numSelected = CheckSelection("Remove", "song");
+			
+			if (numSelected &&
+				PanelManager.CustomMessageBox("Are you sure you want to remove " + numSelected + " song" + (numSelected > 1 ? "s" : "") + " from the song list?",
+											  "", "Remove;Do Not Remove", 0, "", false, 0x30, 1) == 0) {
+
+				if (playlist.count == DMRItemArray.length) {
+					for (var i = DMRItemArray.length - 1; i >= 0 ; i--) {
+						if (DMRItemArray[i].checked) {
+							RemoveArrayItem(DMRItemArray, i);
+							playlist.removeItem(playlist.item(i));
+						}
+					}
+					
+					changed = true;
+					if (DMRItemArray.length == 0) {
+						history.go(-1);
+					}
+					else {
+						BuildArray();
+					}
+				}
+			}
+		}
+		
+		function OnUnload()
+		{
+			if (changed) {
+				var st = new Date().getTime();
+				TVShell.PlaylistManager.savePlaylist(songListUrl, playlist);
+				var et = new Date().getTime();
+				TVShell.Message( "savePlayList. time=" + (et-st) );
+			}
+		}
+				
+
+	</script>
+</head>
+
+<body style="behavior: url(msntv:/HTC/ScrollDelegator.htc);" onunload="OnUnload();">
+	<table style="height:100%; width:100%;" cellpadding="0" cellspacing="0">
+		<tr>
+			<td style="height:57px;">
+				<msntv:DMRHeading id="Heading" mainTitle="Music" subTitle="Edit Song List" helpTopicURL="MSNTV_TRS_TOC_Music" settingsURL = "msntv:/Settings/WMPVisualization.html" imageURL="msntv:/Music/Images/MusicHeader.jpg" />
+			</td>
+		<tr>
+			<td>
+				<table style="width:100%; height:100%;" cellspacing=0 cellpadding=0>
+					<tr>
+						<td class="content" style="width:73%; vertical-align:top;">
+							<table style="height:100%; width:100%; cellpadding="0" cellspacing="0">
+								<tr>
+									<td colspan="2" class="songListInstructions">
+										You can move and remove songs by selecting their checkboxes and then choosing an action.
+									</td>
+								</tr>
+								<tr>
+									<td id="selectCountCell" class="songListCount" style="width:70%;">
+										<span id="selectedCountField"><span id="countStrDiv"></span></span>
+									</td>
+									<td id="selectAllCell" style="display:none; width:30%; padding-right:22px; text-align:right; font-size:16px; color:#232323;">
+										Select All <input type=checkbox id="selectAll" onpropertychange="OnSelectAllPropertyChange();">
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2" style="height:100%;">
+										<iframe id="scrollFrame" frameborder="no" allowtransparency="true"></iframe>
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td class="sidebar" style="width:27%; padding:9px 8px 0px 6px; vertical-align:top;">
+							<msntv:CustomButton id="movetop" class="sidebarButton" label="Move to Top" onClick="MoveToTop();" />
+							<msntv:CustomButton id="movebottom" class="sidebarButton" label="Move to Bottom" onClick="MoveToBottom();" />
+							<msntv:CustomButton id="moveup" class="sidebarButton" label="Move Up" onClick="MoveUp();" />
+							<msntv:CustomButton id="movedown" class="sidebarButton" label="Move Down" onClick="MoveDown();" />
+							<msntv:CustomButton id="delete" class="sidebarButton" label="Remove" onclick="Delete();"/>
+							<msntv:CustomButton id="done" class="sidebarButton" label="Done" onclick="history.go(-1);"/>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+
+	<div id="playerDiv" style="position:absolute; top:0px; left:0px; visibility:hidden;">
+	</div>
+</body>
+
+<script>
+	InitializeScrollFrame(scrollFrame);
+	BuildArray();
+	if (DMRItemArray.length <= 0) {
+		scrollFrame.document.body.innerHTML = "<div style='padding:15px;'>No songs found</div>";	
+	}
+	done.focus();
+</script>
+
+</html>

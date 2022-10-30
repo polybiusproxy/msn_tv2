@@ -1,0 +1,92 @@
+<html xmlns:msntv>
+<head>
+	<title>HomeNetIntro</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Home network basics" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+<P>
+A home network allows you to connect your <script>document.write( ProductShortName );</script> to your home computer(s) via a hub or routing device. You'll be able to use your <script>document.write( ProductShortName );</script> to view pictures, listen to music, and watch videos that are stored on your computer.
+</P>
+
+<P>
+An overview of home networking is presented here. If you need more information, sign in to the <script>document.write( ServiceFullName );</script> and choose <EM>Help</EM> and then <EM>Home networking</EM>, or go to www.msntv.com.
+</P>
+
+
+<P><P>
+<B>Home networking requirements</B>
+</P></P>
+
+<P>
+To connect your <script>document.write( ProductShortName );</script> to a home network, you'll need the following (sold separately):
+<UL>
+<LI>A hub or router
+<LI>Two standard Ethernet cables: one long enough to reach from your computer to your router, and another long enough to reach from your router to your <script>document.write( ProductShortName );</script>. (<EM>Note</EM>: For a wireless network, you can substitute a USB wireless dongle or a wireless Ethernet bridge for the Ethernet cable from the router to the <script>document.write( ProductShortName );</script>.)
+<LI>A computer running Windows 98 or later, configured to connect to your network.
+</UL>
+</P>
+
+<P><P>
+<B>File sharing on your computer</B>
+</P></P>
+
+<P>
+To use your <script>document.write( ProductShortName );</script> to access folders on your computer, you must first designate the folders as shared resources. In addition, file sharing must be enabled on the computer (and any firewalls you might have). For detailed instructions, go to your computer's help and search for "sharing files".
+</P>
+
+<P><P>
+<B>Finding connected computers</B>
+</P></P>
+
+<P>
+Connect your <script>document.write( ProductShortName );</script> to your hub or router. When you turn on the <script>document.write( ProductShortName );</script>, the Sign-in page appears. Choose <EM>Settings</EM> and then choose <EM>Manage your home network</EM>. The Home Network Settings page appears.
+</P>
+
+<P>
+Every device on a home network is known by its IP address. Many home networks use their routers to assign IP addresses dynamically. If this is how your home network is set up, the <script>document.write( ProductShortName );</script> can discover the rest of the network on its own. Choose <b>Find</b>.
+</P>
+
+<P>
+Other home networks assign static IP addresses. If your network is one of these, choose <b>Add</b> and then type the names of the computers on the network. How you find the name of your computer changes depending on your operating system. Search in your computer's help for "computer name". 
+</P>
+
+<P><P>
+<B>Using your shared content</B>
+</P></P>
+
+<P>
+The computers on your home network will now appear when you choose an MSN TV feature that supports file sharing (like Photos, Music, or Videos).
+</P>
+
+<P><P>
+<B>Troubleshooting</B>
+</P></P>
+
+<P>
+If you're having trouble using your home network, choose the link below:
+<UL class=links>
+<LI><A href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Troubleshooting_v11.htm');">Troubleshooting</A></LI>
+</UL>
+</P>
+
+</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

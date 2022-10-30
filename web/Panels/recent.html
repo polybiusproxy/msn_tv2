@@ -1,0 +1,222 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/ScrollList.htc">
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+
+<title>Recent Panel</title>
+
+<link rel=StyleSheet type="text/css" href="../CSS/Panel.css">
+
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<script language="Javascript" src="../Javascript/PanelImpl.js"></script>
+<script language="Javascript" src="../Javascript/VKCodes.js"></script>
+
+<script language="javascript">
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+	var mainPanel = PanelManager.Item("main");
+	var entries = new Array();
+	var scrollList;
+	var g_pendingURL = null;
+
+	// Recent entry constructor
+	function Entry(url, name, thumbnail)
+	{
+		this.url = url;
+		this.name = name;
+		this.thumbnail = thumbnail;
+	}
+
+	function GotoURL()
+	{
+		var spans = window.event.srcElement.all.tags("span");
+	    PanelManager.Show("main");
+		g_pendingURL = spans[1].innerText;
+	}
+
+	function GenerateUrls()
+	{
+
+		var count = mainPanel.History.RecentCount;
+        var PanelHistory=mainPanel.History;
+		entries.length = 0;
+		for (i = 0; i < count; i++) {
+			entries[i] = new Entry(PanelHistory.RecentEntry(i).URL,
+								   PanelHistory.RecentEntry(i).Name,
+								   PanelHistory.RecentEntry(i).ThumbnailPath);
+  		}
+	}
+
+	function GenerateRecentRows()
+	{
+		var size = entries.length;
+
+		// Clear the table.
+		while (scrollList.ScrollListTable.rows.length > 0) {
+			scrollList.ScrollListTable.deleteRow(0);
+		}
+
+		for (var i = 0; i < size; i++) {  
+			var entry = entries[i];
+			var html =	"<a id=\"anchor\" href=# onBeforeCopy=\"onBeforeCopy();\" onClick=\"GotoURL();\" onfocus='OnFocusURL();' onblur='OnBlurURL();'>" +
+							"<table style=\"width:100%;\" cellspacing=0 cellpadding=0>" +
+								"<tr>" +
+									"<td style=\"width:8;\">" +
+									"<td style=\"width:104; height:68\">" +
+										"<img id=\"thumbnail\" style=\"width:96px; height:66px; border:1px solid black;\">" +
+									"<td id=\"textCell\" class=\"linkText\">" +
+										"<span id=\"title\" style=\"font-weight:bold; overflow:hidden; word-wrap:break-word;\"></span><br>" +
+										"<span id=\"url\" style=\"overflow:hidden; word-break:break-all;\"></span>" +
+							"</table>" +
+						"</a>";
+
+			scrollList.InsertRow();
+			var cell = scrollList.InsertCellHTML(html);
+			var all = cell.all;
+
+			if (i != size - 1) {
+				cell.style.borderBottom = "2px solid #5193DF";
+			}
+
+			all.thumbnail.src = "file://" + entry.thumbnail;
+			all.title.innerText = "No Title";
+
+			// Constrain width of title and url to parent cell
+			all.title.style.pixelWidth = all.url.style.pixelWidth = all.textCell.clientWidth;
+
+			// Set content using innerText to avoid treating as HTML.
+			if (entry.name != "none") {
+				all.title.innerText = entry.name;
+			}
+			all.url.innerText = entry.url;
+
+			// Constrain height of title and url giving priority for 2 lines to title.
+			var titleHeight = all.title.clientHeight;
+			var urlHeight = all.url.clientHeight;
+			if (titleHeight > 40) {
+				all.title.style.pixelHeight = 40;
+				all.url.style.pixelHeight = 20;
+			}
+			else if (titleHeight + urlHeight > 60) {
+				all.url.style.pixelHeight = 60 - titleHeight;
+			}
+		}
+
+		scrollList.ScrollListDiv.MyDoScroll("scrollToStart");
+	}
+
+	function OnBeforeShow(name)
+	{
+		if (name == "recentpanel") {
+			TVShell.EventLog.Usage("recent","action=launch");
+			g_pendingURL = null;
+			GenerateUrls();
+			GenerateRecentRows();
+			if (entries.length > 0) {
+				document.all.scrolllist.ScrollListTable.rows[0].all.anchor.focus();
+			}
+			else {
+				document.all.cancel.focus();
+			}
+		}
+	}
+
+	function OnAfterHide(name)
+	{
+		if (name == "recentpanel") {
+			if (g_pendingURL) {
+				mainPanel.GotoURL(g_pendingURL);
+				g_pendingURL = null;
+			}
+		}
+	}
+
+var curRecentElement = null;
+
+	function OnFocusURL()
+	{
+		curRecentElement = window.event.srcElement;
+	}
+
+	function OnBlurURL()
+	{
+		curRecentElement = null;
+	}
+
+	function onBeforeCopy()
+	{
+		if ( curRecentElement )
+		{
+			var spans = curRecentElement.all.tags("span");
+			var url = "";
+			if ( spans )
+			{
+				if ( spans[1] && ( spans[1].id == "url" ) )	url = spans[1].innerText;
+			}
+			TVShell.Message("OnClipBoardCopy - url=" + url );
+			if ( url != "" )
+			{
+				// direct assignment like this will write to the clipboard before the current element acts on the WM_COPY message
+				// this works fine for the recent panel anchors.  If the current element was a text field, this would have to be delayed
+				// by 1 tick ( setTimeout( 'TVShell.Clipboard = globVar;' , 1 ); to occur after the WM_COPY processing in the control.
+				TVShell.Clipboard = url;
+			}
+		}
+		else
+		{
+			TVShell.Message("Cur Element is null");
+		}
+
+	}
+
+	function OnLoad()
+	{
+		scrollList = document.all.scrolllist;
+
+		scrollList.ScrollListDiv.style.width = "100%";
+		scrollList.ScrollListTable.style.width = "100%";
+
+		Sink.AttachEvent(PanelManager, "OnBeforeShow", OnBeforeShow);
+		Sink.AttachEvent(PanelManager, "OnAfterHide", OnAfterHide);
+	}
+
+</script>
+</head>
+
+<body onload="OnLoad();">
+
+	<table style="height:100%; width:100%;" cellpadding="0" cellspacing="0">
+		<tr>
+			<td class="heading" style="height:30px;">
+				Recent
+			</td>
+		<tr>
+			<td class="subHeading" style="height:35px;">
+				Choose a recently visited Web page to return to it.
+			</td>
+		</tr>
+		<tr>
+			<td class="topGradient" style="height:1px;">
+		</tr>
+		<tr>
+			<td>
+				<table style="width:100%; height:100%;" cellspacing=0 cellpadding=0>
+					<tr>
+						<td class="content" style="width:73%; vertical-align:top;">
+							<msntv:scrollList id="scrolllist" scroll style="width:100%; height:100%; rowheight:84;" />
+						</td>
+						<td class="sidebar" style="width:27%; vertical-align:top; padding:9px 0px 0px 6px;">
+							<msntv:CustomButton id="cancel" class="sidebarButton" label="Done" onClick="Cancel();" />
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td style="height:10;"></td>
+		</tr>
+	</table>
+		
+</body>
+</html>

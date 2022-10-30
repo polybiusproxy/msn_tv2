@@ -1,0 +1,52 @@
+<html xmlns:msntv>
+<head>
+	<title>Music Intro</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Introduction to Videos" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+MSN TV Videos lets you watch videos on your <script>document.write( ProductShortName );</script>. You can watch videos that are stored on a memory card, or, if your <script>document.write( ProductShortName );</script> is connected to your home network, you can watch videos that are in shared folders on your home computer.
+<p>
+<p>
+Some Videos features require additional equipment that's sold separately:
+</p>
+</p>
+<ul>
+<li>To watch videos that are stored on a memory card, you'll need a compatible USB memory card reader.</li>
+<li>To watch videos that are on your home computer, you'll need to connect your <script>document.write( ProductShortName );</script> to a home network using a hub, router, or wireless connection.</li>
+</ul>
+You can use many Videos features without signing in to the <script>document.write( ServiceFullName )</script>. Simply turn on your <script>document.write( ProductShortName );</script> and choose <b>Videos</b> from the Sign-in page to:
+</p>
+</p>
+<ul>
+<li>Watch videos that are on a memory card</li>
+<li>Watch videos that are on your home computer (if you've connected your <script>document.write( ProductShortName );</script> to a home network and set up file sharing on your computer)</li>
+</ul>
+To watch a video, choose the checkbox next to it, and then choose <b>Play</b>. It will open and play in Windows Media Player.
+<p>
+<p>
+Media Player supports the following video formats: ASF, MPEG, and WMV.
+</p>
+</p>
+For more information about using Videos, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Videos</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

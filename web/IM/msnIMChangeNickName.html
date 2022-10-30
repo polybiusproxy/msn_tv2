@@ -1,0 +1,156 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<head>
+<title>IM Setting - Change NickName</title>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+<script language=Javascript src="IMCommon.js"></script>
+<script language=javascript>
+var utilities = TVShell.Utilities;
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var MsgrObj = TVShell.UserManager.CurrentUser.Messenger;
+var friendlyName = null;
+	MAXDISPLAYNAME = 129;
+var LongDisplayNameWarning="Your Display Name cannot be longer than "+MAXDISPLAYNAME+" characters."
+function removeTags(plainText)
+{
+   return utilities.EscapeHTML(plainText);
+}
+
+function removeUnusedSpace(s)
+{
+	if (s == '')
+		return s;
+	var start,end;
+	for (var i = 0; i < s.length; i++) {
+		if (s.charAt(i) != ' ') {
+			start = i;
+			break;
+		}
+	}
+	for (var i = s.length -1; i >= 0; i--) {
+		if (s.charAt(i) != ' ') {
+			end = i+1;
+			break;
+		}
+	}
+	return s.substr(start,end);
+}
+
+function PageLoad()
+{
+	switch ( MsgrObj.LocalState ) {
+		case MSTATE_OFFLINE:
+		case MSTATE_UNKNOWN:
+		case MSTATE_LOCAL_FINDING_SERVER:
+		case MSTATE_LOCAL_CONNECTING_TO_SERVER:
+		case MSTATE_LOCAL_SYNCHRONIZING_WITH_SERVER:
+		case MSTATE_LOCAL_DISCONNECTING_FROM_SERVER:
+			 friendlyName = null;
+			 break;
+		case MSTATE_ONLINE:
+		case MSTATE_INVISIBLE:
+		case MSTATE_UNKNOWN:
+		case MSTATE_BUSY:
+		case MSTATE_ON_THE_PHONE:
+		case MSTATE_AWAY:
+		case MSTATE_BE_RIGHT_BACK:
+		case MSTATE_IDLE:
+		case MSTATE_OUT_TO_LUNCH:
+			friendlyName = MatchFriendlyName(MsgrObj.LocalFriendlyName);
+			break;
+	}
+	
+}
+function SaveDisplayName()
+{	
+	if (friendlyName == null) {
+		return true;
+	}
+	var name=removeUnusedSpace(document.all.displayName.value);
+//	TVShell.Message(" document.all.displayName input ="+name);
+	if (name.length == 0 || name == '') {
+		MsgrObj.Services.PrimaryService.FriendlyName=MsgrObj.LocalLogonName;
+	} else {
+		MsgrObj.Services.PrimaryService.FriendlyName=name;
+	}
+	TVShell.DeviceControl.PlaySound("Task_Complete");
+	return true;
+}
+var MessageInputPreValue=null;
+function TextOnKeyDown() 
+{ 	
+	var e = window.event;
+	if (e.altKey || e.ctrlKey || e.keyCode == 13)
+		return;
+
+	var inputStr = document.all.displayName.value;
+	if (inputStr.length >= MAXDISPLAYNAME && MessageInputPreValue != document.all.displayName.value && e.keyCode != 37 && e.keyCode != 38 && e.keyCode != 39 && e.keyCode != 40&& e.keyCode != 8) {
+		document.all.displayName.value=inputStr.substr(0, MAXDISPLAYNAME);
+		e.returnValue = false;
+		TVShell.PanelManager.CustomMessageBox(LongDisplayNameWarning,"", "OK", 0,"");
+		NameDiv.innerHTML = NameDiv.innerHTML;
+	}
+}
+function DrawDiv()
+{
+	var str1,str2;
+	if (friendlyName != null) {
+		str1= "<P><font style=\"word-wrap:break-word;\">When people send you instant messages, your name appears on their screen as <EM>"+ removeTags(friendlyName) +"</EM>. This is your display name.</font>"
+			+ "<P>"
+			+ "<P>To change your display name, type a new one in the box below, and then choose <EM>Save Changes</EM>.";
+		str2= "<table>"
+			+ "	<tr><td>Type a new Display Name</td></tr>"
+			+ "	<tr><td><input type=text id=displayName size=30 style=\"background-color: #0D3146;	color: #C0C6CD;\" onKeyDown=\"TextOnKeyDown()\"></td></tr>"
+			+ " <tr><td>Example: myname</td></tr>"
+			+ "</table><P>";
+	} else {
+		str1= "<P>You are not connected to the Messenger Server right now. Please go to the IM panel and sign in."
+			+ "<P>";
+		str2= " ";
+		Save.style.visibility = "hidden";
+		Cancel.label="Done";
+	}
+	NameDiv.innerHTML=str1;
+	NameInput.innerHTML=str2;
+}
+function OnLocalFriendlyNameChangeResult(hr, pService,bstrPrevFriendlyName)
+{
+	PageLoad();
+	DrawDiv();
+	document.all.displayName.value = friendlyName;
+}
+
+Sink.AttachEvent(MsgrObj, "OnLocalFriendlyNameChangeResult", OnLocalFriendlyNameChangeResult);
+</script>
+</head>
+
+<BODY>
+<SCRIPT>OpenSettingsTable( "Messenger" , "Change display name" , "" , true );</SCRIPT>
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:history.go(-1)" onClick="SaveDisplayName()" id=Save label="Save Changes" style="visibility:visible;" />
+		<msntv:CustomButton href="javascript:history.go(-1)" id=Cancel label="Cancel" />
+	</DIV>
+	<DIV id=nonscrollArea>
+		<DIV class=description>
+			<DIV id=NameDiv></DIV>
+			<DIV id=NameInput></DIV>
+		</DIV>
+	</DIV>
+<script language="javascript">
+	PageLoad();
+	DrawDiv();
+	if (document.all.displayName) {
+		document.all.displayName.value = friendlyName;
+		document.all.displayName.focus();
+		document.all.displayName.select();
+	}
+</script>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</body>
+</html>

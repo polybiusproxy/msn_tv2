@@ -1,0 +1,126 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/IPAddress.htc"> <TITLE>Enter your wireless settings</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <STYLE> table.controlTable td { padding: 5px 5px 0px 0px; } </STYLE> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/Wireless.js"></SCRIPT> <SCRIPT>
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+var WirelessAdapter = TVShell.ConnectionManager.WirelessAdapter;
+var WirelessSettings = null;
+if (WirelessAdapter) {
+	WirelessSettings = WirelessAdapter.Settings;
+}
+
+var didChangeKey = false;
+var chosenSSID = "";
+var onSuccess = "javascript:history.go(-2)";
+
+
+function onLoadPage()
+{
+	var params = location.href.split("?");
+	chosenSSID = "";
+		
+	if ( params && params.length > 1 ) {
+		var i,st;
+		if ( params[1].indexOf("&") > 0 ) {
+			params = params[1].split("&");
+		}
+		for ( var i=0; i < params.length; i++ ) {
+			if ( (st=params[i].indexOf("ssid=")) == 0 ) {
+				chosenSSID = params[i].substring(st+5);
+				chosenSSID = unescape(chosenSSID);
+			}
+			else if ( (st=params[i].indexOf("onSuccess=")) == 0 ) {
+				var v = params[i].substring(st+10);
+				onSuccess = unescape(v);
+			}
+		}		
+	}
+	TVShell.Message("SSID passed in was " + chosenSSID);
+		
+	if (WirelessSettings) {
+		var curKey = "";
+		if (WirelessSettings.SSID == chosenSSID ) { 
+			if (WirelessSettings.KeyIdx == 1 ) {
+				curKey = WirelessSettings.KeyMaterial1;
+			} else {
+				TVShell.Message("Not showing key since index is " + WirelessSettings.KeyIdx);
+			}
+		}
+		if ( chosenSSID == ""  ) {
+			chosenSSID = WirelessSettings.SSID;
+		}
+		DisplayKey(curKey);
+		SetFocusSafely(document.all.Key);
+		var textRange = document.all.Key.createTextRange();
+		textRange.expand("textedit");
+		textRange.select();
+		document.all("Key").focus();
+	}
+		
+	if ( chosenSSID != "" ) {
+		document.all.cssid.innerHTML = "(<em> " + TVShell.Utilities.EscapeHTML(chosenSSID) + " </em>) ";
+	}
+}
+
+function FocusKey()
+{
+	var textRange = document.all.Key.createTextRange();
+	textRange.collapse(false);
+}
+
+function
+KeyEntryKey()
+{
+	var e = window.event;
+	if (e.altKey || e.ctrlKey )
+		return;
+
+	if (!e.shiftKey && e.keyCode == 13){
+		SetSettings();
+		return;
+	} else {
+		didChangeKey = true;
+	}
+	OnKeyEntryChanged(true);
+}
+
+function AdvancedSettings()
+{
+	TVShell.Message("Go to advanced settings");
+	TVShell.Url = "msntv:/Settings/Network/WirelessAdvanced.html";
+}
+	
+function Cancel()
+{
+	history.go(-1);
+}
+
+function SetSettings()
+{
+	if ( WirelessSettings ) {
+	// need to check to make sure we can connect to network
+		var key;
+		var wasHex = false;
+		var rawKey;
+		
+		if ( didChangeKey )
+			rawKey = GetEnteredKey();
+		else
+			rawKey = WirelessSettings.KeyMaterial1;
+			
+		
+		
+		WirelessSettings.KeyIdx = 1;
+		WirelessSettings.KeyMaterial1 = rawKey;
+		WirelessSettings.AuthenticationMode = WirelessAuth_Ndis802_11AuthModeWPAPSK;
+		WirelessSettings.WEPEnable = false;
+		WirelessSettings.WPAEnable = true;
+		WirelessSettings.SSID = chosenSSID;
+		WirelessSettings.IsDirty = true;
+		CheckWirelessConnection(onSuccess,"");
+	}
+}
+</SCRIPT><BODY> <SCRIPT>OpenSettingsTable( "Settings" , "Enter wireless network pass phrase" , 
+				"WirelessHelpWPA.html" , true );</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:SetSettings();" class=buttonBarButton id=done tabindex=2 label="Save Changes" /> <msntv:CustomButton href="javascript:Cancel();" class=buttonBarButton id=default tabindex=3 label="Cancel" /> </DIV><DIV id=nonScrollArea><DIV class=description> <P> The network that you want to connect to <span id=cssid></span> requires the WPA pass phrase from your wireless access point. <br> <br> The pass phrase should be between 8 and 63 characters <br> <br> <br><TABLE class=controlTable> <TR> <TD> <INPUT TYPE="TEXT" onfocus="FocusKey();" CLASS=inputText ID="Key" onclick="SetSettings();" onkeyup="KeyEntryKey();" SIZE=63 tabindex=1 MAXLENGTH=63> <tr><td id="KeyCharCountHint" > </tr> </TABLE> <p> Select <EM>Help</EM> for further instructions. </p> </DIV> </DIV> <SCRIPT>
+	CloseSettingsTable();
+
+	onLoadPage();
+</SCRIPT> </BODY> </html>

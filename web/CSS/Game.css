@@ -1,0 +1,208 @@
+body
+{
+	background-color: #C2E4FC;
+	font-family: Segoe TV;
+	overflow: hidden;
+	margin: 0px;
+	font-size: 18px;
+	color: #07214D;
+}
+
+td
+{
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #07214D;
+}
+
+a:visited
+{
+	color: #14224B;
+	text-decoration: none;
+}
+
+a:link
+{
+	color: #14224B;
+	text-decoration: none;
+}
+
+.headingLabel
+{
+	background-color:#82BAF4;
+	display:block;
+	font-size:18px;
+	font-weight:bold;
+	color:#6A5422;
+	padding:2px 0px 2px 10px;
+	margin:2px;
+}
+
+.groupLabel
+{
+	background-color:#82BAF4;
+	display:block;
+	font-size: 16px;
+	font-weight:bold;
+	color:white;
+	padding: 2px 0px 2px 10px;
+	margin:2px;
+}
+
+.folderLabel
+{
+	padding:15px 0 0 15px;
+	font-size: 16px;
+}
+
+div.itemLabel table
+{
+	 width:100%;
+	 border-bottom:1px solid #89C0EB;
+}
+
+div.playlistLabel table
+{
+	 width:100%;
+	 border-bottom:1px solid #89C0EB;
+}
+
+.selected
+{
+	background-color:#C0F6DF;
+}
+
+.description
+{
+	width: 100%;
+}
+
+.sectionTitle
+{
+	color:#1159B3;
+}
+
+.sideBarButton, #sideBar msntv\:CustomButton
+{
+	height: 26px;
+	width: 96%;
+	display: block;
+	text-align:left;
+	margin: 0 0 4px 0;
+	font-size:16px; 	
+}
+
+.content
+{
+	behavior: url(#default#gradient);
+	startColor:#C2E4FC;
+	endcolor: #85D2F5;
+	angle:0;
+}
+
+#header
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 56px;
+	width: 100%;
+}
+
+#headerTitle
+{
+	position: absolute;
+	top: 27px;
+	left: 15px;
+	width: 400px;
+	color: #D0E4FF;
+	font: 21px bold;
+}
+
+#headerSubTitle
+{
+	position: absolute;
+	top: 27px;
+	left: 90px;
+	width: 400px;
+	color: #F2F2F2;
+	font: 21px bold;
+}
+
+#subTitle
+{
+	color: #07214D;
+	font-size: 18px;
+	white-space: nowrap;
+	margin-bottom: 10px;
+}
+
+#signIn
+{
+	position: absolute;
+	bottom: 30px;
+	right: 88px;
+	color: #F2F2F2;
+	font-size: 18px;
+	text-align: right;
+}
+
+#help
+{
+	position: absolute;
+	bottom: 30px;
+	right: 8px;
+	color: #F2F2F2;
+	font-size: 18px;
+	text-align: right;
+}
+
+#helpIcon
+{
+	position: relative;
+	top: 1px;
+	left: 4px;
+	margin-left: 4px;
+	behavior: url(#default#alphaImageLoader);
+	src: url(msntv:/Shared/images/Icon_Help_RelatedLink.png);
+	width: 20px;
+	height: 20px;
+}
+
+#scrollListDiv
+{
+	overflow-y:auto;
+	width:100%;
+	height:100%;
+	padding-right:23px;
+	border-top:1px solid #89C0EB;
+	behavior:url(msntv:/HTC/ScrollingDIV.htc);
+}
+	
+#scrollArea
+{
+	position: absolute;
+	top: 71px;
+	left: 0px;
+	width: 74%;
+	bottom: 0px;
+	padding-left: 20px;
+	padding-right: 10px;
+	overflow-y: auto;
+	behavior: url(msntv:/HTC/ScrollingDIV.htc) url(#default#gradient);
+	startColor:#C2E4FC;
+	endcolor: #85D2F5;
+	angle:0;
+}
+		
+#sideBar
+{
+	position: absolute;
+	top: 56px;
+	right: 0px;
+	width: 26%;
+	height:85%;
+	padding-right: 0px;
+	padding-left: 2px;
+	padding-top:5px;
+}	

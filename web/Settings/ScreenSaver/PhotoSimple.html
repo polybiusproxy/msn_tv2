@@ -1,0 +1,95 @@
+<html><head> <title>Photos Screen Saver</title> <style type="text/css"> body { margin: 0px; background-color:black; } </style> </head> <script LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></script> <script src="msntv:/Javascript/Parameters.js"></script> <script language="Javascript" src="msntv:/Javascript/DMRCommon.js"></script> <script language="Javascript" src="msntv:/Javascript/DMREnumerate.js"></script> <script LANGUAGE=Javascript SRC="msntv:/Photo/Photos.js"></script> <script language="JavaScript" type="text/javascript">
+							
+var index=0;
+var FileNameArray = new Array();
+var allImageFileNames = "";
+var nPhotos = 0;
+
+var ScreenSaverFilePath = "\\"+userDataVolumeName+"\\"+PhotoSettingsPath+"\\"+scFileName;
+var albumStr=Utilities.ReadTextFile(ScreenSaverFilePath);
+var foundAlbumPhotosForSC = false;
+if(albumStr)
+{
+	allImageFileNames = "";
+	
+    var StorageDevice = StorageManager.Item(userDataVolumeName);
+	if (StorageDevice) 
+	{	    
+		var albums=albumStr.split("\n");
+		var i;
+		
+		for(i=0; i<albums.length; i++)
+		{
+			var albumPath = PhotoStorePath+"\\"+albums[i];
+				
+			var AlbumXmlStr = GetImageHREFNodes(StorageDevice, albumPath);
+			if (AlbumXmlStr)
+			{
+				allImageFileNames+=AlbumXmlStr;
+			}
+		}
+		
+		if (allImageFileNames)
+		{
+			FileNameArray = allImageFileNames.split('\n');
+			nPhotos = FileNameArray.length - 1;
+			
+			if(nPhotos > 0)
+				foundAlbumPhotosForSC = true;
+		}
+	}
+}
+
+if(!foundAlbumPhotosForSC)
+{
+	// no user photos found for screen saver, so enumerate signin pics
+	allImageFileNames = "";
+	
+	var StorageDevice = StorageManager.Item("\\web");
+	if (StorageDevice) 
+	{
+		var pathText = "Settings\\ScreenSaver\\default\\images";
+		allImageFileNames = GetImageHREFNodes(StorageDevice, pathText);
+		if (allImageFileNames)
+		{
+			FileNameArray = allImageFileNames.split('\n');
+			nPhotos = FileNameArray.length - 1;
+		}
+	}
+}
+
+var i;
+for(i=0; i<nPhotos; i++)
+{
+	if(FileNameArray[i])
+		FileNameArray[i] = FormatURL(FileNameArray[i]);
+}
+
+function NextPhoto()
+{
+	index++;
+
+	if (index >= nPhotos) {
+		index = 0;
+	}
+	
+	image.src = FileNameArray[index];
+}
+
+function OnLoad()
+{
+	if (nPhotos > 0) {
+		index = -1;
+		NextPhoto();
+		setInterval(NextPhoto, 7000);
+	}
+}
+
+function OnLoadImage()
+{
+	image.style.height = "auto";
+	if (image.clientHeight > 420) {
+		image.style.pixelHeight = 420;
+	}
+}
+</script><body onload="OnLoad();"><table cellpadding=0 cellspacing=0 width=100% height=100%> <tr> <td align=center vAlign=middle> <img id="image" onload="OnLoadImage();" style="vertical-align:top;" src="msntv:/Images/1x1.gif"> </td> </tr> </table> </body> </html>

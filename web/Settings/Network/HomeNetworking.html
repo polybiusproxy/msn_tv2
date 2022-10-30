@@ -1,0 +1,1201 @@
+<html xmlns:msntv> <?import namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/Progress.htc"><HEAD> <TITLE>HomeNetworking</TITLE><link rel=StyleSheet type="text/css" href="msntv:/CSS/Settings.css"> <SCRIPT language="Javascript" src="msntv:/Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/Parameters.js"></SCRIPT> <script language="Javascript" src="msntv:/Javascript/StatusPanel.js"></script> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/HomeNetworking.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/ProgressPanel.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/ContentPaneHelp.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/Provisioning.js"></SCRIPT> <style type="text/css"> .titleDiv { width: 100%; } </style> <script language="javascript">
+var parameters	= FindParameters(TVShell.PanelManager);
+
+var mainPanel = TVShell.PanelManager.Item("main");
+
+var HNHelpURL = "";
+
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var hn;
+var sm;
+
+// event handler status codes
+var statusNeedsPassword = 0x0070005;
+var statusAttemptFailed = 0x004005;
+var statusAttemptAbort = 0x004004;
+var statusAccessDenied = 0x0070056;
+var statusBadNetResp = 0x7003A;
+var statusBadNetPath = 0x70035;
+var statusAttemptCancelled = 0x704c7;
+
+// keep track of current state for event handlers
+var HN_SCREEN_MAIN = 0;
+var HN_SCREEN_EDITHOST = 1;
+var HN_SCREEN_ADDHOST = 2;
+var HN_SCREEN_REMOVEHOST = 3;
+
+var currentScreen = HN_SCREEN_MAIN;
+
+var HN_STATE_NORMAL = 0;
+var HN_STATE_INQUIREHOST = 1;
+var HN_STATE_INQUIREHOSTWAIT = 2;
+var HN_STATE_INQUIRESHARE = 3;
+var HN_STATE_INQUIRESHAREWAIT  = 4;
+var currentHNState = HN_STATE_NORMAL;
+
+var currentHost;		// current host when at EditHost page
+var activeElementName;		// name of anchor that has the currect focus at edithost page
+
+var MAX_HOST_NAME = 18;
+var MAX_SHARE_NAME = 40;
+var MAX_UPNPHOST_NAME = 40;
+
+var NetEvent = new Array("unknown","host detected","online","offline","online?","mount","unmount","service detected", "end service scan","end host scan", "progress");
+var hidepassword = "********";
+var mounted = 0;
+
+var removeArray;			// scratchpad for removing hosts
+
+
+// auto-update network status
+var indexHost = 0;
+var nTimeout = 0;
+var nTimeoutCount = 15;		// restart auto update if dead for 15 seconds
+var inHostScan = false;		// true if we are in auto-detect hosts
+var networkStateString = "";	// complete state of the network in one string to detect changes.
+
+function GetHNHelpURL(page)
+{
+	var bOnline = TVShell.IsUserAuthorizedandConnected;
+
+	// always go to top TOC if off line
+	if ( !bOnline ) return "msntv:/Help/MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm";
+	
+	return GetPaneHelpURL(PH_topicTOC,  page );
+}
+
+function getTopHelpURL()
+{
+	if ( parameters["upnp"] )
+	{
+		return GetHNHelpURL( "MSNTV_PROC_SINGLE_HomeNet_PCSettings.htm" );
+	}
+	
+	if ( parameters["remove"] )
+	{
+		return GetHNHelpURL( "MSNTV_PROC_SINGLE_HomeNet_Remove.htm" );
+	}
+
+	if ( parameters["addhost"] )
+	{
+		return GetHNHelpURL( "MSNTV_PROC_SINGLE_HomeNet_FindComputerName.htm" );
+	}
+
+	if ( parameters["edithost"] )
+	{
+		return GetHNHelpURL( "MSNTV_PROC_SINGLE_HomeNet_PCSettings.htm" );
+	}
+
+	return GetHNHelpURL( "MSNTV_TRS_TOC_HomeNet.htm" );
+}
+
+// reset to zero to start timeout counter
+function ResetTimeout()
+{
+	nTimeout = 0;
+}
+
+function UpdateOnNext()
+{
+	nTimeout = nTimeoutCount;
+}
+
+// cycle between pinging host and searching for shares on the host
+var pingHost = true;
+
+function updateNextHost()
+{
+	ResetTimeout();
+	if ( currentScreen == HN_SCREEN_REMOVEHOST  ) return;
+	if ( inHostScan ) return;
+	if ( hn.Count <= 0 )
+	{
+		// update any changes every tick to catch any UPNP state changes
+		doUpdate();
+		UpdateOnNext();
+		return;
+	}
+	if ( indexHost >= hn.Count ) indexHost = 0;
+	var hst;
+	if ( currentHNState == HN_STATE_NORMAL )
+		hst = hn.Item( indexHost );
+	else
+		hst = hn.Item( currentHost );
+		
+	if ( pingHost )
+	{
+		hst.BringOnline();		// ping host
+		if ( currentHNState == HN_STATE_INQUIREHOST )
+		{
+			currentHNState = HN_STATE_INQUIREHOSTWAIT;
+			SetProgress( 50 );
+		}
+	}
+	else
+	{
+		if ( hst.State == HOST_STATE_ONLINE )
+		{
+			var disablePasswordPopUp = true;
+			if ( currentHNState == HN_STATE_INQUIRESHARE )
+			{
+				SetProgress( 75 );
+				disablePasswordPopUp = false;
+				currentHNState = HN_STATE_INQUIRESHAREWAIT;
+				UpdateOnNext();
+			}
+			hst.AutoDetect( disablePasswordPopUp );	// attempt to detect shares but do not allow password pop-up
+		}
+		else
+		{
+			UpdateOnNext();
+		}
+	}
+	pingHost = !pingHost;
+	if ( pingHost ) indexHost++;
+}
+
+function triggerAutoUpdate()
+{
+	nTimeout++;
+	if ( nTimeout >= nTimeoutCount )
+	{
+		nTimeout = 0;
+		updateNextHost();
+	}
+	setTimeout( "triggerAutoUpdate();" , 1000 );
+	
+}
+
+function ClearAppData()
+{
+	 for ( var i = 0 ; i < hn.Count ; i++ )
+  	{
+		var hst = hn.Item(i);
+		hst.ApplicationData = "";
+		hst.State = HOST_STATE_NEW;
+  	}
+}
+
+
+function OnLoad() {
+
+	hn = TVShell.ConnectionManager.HomeNetworking;
+	Sink.AttachEvent(hn, "OnHostHandler", OnHostHandler);
+	Sink.AttachEvent(hn, "OnServiceHandler", OnServiceHandler);
+	Sink.AttachEvent(TVShell.StorageManager, "OnDeviceAdd", OnDeviceAdd);
+	Sink.AttachEvent(TVShell.StorageManager, "OnDeviceRemove", OnDeviceRemove);
+
+	ClearAppData();
+	UpdateOnNext();
+	triggerAutoUpdate();
+
+	if ( parameters["remove"] )
+	{
+		TVShell.Message('Onload - remove');
+		removeHost();
+		return;
+	}
+
+	if ( parameters["addhost"] )
+	{
+		TVShell.Message('Onload - add');
+		HNHelpURL = "msntv:/Help/MSNTV_PROC_SINGLE_HomeNet_FindComputerName_v11.htm";
+		AddHost();
+		return;
+	}
+
+	if ( parameters["edithost"] )
+	{
+		TVShell.Message('Onload - edit' + parameters["edithost"] );
+		EditHost( parameters["edithost"] );
+		UpdateOnNext();
+		triggerAutoUpdate();
+		return;
+	}
+
+	TVShell.Message('Onload - Main');
+	MainScreen();
+}
+
+function GoUpOneLevel()
+{
+    hn.Save();
+	history.go(-1);
+	return false;
+}
+
+function getNetworkState()
+{
+	var str = "";
+	for ( var i = 0 ; i < hn.Count ; i++ )
+	{
+		var hst = hn.Item(i);
+		str += hst.Name;
+		str += ",";
+		str += hst.State;
+		str += ",";
+		str += hst.ApplicationData;
+		str += ",";
+		str += hst.Count;
+		str += ",";
+		for ( var j = 0 ; j < hst.Count ; j++ )
+		{
+			var sh = hst.Item( j );
+			str += sh.Name;
+			str += ",";
+			str += sh.Enabled;
+			str += ",";
+			
+		}
+	}
+
+	var StorageManager = TVShell.StorageManager;
+
+	for (i=0; i < StorageManager.Count; i++) 
+	{	
+		var StorageDevice = StorageManager.Item(i);
+		if (!StorageDevice.Removable && StorageDevice.IsNetwork && StorageDevice.Mounted) 
+		{
+			str += StorageDevice.Name + ",";
+		}
+	}			
+
+	return str;
+}
+
+
+var lastNetworkState = "";
+function doUpdate()
+{
+	var str = getNetworkState();
+	if ( str == lastNetworkState ) return;	// do nothing if nothing changed
+	lastNetworkState = str;
+	if ( currentScreen == HN_SCREEN_MAIN )
+	{
+		Update();
+		return;
+	}
+	if ( currentScreen == HN_SCREEN_EDITHOST )
+	{
+		UpdateEditHost( currentHost );
+		return;
+	}
+	
+}
+
+function OnDeviceAdd()
+{
+	doUpdate();
+}
+
+function OnDeviceRemove()
+{
+	doUpdate();
+}
+
+
+function OnHostHandler(hnx, he, evt, status)
+{
+	var str="OnHostEvent: event=" + NetEvent[evt] + " status=" + status;
+	if (he) {
+	    str += " host=" + he.Name;
+	}
+	TVShell.Message(str);
+
+	status = status & 0x7FFFFFFF;
+	
+    switch(evt) {
+    case HN_EVT_NEWHOST:
+        if (he) {
+            he.Enabled = true;
+    	    doUpdate();
+    	}
+	    break;
+	    
+	case HN_EVT_ENDHOSTSCAN:   
+	  	HideProgress();
+		inHostScan = false;
+		UpdateOnNext();
+		if (status != 0)
+		{
+	    		var ret = TVShell.PanelManager.CustomMessageBox(
+				"<P>Your home network does not currently allow your "+ProductShortName+" to find computers.</P><P>To troubleshoot, choose <EM>More Info</EM>.",
+				"No computers found", "More Info;OK", 0, ""); 
+				if (ret == 0)
+					document.location = GetHNHelpURL( "MSNTV_PROC_SINGLE_HomeNet_RouterSetup.htm" );
+		}
+		else
+		{
+			if ( hn.Count <= 0 )
+			{
+		    		var ret = TVShell.PanelManager.CustomMessageBox(
+					"<P>Check to see that your computers are turned on and connected to the network.</P><P>To troubleshoot, choose <EM>More Info</EM>.",
+					"No computers found", "More Info;Cancel", 0, "", false, MGX_ICON_WARNING , MGX_SIZE_LARGE ); 
+				if ( ret == 0 )
+				{
+					document.location = GetHNHelpURL( "MSNTV_PROC_SINGLE_HomeNet_Troubleshooting.htm" );
+				}
+			}
+		}
+		
+		if ( currentScreen == HN_SCREEN_MAIN ) SideBarMain();
+	  	break;
+	  	
+	case HN_EVT_BRINGONLINE:
+   	    doUpdate();
+		UpdateOnNext();
+		if ( ( currentHNState == HN_STATE_INQUIREHOSTWAIT ) || ( currentHNState == HN_STATE_INQUIRESHAREWAIT ) )
+		{
+			if ( he && ( he.Name == currentHost ) )
+			{
+				if ( he.State != HOST_STATE_ONLINE )
+				{
+					currentHNState = HN_STATE_NORMAL;
+					HideProgress();
+					if ( currentScreen == HN_SCREEN_ADDHOST )
+					{
+						history.go(-1);	// back to main screen
+					}
+					else
+					{
+				    		TVShell.PanelManager.CustomMessageBox("<P>Check that the computer is turned on and connected to the network, then try again.</P>", "Computer not online", "Continue", 0, "", false, MGX_ICON_WARNING , MGX_SIZE_SMALL ); 
+						history.go(0);
+					}
+				}
+				else
+				{
+					if (	currentHNState == HN_STATE_INQUIREHOSTWAIT ) currentHNState = HN_STATE_INQUIRESHARE;
+				}
+			}
+		}
+        break;
+
+	case HN_EVT_ENDSERVICESCAN:	// end discover shares on a host
+		if ( he )
+		{
+			if ( status == statusNeedsPassword ) TVShell.Message("status needs password");
+			if ( status == statusAccessDenied ) TVShell.Message("status access denied");
+			if ( status == statusAttemptFailed ) TVShell.Message("status password box is up?" );
+			if ( status == statusAttemptAbort ) TVShell.Message("status aborted" );
+			if ( status == statusAttemptCancelled ) TVShell.Message("status cancelled");
+
+			if (
+				( status == statusNeedsPassword ) ||
+				( status == statusAccessDenied ) ||
+				( status == statusAttemptAbort ) ||
+				( status == statusAttemptCancelled )
+				)
+			{
+				he.ApplicationData = "password";
+				UpdateOnNext();
+			}
+			if ( status == 0 ) he.ApplicationData = "ok";
+		}
+
+		// if password box is currently up, do nothing
+		if ( status == statusAttemptFailed ) return;
+
+		if ( currentHNState == HN_STATE_INQUIRESHAREWAIT ) {
+
+			HideProgress();
+			currentHNState = HN_STATE_NORMAL;
+
+			switch (status) {
+				case 0:
+					// successful share scan, go to host details page
+					if ( currentScreen == HN_SCREEN_ADDHOST )
+						document.location.replace( "HomeNetworking.html?edithost=" + currentHost );
+					else
+						document.location = "HomeNetworking.html?edithost=" + currentHost;
+					break;
+
+				case statusAttemptAbort:
+					if ( currentScreen == HN_SCREEN_ADDHOST )
+						history.go(-1);
+					break;
+
+				case statusNeedsPassword:
+					var ret = TVShell.PanelManager.CustomMessageBox(
+					"<P>You may have typed the wrong user name or password.</P><P>Check the information and try again.</P><P>To troubleshoot, choose <EM>More Info</EM>",
+					"Incorrect information", "Cancel;More Info;Try Again", 2, "", false, MGX_ICON_WARNING , MGX_SIZE_LARGE ); 
+					switch (ret) {
+						case 0:
+						default:
+							if ( currentScreen == HN_SCREEN_ADDHOST )
+								history.go(-1);
+							else
+								history.go(0);
+							break;
+						case 1:
+							document.location = GetHNHelpURL( "MSNTV_PROC_SINGLE_HomeNet_WrongUserName.htm" );
+							break;
+						case 2:
+							inquireHost( currentHost );
+							break;
+					}
+					break;
+
+				default:
+					var ret = TVShell.PanelManager.CustomMessageBox("<P>For more about setting up shares, go to your PC and search in Help for \"sharing files\".</P>",
+								"No shares found", "Try Again;Cancel", 1, "", false, MGX_ICON_WARNING , MGX_SIZE_SMALL ); 
+					if ( ret == 0 )
+					{
+						inquireHost( currentHost );
+					}
+					else
+					{
+						if ( currentScreen == HN_SCREEN_ADDHOST )
+							history.go(-1);
+						else
+							history.go(0);
+					}
+					break;
+			}
+		}
+
+		if ( status == 0 )	// only act if it was successful
+		{
+			UpdateOnNext();
+		}
+		doUpdate();
+	  	break;
+        
+	case HN_EVT_HOSTSCANPROGRESS:
+		inHostScan = ( status < 100 ) ? true : false;
+		SetProgress(status);
+		break;	    
+
+	case HN_EVT_NEWSERVICE:
+		// status == 1 indicates that share was removed
+		break;
+	}
+}
+
+function NavigateToMediaApp( he , se , sd )
+{
+	if ( se != null ) sd = se.NetStorage;
+	var message;
+	if ( he != null )
+	{
+		message = "<p>You have selected the folder <EM>"+ se.Name + "</EM> on the computer <EM>" + he.Name + "</EM>.</P>";
+	}
+	else
+	{
+		message = "<P>You have selected the media server <EM>" + sd.Name + "</EM>.</P>";
+	}
+	message += "<p>Choose the type of content you are looking for.</p>";
+	var retVal = TVShell.PanelManager.CustomMessageBox(message, "", "Photos;Music;Videos;Cancel", 3, "",
+					true, MGX_ICON_INFO, MGX_SIZE_LARGE);
+	var target = null;
+	if (retVal==0) target = "Photo";
+	if (retVal==1) target = "Music";
+	if (retVal==2) target = "Video";
+	if ( target != null )
+	{
+		if (canAccessOfflineApp())
+		{
+			target = "msntv:/"+target+"/viewer.html?location=2&StorageDeviceVN="+encodeURIComponent( sd.VolumeName );
+			document.location = target;
+		}
+		else
+		{
+			NotProvisionedMessageBox( target , "network" );
+		}
+	}
+	else
+	{
+		history.go(0);
+	}
+
+}
+
+function OnServiceHandler(he, se, evt, status)
+{
+	var str="OnServiceEvent: event=" + NetEvent[evt] + " status=" + status;
+	if (he) {
+	    str += " host=" + he.Name;
+	}
+	if (se) {
+	    str += " service=" + se.Name;
+	}    
+	TVShell.Message(str);
+
+    switch(evt) {
+	case HN_EVT_MOUNTED: 
+		TVShell.Message("Mounted! : " + he.Name + " : " + se.Name );
+		HideProgress();
+		if ( status == 0 )
+		{
+			NavigateToMediaApp( he , se , null );
+		}
+		else
+		{
+			ShareUnavailableMessageBox(he, se, status, false)
+			history.go(0);
+		}
+		break;
+
+    case HN_EVT_UNMOUNTED:
+        doUpdate();
+        break;
+        
+	case HN_EVT_NEWSERVICE:
+		if (se && status==0)
+		{
+	       	se.Enabled = true;
+		}
+		doUpdate();
+		break;
+
+	case HN_EVT_ENDSERVICESCAN:
+	  	HideProgress();
+		doUpdate();
+	  	break;
+	}
+}
+
+
+//////////////////////////////////
+
+
+// inquire for shares on this host
+function inquireHost( h )
+{
+	// don't do anything if already started
+	if ( inHostScan || ( currentHNState != HN_STATE_NORMAL ) ) return;
+	var hst = hn.Item(h);
+	HideProgress();
+	currentHNState = HN_STATE_INQUIREHOST;
+	currentHost = h;
+	hst.ApplicationData = "";
+	UpdateOnNext();	
+	lastNetworkState = "";
+	// first make sure the host is online, then discover shares
+	pingHost = true;
+}
+
+function SideBarAddHost()
+{
+	var str;
+	str = "<msntv:CustomButton onclick='SaveHost(document.all.hostname.value)' class=sideBarButton id=\"add\" label=\"Add\" />" + 
+	      "<msntv:CustomButton id=btnCancel onclick='history.go(-1)' class=sideBarButton label=\"Cancel\" />";
+    document.all.sideBar.innerHTML=str;
+}
+
+function AddHost()
+{
+	HideProgress();
+	currentScreen = HN_SCREEN_ADDHOST;
+    var str = "<FORM NAME=hostedit onsubmit='return SaveHost(document.all.hostname.value);'><P>Type the name of the computer that you want to add, then choose <EM>Add</EM>.</P><TABLE cellspacing=5 cellpadding=0 width=100%>" +
+			  "<TR><TD style='text-align:right'>Name:</TD><TD width=5></TD><TD><INPUT TYPE=\"TEXT\" id=addHostInput CLASS=inputText NAME=\"hostname\" size=15 MAXLENGTH=15></TD></TR>" +
+			  "</TABLE></FORM>";
+
+	document.all.scrollArea.innerHTML = str;
+	SideBarAddHost();
+	document.all.scrollArea.MyDoScroll( "scrollToStart" );
+	document.all.hostname.focus();
+}
+
+
+function SideBarRemoveHost()
+{
+	var str;
+	str = "<msntv:CustomButton onclick='removeSelectedHosts()' class=sideBarButton id='remove' label='Remove' />" + 
+	      "<msntv:CustomButton onclick='history.go(-1)' class=sideBarButton id='cancel' label='Cancel' />";
+    document.all.sideBar.innerHTML=str;
+}
+
+
+function removeHost()
+{
+	HideProgress();
+	currentScreen = HN_SCREEN_REMOVEHOST;
+	
+	var str
+
+	str = "<div class=titleDiv><P>Check the box next to the computer you want to remove and choose <EM>Remove</EM>.</P></div>";
+
+	var numHosts = hn.Count; 
+	var hostArray = new Array( numHosts );
+	for ( var i = 0 ; i < numHosts ; i++ ) hostArray[i] = hn.Item(i);
+	hostArray.sort( compareHosts );
+	removeArray = new Array();
+
+	for ( var i=0 ;  i<numHosts ;  i++ )
+	{
+		var he = hostArray[i];
+		removeArray[he.Name] = "false";
+		str += showSelectableHost( he , i );
+	}
+	
+	SideBarRemoveHost();
+	
+	document.all.cancel.focus();
+	document.all.scrollArea.innerHTML = str;
+	document.all.scrollArea.MyDoScroll( "scrollToStart" );
+}
+
+function toggleRemoveEnable( name )
+{
+	removeArray[name] = ( removeArray[name] == "true" ) ? "false" : "true";
+}
+
+
+function removeSelectedHosts()
+{
+	TVShell.Message('removing hosts n=' + hn.Count );
+	var i = 0;
+	while ( i < hn.Count )
+	{
+		var hst = hn.Item(i);
+		i++;
+		if ( removeArray[hst.Name] && removeArray[hst.Name] == "true" )
+		{
+			TVShell.Message('Removing:' + hst.Name );
+			hn.Remove( hst.Name );
+			i = 0;
+		}
+	}
+	hn.Save();
+	history.go(-1);
+}
+
+
+function showSelectableHost( hst , i )
+{
+
+	var name = hst.Name;
+	var enabled = removeArray[name];
+	TVShell.Message('show : ' + name + 'enabled = ' + enabled );
+	if ( name.length > MAX_HOST_NAME )
+	{
+		name = name.substr(0, MAX_HOST_NAME) + "...";
+	}
+
+	var html =	"<table style=\"width:100%;\" cellspacing=0 cellpadding=0><tr>" +
+				"<td style='width:15px;'></td>" +
+				"<td style='width:25px; height:25px;'>";
+
+	html += ( "<input id=removeCheckBox" + i + " type=checkbox" + (enabled == "true" ? " checked " : " ")
+					+ "name=share onClick='toggleRemoveEnable(\""+hst.Name+"\");'></td>" );
+
+	html +=	( "<td style='width:5px;'></td>" +
+				"<td style='width:300px; height:25px;'><span class=ellipsis style='width:300px; height:25px;'>" + name + "</span></td>" +
+				"<td></td></tr></table>" );
+	return html;
+}
+
+
+
+function DetectHosts()
+{
+    hn.AutoDetect(0);
+	inHostScan = true;
+}
+
+// initiate a scan for shares with password pop-up
+function scanForShares()
+{
+	// cause an immediate call to discover shares
+	pingHost = false;
+	UpdateOnNext();
+}
+
+function SideBarEditHost(h)
+{
+	var str;
+	str = "<msntv:CustomButton onclick='history.go( -1 )' class=sideBarButton id='done' label=\"Done\" />";
+	document.all.sideBar.innerHTML=str;
+	document.all('done').focus();
+}
+
+function EditHost(h)
+{
+	HideProgress();
+	currentScreen = HN_SCREEN_EDITHOST;
+	currentHost = h;
+	var hst = hn.Item(h);
+	hst.ApplicationData = "";
+	SideBarEditHost(h);
+	UpdateEditHost(h);
+	UpdateOnNext();	
+	lastNetworkState = "";
+}
+
+function UpdateEditHost( h )
+{
+	var he = hn.Item(h);
+	var str;
+	var printersCount = getHostPrintersCount( he );
+	var foldersCount = he.Count - printersCount;
+	var el = document.activeElement;
+	activeElementName = "";
+	if ( el ) activeElementName = el.name;
+
+	str = "<div style='width:100%;'><SPAN class=topic style='height:30px;'><P>"+he.Name+"</P></SPAN></div>";
+	if (foldersCount > 0)
+		str += "<P style='margin-bottom:0px;'>You can view media from this computer in the shared folders below.</P>";
+	else
+		str += "<P>Your "+ProductShortName+" cannot find any shared folders on this computer.</P>";
+
+	if ( foldersCount > 0 )
+	{
+		str += "<div style='width:100%; height:1px; border-bottom: 1px solid #224466;'></div>";
+	}
+
+	str += updateShares(he, foldersCount);
+
+	document.all.scrollArea.innerHTML = str;
+
+	if ( activeElementName != "" )
+	{
+		el =document.all.item( activeElementName );
+		if ( el )
+			el.focus();
+		else
+		{
+			activeElementName = "";
+			document.all('done').focus();
+		}
+	}
+
+/*	hide shared printers
+	if (printersCount > 0) {
+		str = "<P>You can print on the shared printer(s) below.</P>";
+		AddTxt(str);
+		updatePrinters(he, printersCount);
+	}
+*/
+
+	document.all.scrollArea.MyDoScroll( "scrollToStart" );
+}
+
+function HostNameCheck( h )
+{
+	var checkString = h;
+
+	if (checkString.length == 0)
+		return "Please enter the name of a computer on your home network and then choose <EM>Add</EM>."
+	checkString = checkString.toLowerCase();
+	
+	var ch = checkString.charAt(0);
+
+	// First character must be a letter
+//	if (!(ch >= 'a' && ch <= 'z'))
+//		return "Computer names should begin with a letter (A-Z).";
+
+	// All other characters must be letters, numbers, or hyphen
+	for ( var i = 0 ; i < h.length ; i++ )
+	{
+		ch = checkString.charAt(i);
+		if (!((ch  >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'))
+			return "Computer names should contain only letters, numbers, or \"-\".";
+	}
+	
+	return "";
+	
+}
+
+//called from addhost page
+function SaveHost(h)
+{
+	var ErrorMessage = HostNameCheck( h );
+
+	if (ErrorMessage != "") {
+		TVShell.PanelManager.CustomMessageBox( ErrorMessage , "", "OK", 0, "",
+												false , MGX_ICON_WARNING, MGX_SIZE_SMALL );
+		return false;
+	}
+
+	var name = h;
+	name = name.toLowerCase()
+	var he = hn.Add(name);
+	he.Description = "";
+	he.Enabled = true;
+	inquireHost(name);
+
+	return false;
+}
+
+
+//////////////////////////////////
+
+function SideBarMain()
+{
+	var str;
+	str =
+		"<msntv:CustomButton onclick=\"DetectHosts()\" id='findPC' class=sideBarButton  label=\"Find\" />" +
+		"<msntv:CustomButton id=addPC href='HomeNetworking.html?addhost=1' class=sideBarButton label=\"Add\" />";
+
+	if ( hn.Count > 0 )
+		str += "<msntv:CustomButton href='HomeNetworking.html?remove=1' class=sideBarButton id='btnRemove'  label='Remove' />";
+	
+	str +=	"<msntv:CustomButton onclick='GoUpOneLevel()' class=sideBarButton id='default' label='Done' />";
+
+	document.all.sideBar.innerHTML=str;
+	document.all("findPC").focus();
+}
+
+function getHostPrintersCount( hst )
+{
+	if (!hst.Count) {
+		return 0;
+	}
+	
+	var i;
+	var numPrinters = 0;
+
+	for(i=0; i<hst.Count; i++) {
+		var se = hst.Item(i);
+		
+		if (HN_RESOURCE_PRINT == se.Type) {
+			numPrinters++;
+		}
+	}
+
+	return numPrinters;
+}
+
+function getHostStatus( hst )
+{
+	var txt;
+	var printersCount = getHostPrintersCount( hst );
+	var foldersCount = hst.Count - printersCount;
+
+	switch( foldersCount )
+	{
+		case 0:
+			txt = "No shared folders";
+			break;
+		case 1:
+			txt = "1 shared folder";
+			break;
+		default:
+			txt = foldersCount + " shared folders";
+			break;
+	}
+
+/*	hide shared printers
+	switch( printersCount )
+	{
+		case 0:
+			break;
+		case 1:
+			txt += " and 1 shared printer";
+			break;
+		default:
+			txt += " and " + printersCount + " shared printers";
+			break;
+	}
+*/
+
+	switch( hst.State )
+	{
+		case HOST_STATE_NEW:
+			txt = "Unknown";
+			break;
+		case HOST_STATE_OFFLINE:
+			txt = "Not available";
+			break;
+		case HOST_STATE_BRINGONLINE:
+			txt = "Checking";
+			break;
+		case HOST_STATE_ONLINE:
+			if ( hst.ApplicationData == "password" ) txt = "Needs Password";
+			if ( hst.ApplicationData == "" ) txt = "Searching";
+			break;
+		default:
+			break;
+	}
+
+	return txt;	
+}
+
+function showHost( hst )
+{
+	var name = hst.Name;
+	if ( name.length > MAX_HOST_NAME )
+	{
+		name = name.substr(0, MAX_HOST_NAME) + "...";
+	}
+
+	var txt = getHostStatus( hst );
+
+	name += " (" + txt + ")";
+	var html = "<UL class=links><LI><a id='anchor-"+hst.Name+"' tabIndex=0 onClick='inquireHost(\"" + hst.Name + "\");'>" + name + "</A></LI></UL>";
+	return html;
+}
+
+function showShare( hst, share )
+{
+	var html = "<table cellpadding=0 cellspacing=0 width=100%><tr><td style='height:24px; padding-left:15px; border-bottom: 1px solid #224466;'>";
+	html += "<a id=share-" + share.Name + " name='"+share.Name +"' onclick='MountShare(\"" + hst.Name + "\",\"" + share.Name + "\");' style='display:inline-block; width:100%;'>" + share.Name + "</a>"; 
+	html += "</td></tr></table>";
+	return html;
+}
+
+function MountShare( hstName , shareName )
+{
+
+	var he = hn.Item(hstName);
+	if(he)
+	{
+		var se = he.Item(shareName);
+		if(se) {
+			TVShell.Message("mounting hst:" + hstName + "  share:" + se.Name);
+			ShowProgressPanel();
+			SetProgressPercent(50);
+			SetProgressStopFunction(null);
+			SetProgressText(PROGRESS_PLEASE_WAIT + "Connecting to " + se.Name + "...");
+			se.Mount();
+		}
+	} 
+}
+
+
+function ShowUPNPDetails()
+{
+    return false;
+}
+
+function gotoUPNPMedia( vn )
+{
+	var StorageManager = TVShell.StorageManager;
+	var name = vn.toLowerCase();
+	for ( var i=0; i < StorageManager.Count; i++) 
+	{	
+		var sd = StorageManager.Item(i);
+	    	if (!sd.Removable && sd.IsNetwork && sd.Mounted && ( name == sd.VolumeName.toLowerCase() ) ) 
+		{
+			NavigateToMediaApp( null , null , sd );
+			return;
+		}
+	}
+	// now we can't find this server?  Just display unavailable and refresh screen
+	TVShell.PanelManager.CustomMessageBox( "<P>Media server not available.</P>" , "", "OK", 0, "",	true, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+	history.go(0);
+}
+    
+function showUPNPHost(stm)
+{
+	var name = stm.Name;
+	
+	if ( name.length > MAX_UPNPHOST_NAME )
+	{
+		name = name.substr(0, MAX_UPNPHOST_NAME) + "...";
+	}
+
+    var html =	"<UL class=links><LI><a id='anchor-"+name+"' tabIndex=0 onclick='gotoUPNPMedia(\"" + stm.VolumeName + "\" );' >" + name + "</A></LI></UL>";
+	return html;
+}
+
+
+function MainScreen()
+{
+ 	SideBarMain();
+	currentScreen = HN_SCREEN_MAIN;
+	Update();
+	document.all.scrollArea.MyDoScroll( "scrollToStart" );
+
+}
+
+function compareHosts( h1 , h2 )
+{
+	var n1 = h1.Name;
+	n1 = n1.toLowerCase();
+	var n2 = h2.Name;
+	n2 = n2.toLowerCase();
+	if ( n1 < n2 ) return -1;
+	if ( n1 > n2 ) return 1;
+	return 0;
+}
+
+function compareShares( s1 , s2 )
+{
+	var n1 = s1.Name;
+	n1 = n1.toLowerCase();
+	var n2 = s2.Name;
+	n2 = n2.toLowerCase();
+	if ( n1 < n2 ) return -1;
+	if ( n1 > n2 ) return 1;
+	return 0;
+}
+
+function updateShares( he, foldersCount)
+{
+	var str = "";
+	if ( foldersCount <= 0 ) return str;
+	
+	var shareArray = new Array( foldersCount );
+
+	var j, k;
+	for (j=0, k=0; j<he.Count; j++) 
+	{
+		if (HN_RESOURCE_STORAGE == he.Item(j).Type) {
+			shareArray[k++] = he.Item(j);
+		}
+	}
+	
+	shareArray.sort( compareShares );
+	for ( j=0; j<foldersCount; j++)
+	{
+		var se = shareArray[j];
+
+		str += showShare( he, se );
+	}
+	return str;
+}
+
+function updatePrinters( he, printersCount )
+{
+	if ( printersCount <= 0 ) return;
+	
+	var shareArray = new Array( printersCount );
+
+	var j, k;
+	for (j=0, k=0; j<he.Count; j++) 
+	{
+		if (HN_RESOURCE_PRINT == he.Item(j).Type) {
+			shareArray[k++] = he.Item(j);
+		}
+	}
+	
+	// shareArray.sort( compareShares );
+	var str = "";
+	for ( j=0; j<printersCount; j++)
+	{
+		var se = shareArray[j];
+		str += showShare( he,se );
+	}
+	return str;
+}
+
+var selectedName = "";
+function SaveHostSelection()
+{
+	var el = document.activeElement;
+	if ( el && el.id )
+	{
+		if ( el.id.indexOf( "anchor-" ) == 0 )
+		{
+			selectedName = el.id;
+		}
+	}
+}
+
+function RestoreHostSelection()
+{
+	if ( selectedName != "" )
+	{
+		try {
+			document.all( selectedName ).focus();
+		} catch (ex) {
+		}
+	}
+}
+
+
+//
+// update - main share and host list
+//
+function Update()
+{
+	if ( currentScreen != HN_SCREEN_MAIN ) return;
+
+	SaveHostSelection();
+
+	var numUNCHosts = hn.Count;
+	var numUPNPHosts = 0;
+	var str = "";
+
+	if (numUNCHosts > 0) {
+		str = "<TABLE width='100%'><TR><TD><SPAN class=topic style='height:30px;'><P>Your "+ProductShortName+" is connected to the following home network:</P></SPAN></TD></TR></TABLE>";
+
+		str += "<table width='100%' cellpadding=0 cellspacing=0>";
+		var hostArray = new Array( numUNCHosts );
+		for ( var i = 0 ; i < numUNCHosts ; i++ ) hostArray[i] = hn.Item(i);
+		hostArray.sort( compareHosts );
+
+		// show all UNC shares
+		for ( var i=0 ;  i < numUNCHosts ;  i++ )
+		{
+			var he = hostArray[i];
+			str += "<tr><td>" + showHost( he ) + "</tr></td>";
+		}
+
+		str += "</table>";
+
+	}
+
+	// Count up and show UPNP hosts, if any
+    var StorageManager = TVShell.StorageManager;
+    for (i=0; i < StorageManager.Count; i++) 
+    {	
+            var StorageDevice = StorageManager.Item(i);
+	    	if (!StorageDevice.Removable && StorageDevice.IsNetwork && StorageDevice.Mounted) 
+		    {
+            	numUPNPHosts++;
+            }
+    }
+
+    if (numUPNPHosts > 0) {
+        // show all UPNP A/V Servers
+
+		str += "<P><SPAN class=topic style='height:30px;'>Your "+ProductShortName+" is connected to the Media servers below.</SPAN></P>";
+
+		str += "<table width='100%' cellpadding=0 cellspacing=0>";
+		for (i=0; i<StorageManager.Count; i++) 
+		{	
+			var StorageDevice = StorageManager.Item(i);
+			if (!StorageDevice.Removable && StorageDevice.IsNetwork && StorageDevice.Mounted) 
+			{
+				str += "<tr><td>" + showUPNPHost(StorageDevice) + "</tr></td>";
+			}
+		}			
+		str += "</table>";
+    }
+	
+	if (numUNCHosts==0 && numUPNPHosts==0)
+	{
+		str = "<P>To find computers connected to your home network, choose <EM>Find</EM>.</P>"+
+				  "<P>If you would like to add a computer manually, choose <EM>Add</EM>.</P>";
+	}
+	document.all.scrollArea.innerHTML = str;
+	RestoreHostSelection();
+	document.all.scrollArea.ScrollHandler();
+}
+
+function SetProgress( percent )
+{
+	if ( percent >= 100 )
+	{
+		HideProgress();
+	}
+	else
+	{
+		var txt;
+		ShowProgressPanel();
+		SetProgressStopFunction( null );
+		SetProgressPercent( percent );
+		if ( currentHNState == HN_STATE_NORMAL )
+			txt = "Please wait. Searching for computers... ";
+		else
+			txt = "Please Wait. Searching for shared folders... ";
+		txt += ( percent + "%" );
+		SetProgressText( txt );
+	}
+}
+
+function HideProgress()
+{
+	HideProgressPanel();
+}
+
+</script> </HEAD><BODY onload="return OnLoad();"> <script language=Javascript>
+
+if (HNHelpURL == "")
+	HNHelpURL = "msntv:/Help/MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm";
+
+OpenSettingsTable( "Settings" , "Home network" , HNHelpURL );
+
+</SCRIPT><DIV id=sideBar> </DIV><div id="scrollArea"> </div> <SCRIPT>CloseSettingsTable();</SCRIPT> </BODY> </HTML>

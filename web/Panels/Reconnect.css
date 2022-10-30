@@ -1,0 +1,18 @@
+body {
+	background-color: #1e1e66;
+}
+
+#progress {
+	position: absolute;
+	top: 19px;
+	left: 45px;
+	width: 200px;
+	height: 13px;
+	background-color: #004000;
+	color: #00ff00;
+	image: url(../Images/ProgressBar.gif);
+	image-animation-offset-x: 10;
+	border:2px inset #2d2d99;
+}
+
+

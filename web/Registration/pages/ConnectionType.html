@@ -1,0 +1,19 @@
+<HTML xmlns:msntv> <?import namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"><HEAD> <meta name=vs_targetSchema content="http://schemas.microsoft.com/intellisense/ie5"> <title id="title">Connection Type</title><link rel=stylesheet type="text/css" href="../css/Registration.css"> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/MSNTVService.js"></SCRIPT> <SCRIPT>
+			function Connect(provider)
+			{
+				SetConnectionType(provider);
+				TVShell.ConnectionManager.Save();
+TVShell.Message('LoginToService("connection::prereg")');
+				LoginToService("connection::prereg");
+TVShell.Message('done LoginToService("connection::prereg")');
+			}
+		</SCRIPT> <STYLE> .arrow { width:8px; height:11px; border:0; vertical-align:middle; } </STYLE> </HEAD><BODY><DIV id=title> Choose how you'll connect to <SCRIPT>document.write(ServiceShortName);</SCRIPT> </DIV><DIV id=main style="padding-right:5%;"> <P> A common way of connecting an <SCRIPT>document.write(ProductShortName);</SCRIPT> to the <SCRIPT>document.write(ServiceFullName);</SCRIPT> is by using a phone line. You can also use an existing broadband connection, such as DSL or a cable modem, if you have one. </P> <BR> <P> Choose how you will connect to the <SCRIPT>document.write(ServiceFullName);</SCRIPT>: <UL class=links><LI><A id="usephone" href="javascript:Connect(MSNIAModemProviderName)" style="font-weight:bold">I will connect using a phone line</A></LI><LI><A id="usebroadband" href="javascript:Connect(BYOAEthernetProviderName)" style="font-weight:bold">I will connect using an existing broadband connection</A></LI> </UL> <BR> <P> Note: Throughout registration, you can use the <EM>Back</EM> key on your keyboard to return to the previous page. </P> </DIV> <SCRIPT>
+			if (TVShell.ConnectionManager.WirelessAdapter &&
+				TVShell.ConnectionManager.WirelessAdapter.CheckStatus() != ConnectError_NoAdapter)
+				usebroadband.focus();
+			else
+			if (TVShell.ConnectionManager.EthernetAdapter.CheckStatus() != ConnectError_NoLine)
+				usebroadband.focus();
+			else
+				usephone.focus();
+		</SCRIPT> </body> </HTML>

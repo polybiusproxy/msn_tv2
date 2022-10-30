@@ -1,0 +1,84 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/IPAddress.htc"> <TITLE>Enter your wireless settings</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <STYLE> table.controlTable td { padding: 5px 5px 0px 0px; } </STYLE> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/Wireless.js"></SCRIPT> <SCRIPT>
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+var WirelessAdapter = TVShell.ConnectionManager.WirelessAdapter;
+var WirelessSettings = null;
+if (WirelessAdapter) {
+	WirelessSettings = WirelessAdapter.Settings;
+}
+
+var chosenSSID = "";
+var onSuccess = "javascript:history.go(-2)";
+
+
+
+
+function onLoadPage()
+{
+	var params = location.href.split("?");
+	chosenSSID = "";
+		
+	if ( params && params.length > 1 ) {
+		var i,st;
+		if ( params[1].indexOf("&") > 0 ) {
+			params = params[1].split("&");
+		}
+		for ( var i=0; i < params.length; i++ ) {
+			if ( (st=params[i].indexOf("ssid=")) == 0 ) {
+				chosenSSID = params[i].substring(st+5);
+				chosenSSID = unescape(chosenSSID);
+			}
+			else if ( (st=params[i].indexOf("onSuccess=")) == 0 ) {
+				var v = params[i].substring(st+10);
+				onSuccess = unescape(v);
+			}
+		}		
+	}
+	TVShell.Message("SSID passed in was " + chosenSSID);
+		
+	if (WirelessSettings) {
+		TVShell.Message("Adapter is " + WirelessSettings.Name);
+		var curKey = "";
+		if (WirelessSettings.SSID == chosenSSID ) { 
+			if (WirelessSettings.KeyIdx == 1 ) {
+				curKey = WirelessSettings.KeyMaterial1;
+			} else {
+				TVShell.Message("Not showing key since index is " + WirelessSettings.KeyIdx);
+			}
+		}
+		if ( chosenSSID == ""  ) {
+			chosenSSID = WirelessSettings.SSID;
+		}
+	}
+		
+	if ( chosenSSID != "" ) {
+		document.all.cssid.innerHTML = "(<em> " + TVShell.Utilities.EscapeHTML(chosenSSID) + " </em>) ";
+	}
+}
+
+
+	
+function Cancel()
+{
+	history.go(-1);
+}
+
+
+function ChooseWPA()
+{
+	var url = "WirelessSettingsWPA.html?ssid=" + chosenSSID;
+	window.location = url;
+}
+
+
+function ChooseWEP()
+{
+	var url = "WirelessSettings.html?ssid=" + chosenSSID;
+	window.location = url;
+}
+
+</SCRIPT><BODY> <SCRIPT>OpenSettingsTable( "Settings" , "Select wireless privacy method" , 
+				"WirelessHelpPrivacy.html" , true );</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:Cancel();" class=buttonBarButton id=default label="Cancel" /> </DIV><DIV id=nonScrollArea><DIV class=description> <P> The network that you want to connect to <span id=cssid></span> is using either the WPA or WEP privacy method, but your <script>document.write(ProductShortName)</script> is not able to determine which one. Please check your wireless access point setup to find out which method is being used and choose it below: <br> <br> </p> <P> <a href="javascript:ChooseWPA();">WPA (Wireless Protected Access)</a> <br> </p> <P> <a href="javascript:ChooseWEP();">WEP (Wireless Equivalent Privacy)</a> </p> <br> <br> <p> Select <EM>Help</EM> for further instructions. </p> </DIV> </DIV> <SCRIPT>
+	CloseSettingsTable();
+	onLoadPage();
+</SCRIPT> </BODY> </html>

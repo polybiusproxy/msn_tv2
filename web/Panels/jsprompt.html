@@ -1,0 +1,99 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<TITLE>Prompt</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script>
+var PanelManager = TVShell.PanelManager;
+
+var thisName = window.name;
+var thisPanel=PanelManager.Item(thisName);
+
+var IDOK=1;
+var IDCANCEL=2;
+
+
+function SetContent()
+{
+var  prompt=thisPanel.Caption;
+var  defaultInput=thisPanel.UserStrData;
+
+   if(prompt)
+     document.all.UserPrompt.innerText=prompt;
+   if(defaultInput)
+     document.all.UserInput.value=defaultInput;
+   document.all.UserInput.select();
+}
+
+function OnClickOK()
+{
+   var inputStr=document.all.UserInput.value;
+   if(inputStr)
+      PanelManager.InternetData1=inputStr;
+   else
+      PanelManager.InternetData1=""; 
+   PanelManager.CloseMessageBox(thisName,IDOK);
+}
+
+function OnSubmit()
+{
+  OnClickOK();
+}
+
+</script>
+</HEAD>
+<body onLoad="SetContent()">
+<table height=100% width=100% cellspacing=0 cellpadding=0>
+	<tr >
+	  <td colspan=2 valign=top>
+	    <table cellspacing=0 cellpadding=0 >
+			<tr>
+				<td valign=top height=30>
+					<div style="width:40px; height:50px;behavior:url(#default#alphaImageLoader);src:url(msntv:/panels/Images/Icon_Warning_ErrorPanels.png);"></div> 
+				</td>
+				<td width=4>
+				</td>
+				<td id="caption_cell" align=left valign=top>
+					User Prompt
+				</td>
+			</tr>
+		</table>
+	  </td>
+	</tr>
+	<tr>
+	  <td valign=top align=left >
+	       <table cellspacing=0 cellpadding=0>
+		     <tr>
+			   <td> Script Prompt:
+			   </td>
+			 </tr>
+		     <tr>
+			   <td id=UserPrompt>
+			   </td>
+			 </tr>
+		   </table>
+	  </td>
+	  <td valign=top width=20% align=right>
+			<table>
+				<tr>
+				  <td>
+					<msntv:CustomButton id='okBtn' style="width:80px" label='OK' onClick='OnClickOK()'/>
+				  </td>
+				</tr>
+				<tr>
+				  <td>
+					<msntv:CustomButton id='cancelBtn' label='Cancel' style="width:80px"  onClick='PanelManager.CloseMessageBox(thisName,IDCANCEL)'/>
+				  </td>
+				</tr>
+			</table>
+	  </td>
+	</tr>
+	<tr>
+	  <td colspan=2>
+	    <form onsubmit="OnSubmit()"><input id=UserInput size=50></form>
+	  </td>
+	</tr>
+</table>
+</body>
+</html>

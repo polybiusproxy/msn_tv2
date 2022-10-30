@@ -1,0 +1,230 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<head>
+<title>IM Setting Allow Block List</title>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+<style>
+
+.nameContent {
+	font-family:Highway; 
+	font-size:18px; 
+	font-weight:bold;
+	width:240px;
+	color:#07214D;	
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.titleContent {
+	font-family:Highway; 
+	font-size:18px; 
+	font-weight:bold;
+	width:340px;
+	color:#07214D;	
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+</style>
+<script language=Javascript src="IMCommon.js"></script>
+<script language=Javascript src="../Javascript/Parameters.js"></script>
+<script language=javascript>
+var parameters = FindParameters(TVShell.PanelManager);
+var utilities = TVShell.Utilities;
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var MsgrObj = TVShell.UserManager.CurrentUser.Messenger;
+var contactList 						= null;
+var allowList 							= null;
+var blockList 							= null;
+
+var	currentIndex=parameters.index;
+var	currentListType=parameters.mList;
+
+function removeTags(plainText)
+{
+   return utilities.EscapeHTML(plainText);
+}
+
+function AllowBlockAddRemoveUser()
+{
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	var pUser;
+	if(currentIndex!=-1){
+		if (currentListType == 0) {
+			pUser=contactList.Item(currentIndex);
+			if (AddRadio.checked == true && !inContactList) {
+				contactList.Add(pUser);
+			}
+			if (RemoveRadio.checked == true && inContactList) {
+				contactList.Remove(pUser);
+			}
+		} else {
+			if (currentListType == 2) {
+				pUser=blockList.Item(currentIndex);
+			}
+			if (currentListType == 1) {
+				pUser=allowList.Item(currentIndex);
+			}
+			if (AllowRadio.checked == true && !inAllowList) {
+				blockList.Remove(pUser);
+				allowList.Add(pUser);
+			}
+			if (BlockRadio.checked == true && inAllowList) {
+				allowList.Remove(pUser);
+				blockList.Add(pUser);
+			}	
+		}	
+	} else {		
+		if(allowAllRadio.checked==true){
+			MsgrObj.MessagePrivacy=MMSGPRIVACY_BLOCK_LIST_EXCLUDED;
+		}
+		if(blockAllRadio.checked==true){
+			MsgrObj.MessagePrivacy=MMSGPRIVACY_ALLOW_LIST_ONLY;
+		}
+	}
+	TVShell.DeviceControl.PlaySound("Task_Complete");
+}
+var inAllowList;
+var inContactList;
+
+function DrawChoiceDiv()
+{	
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	contactList=MsgrObj.GetList(MLIST_CONTACT);
+	var friendlyName;
+	var emailAddress;
+	var str;
+	if (currentIndex == -1) {	
+		if(MsgrObj.MessagePrivacy==MMSGPRIVACY_ALLOW_LIST_ONLY){
+			str  ="<P>To allow all people, except those on your Block list, to send you instant messages, choose <EM>Allow all</EM>, and then choose <EM>Save Changes.</EM>"
+				+ "<P>"
+				+ "<table cellspacing=2 cellpadding=2 border=0>"
+				+ "		<tr><td><input type=radio name=AllowAll id=allowAllRadio checked></td>"
+				+ "			<td width=140>Allow All</td>"
+				+ "			<td><input type=radio name=AllowAll id=blockAllRadio></td>"
+				+ "			<td>Don\'t allow all</td></tr>"
+				+ "</table>";
+		}else{
+			str  ="<P>To block all people, except those on your Allow list, from sending you instant messages, choose <EM>Block all</EM>, and then choose <EM>Save Changes.</EM>"
+				+ "<P>"
+				+ "<table cellspacing=2 cellpadding=2 border=0>"
+				+ "		<tr><td><input type=radio name=AllowAll id=blockAllRadio checked></td>"
+				+ "			<td width=140>Block All</td>"
+				+ "			<td><input type=radio name=AllowAll id=allowAllRadio></td>"
+				+ "			<td>Don\'t block all</td></tr>"
+				+ "</table>";
+		}
+	} else if (currentListType==MLIST_CONTACT) {
+		inContactList=false;
+		friendlyName=removeTags(MatchFriendlyName(contactList.Item(currentIndex).FriendlyName));
+		emailAddress=removeTags(contactList.Item(currentIndex).EmailAddress);
+		for(var i=0; i< contactList.Count && !inContactList;i++){
+			if(contactList.Item(i).EmailAddress==emailAddress)
+				inContactList=true;
+		}
+		if(inContactList == true){
+			str ="<P><font style=\"word-wrap:break-word;\"><EM>"+ friendlyName +" ("+ emailAddress + ")</EM> is on your contact list; you can see when <EM>"+ friendlyName +"</EM> is online and can send him or her instant messages. <br>To take <EM>"+ friendlyName + "</EM> off your contact list, choose <EM>Remove from contact list</EM>, and then choose <EM>Save Changes</EM></font>."
+				+ "<P>"
+				+ "<table cellspacing=2 cellpadding=2 border=0>"
+				+ "		<tr><td><input type=radio name=AddRemove id=AddRadio checked></td>"
+				+ "			<td width=140><font>Keep on contact list</font></td></tr>"
+				+ "		<tr><td><input type=radio name=AddRemove id=RemoveRadio></td>"
+				+ "			<td><font>Remove from contact list</font></td></tr>"
+				+ "</table>";
+		}
+	} else { 
+		if(currentListType==MLIST_ALLOW){
+			friendlyName=removeTags(MatchFriendlyName(allowList.Item(currentIndex).FriendlyName));
+			emailAddress=removeTags(allowList.Item(currentIndex).EmailAddress);
+			inAllowList=true;
+		}else if(currentListType==MLIST_BLOCK){
+			friendlyName=removeTags(MatchFriendlyName(blockList.Item(currentIndex).FriendlyName));
+			emailAddress=removeTags(blockList.Item(currentIndex).EmailAddress);
+			inAllowList=false;
+		}
+		if(inAllowList == true){
+			str = "<P><font style=\"word-wrap:break-word;\"><EM>"+friendlyName +" ("+ emailAddress + ") </EM>is allowed to see when you are online and can send you instant messages.</font>"
+				+ "<P><font style=\"word-wrap:break-word;\">To block this contact from seeing when you are online and sending you instant messages, choose <EM>Block "+friendlyName+"</EM>, and then choose <EM>Save Changes</EM>.</font>"
+				+ "<P><table cellspacing=2 cellpadding=2 border=0>"
+				+ "		<tr><td><input type=radio name=AllowBlock id=BlockRadio></td>"
+				+ "			<td><font class=nameContent>Block "+friendlyName+"</font></td></tr>"
+				+ "		<tr><td><input type=radio name=AllowBlock id=AllowRadio checked></td>"
+				+ "			<td><font class=nameContent>Allow "+friendlyName+"</font></td></tr>"
+				+ "</table>";
+		}else{
+			str = "<P><font style=\"word-wrap:break-word;\"><EM>"+friendlyName +" ("+ emailAddress + ") </EM>is not allowed to see when you are online and cannot send you instant messages.</font>"
+				+ "<P><font style=\"word-wrap:break-word;\">To allow this contact to see when you are online and sending you instant messages, choose <EM>Allow "+friendlyName+"</EM>, and then choose <EM>Save Changes</EM>.</font>"
+				+ "<P><table cellspacing=2 cellpadding=2 border=0>"
+				+ "		<tr><td><input type=radio name=AllowBlock id=AllowRadio></td>"
+				+ "			<td><font class=nameContent>Allow "+friendlyName+"</font></td></tr>"
+				+ "		<tr><td><input type=radio name=AllowBlock id=BlockRadio checked></td>"
+				+ "			<td><font class=nameContent>Block "+friendlyName+"</font></td></tr>"
+				+ "</table>";
+		}
+	}
+	ChoiceDiv.innerHTML=str;
+}
+function OnListAddResult(hr, mList, pUser)
+{
+	/*
+	if(hr==0)
+		DrawChoiceDiv();
+		*/
+}
+function OnListRemoveResult(hr, mList, pUser)
+{
+	/*
+	if(hr==0)
+		DrawChoiceDiv();
+		*/
+}
+
+Sink.AttachEvent(MsgrObj, "OnListAddResult", OnListAddResult);
+Sink.AttachEvent(MsgrObj, "OnListRemoveResult", OnListRemoveResult);
+
+</script>
+</head>
+<body>
+<script language="javascript" >
+	switch(parameters.mList) {
+		case "0":
+			var contactList = MsgrObj.GetList(MLIST_CONTACT);
+			var emailAddress = contactList.Item(parameters.index).EmailAddress;
+			OpenSettingsTable( "Messenger" , "Make changes to "+ emailAddress , "" );
+			break;
+		case "1":
+			OpenSettingsTable( "Messenger" , "Edit your Allow list" , "" );
+			break;
+		case "2":
+			OpenSettingsTable( "Messenger" , "Edit your Block list" , "" );
+			break;
+		default:
+			OpenSettingsTable( "Messenger" , "Settings" , "" );
+	}
+</script>
+
+	<DIV id=sideBar>
+		<msntv:CustomButton href="javascript:history.go(-1)" onClick="AllowBlockAddRemoveUser()" class=sideBarButton id=Save label="Save Changes" />
+		<msntv:CustomButton href="javascript:history.go(-1)" class=sideBarButton id=Cancel label="Cancel" />
+		<script>Cancel.focus();</script>
+	</DIV>
+	<DIV id=scrollArea>
+		<DIV class=description>
+			<DIV id=ChoiceDiv>
+			</DIV>
+		</DIV>
+	</DIV>
+<script language="javascript" >
+	DrawChoiceDiv();
+</script>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</body>
+</html>

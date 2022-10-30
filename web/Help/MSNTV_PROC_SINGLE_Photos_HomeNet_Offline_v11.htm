@@ -1,0 +1,63 @@
+<html xmlns:msntv>
+<head>
+	<title>Photos HomeNet</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Viewing photos from your computer" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+If your <script>document.write( ProductShortName );</script> is connected to your home network, you can use it to view photos that are stored on your computer. To view photos that are on your computer, you must make sure your <script>document.write( ProductShortName );</script> is connected to your home network, and that your computer is set up to share files over the network.
+<p>
+<p>
+To learn more about connecting your <script>document.write( ProductShortName );</script> to a home network, choose the link below:
+<br>
+<span class="customBullet"><a id="pageresizeWebID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm');">Introduction to home networking</a>
+</span>
+</p>
+</p>
+<p>
+<p>
+You don't have to sign in to the <script>document.write( ServiceFullName )</script> to view the photos that are stored on your computer. Just turn on your <script>document.write( ProductShortName );</script> and follow these steps:
+<ol>
+<li>Make sure your <script>document.write( ProductShortName );</script> and your computer are connected to your home network, and that the photos folder on the computer is a shared folder.</li>
+<li>Choose <b>Photos</b> from the bottom of the Sign-in page.</li>
+<p>
+<p>
+The Photos Home page appears.
+</p>
+</p>
+<li>In the <b>Photos on home network</b> section, choose the computer folder that contains the photos you want to view.</li>
+<p>
+<p>
+Small images representing the photos appear on screen. (If there are subfolders within a photos folder on the computer, you'll need to choose a subfolder to see the photos it contains.)
+</p>
+</p>
+</ol>
+Check the boxes next to the photos you want to work with. Then you can do the following:
+<ul>
+<li>Choose <b>View Slideshow</b> to see a slideshow of the slected photos, with each photo on screen for a few seconds.</li>
+<li>Choose <b>Print Photos</b> to print copies of the selected photos. (You must have a compatible USB printer attached to your <script>document.write( ProductShortName );</script>. For information about printing, sign in and choose <b>Help</b> and then <b>Printing</b>.)</li>
+<li>Choose <b>Send Photos</b> to include the selected photos in an e-mail message. (You must sign in to the <script>document.write( ServiceFullName )</script> to send the e-mail.</li>
+<li>Choose <b>Save Photos</b> to save copies of the selected photos in albums on your <script>document.write( ProductShortName );</script>.  (For more information on creating photo albums, choose <b>Photos</b> from the bottom of the Sign-in page, and then choose <b>Help</b> from the Photos Home page.)</li>
+</ul>
+For more information about using Photos, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Photos</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

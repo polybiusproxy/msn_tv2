@@ -1,0 +1,162 @@
+.templateButton
+{
+    font:bold 12pt trebuchet ms; 
+    color:rgb(255,255,255); 
+    border-width:2px; 
+    border-color:rgb(80,64,0); 
+    border-style:solid;
+    background-color:rgb(0,153,254); 
+    height:29px; 
+    line-height:100%;
+    margin:'0cm';
+}
+
+.templateButtonDown
+{
+    font:bold 12pt trebuchet ms; 
+    color:rgb(255,255,255); 
+    border-width:2px; 
+    border-color:rgb(246,231,162); 
+    border-style:solid;
+    background-color:rgb(80,64,0); 
+    height:29px; 
+    line-height:100%;
+    margin:'0cm';
+}
+
+.templateButtonOver
+{
+    font:bold 12pt trebuchet ms; 
+    color:rgb(255,255,255); 
+    border-width:2px; 
+    border-style:solid;
+    border-color:rgb(80,64,0); 
+    background-color:rgb(0,52,100); 
+    height:29px; 
+    line-height:100%;
+    margin:'0cm';
+}
+
+.templateButtonDisabled
+{
+    font:bold 12pt trebuchet ms; 
+    color:rgb(192,160,48); 
+    border-width:2px; 
+    border-style:solid;
+    border-color:rgb(192,160,48); 
+    background-color:rgb(235,208,70); 
+    height:29px; 
+    line-height:100%;
+    margin:'0cm';
+}
+
+.templateHelpMark
+{
+    position:absolute;
+    top: -2;
+    left: 546;
+    z-index:10;
+    font-size:14pt;
+    font-family:Trebuchet ms;
+    font-weight: bold;
+    color: white;
+}
+.templateHelp
+{
+    position:absolute;
+    top: 0;
+    left: 560;
+    z-index:10;
+    font-size:12pt;
+    font-family:Trebuchet ms;
+    font-weight: bold;
+    color: white;
+}
+
+.templateHelpLink:link
+{
+    text-decoration: none;
+    color: white;
+}
+.templateHelpLink:visited
+{
+    text-decoration: none;
+    color: white;
+}
+.templateHelpLink:active
+{
+    text-decoration: none;
+    color: yellow;
+}
+.templateHelpLink:hover
+{
+    text-decoration: none;
+    color: yellow;
+}
+
+.templateTitle
+{
+    COLOR: #ffffff;
+    FONT: bold 22pt trebuchet ms;
+    LEFT: 240px;
+    POSITION: absolute;
+    TOP: 5px;
+    LEFT: 15;
+}
+
+.templateMenu
+{
+	padding-left: 5; 
+	padding-top: 0; 
+	padding-right: 5; 
+	padding-bottom: 0; 
+    text-align:center;
+    text-valign:center;
+    font-size:11pt;
+
+    A{font: bold 11pt trebuchet ms,arial}  
+}
+
+.templateTopCmd
+{
+    A{font: bold 11pt trebuchet ms,arial;color:black};  
+    A:link    { color:#000000 };
+    a:hover   { color:red }
+    a:visited { color:black }
+}
+		
+.MainChattingLabel {color:#006699;}
+.MainChattingNames {color:black;}
+
+.MainOthersLabel {color:#006699;}
+.MainOthersNames {color:black;}
+
+.MainCaption {color:#003163;}
+.MainQuote {position:relative;left:40px;width:525px;color:black;}
+
+.MainTyping {color:#5C8FB5;}
+.MainParticipantFrame {background-color:rgb(176,208,255);}
+.MainReminderCaption {color:#5aadad;}
+.MainDisableMenu { font: bold 11pt trebuchet ms,arial;color:gray;}
+
+.MainMessageArea 
+{ 
+    font-family:trebuchet ms,sans-serif;
+    border-width:2px;
+    padding-left:3;
+    border-style:solid; 
+    border-color:#8CAABD;
+    font-weight:bold;
+    overflow:hidden;
+    position:relative;
+    top:10px; left:20px;
+    width:480px;
+    height:40px;
+    background-color:white;
+}
+
+.InvitationName {font-weight:bold;}
+.InvitationHeading1 {font-weight:bold;}
+.InvitationMessage {font: 12pt trebuchet ms;}
+.InvitationBreak {color:#504000;}
+

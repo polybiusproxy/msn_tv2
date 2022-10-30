@@ -1,0 +1,41 @@
+<html xmlns:msntv>
+<head>
+	<title>Password</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Switching users" showScrollTop="true" />
+
+<div id="ScrollArea">
+	<span class="description">
+        <p>
+        <script>document.write( ServiceShortName );</script> allows you to have up to ten additional users on your account. (Choose <b> Account</b> from the top of the home page to add a user.) You don't have to turn off your <script>document.write( ProductShortName );</script> when one user is finished using <script>document.write( ServiceShortName );</script> and another wants to sign in.
+		</p>
+        <p>
+        To sign in using a different user name:
+		</p>
+        <ol>
+            <li>Choose <b>Sign out</b> from the top of the home page (or press <b>Menu</b> on your keyboard and choose <b>Sign out</b>).</li>
+	    <li>Choose your user name on the Sign-in page.</li>
+            <li>Sign in by entering your password.</li>
+        </ol>
+        <p>
+        </p>
+        <p>
+        The first user will be signed out, and the second user will be signed in.
+        </p>
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

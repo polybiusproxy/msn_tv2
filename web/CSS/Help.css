@@ -1,0 +1,26 @@
+BODY {
+	background-color: #3D4665;
+	color: #828CA9;
+	margin: 8px 4px;
+}
+
+A:link {
+	color: #FFEA9C;
+}
+A:visited {
+	color: #FFEA9C;
+}
+A:active {
+	color: #FFEA9C;
+}
+A:hover {
+	color: #FFEA9C;
+}
+
+H1 {
+	letter-spacing: .15em;
+	line-height: 1.5em;
+	text-decoration: shadow;
+	font-size: 36pt;
+	color: #CBABAB;
+}

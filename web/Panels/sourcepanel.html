@@ -1,0 +1,95 @@
+<HTML>
+<HEAD>
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+	<SCRIPT>
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		var PanelManager = TVShell.PanelManager;
+
+		function BuildMenu()
+		{
+			var menu = document.all.panelName.options;
+
+			// Remove the current menu
+			while (menu.length > 0)
+				menu.remove(0);
+
+			// Add new menu items
+			for (i = 0; i < TVShell.PanelManager.Count; i++) {
+				var optionitem = document.createElement("OPTION");
+				optionitem.value = TVShell.PanelManager.Item(i).Name;
+				optionitem.text = TVShell.PanelManager.Item(i).Name;
+				menu.add(optionitem);
+			}
+		}
+
+		function Cancel()
+		{
+			// Toggle ourselves off
+			PanelManager.Hide("source");
+		}
+
+		function ShowSource(panel)
+		{
+			var sourceLines = panel.HTMLSource.split("\n");
+			var maxNumberLength = sourceLines.length.toString().length;
+
+			for (i = 0; i < sourceLines.length; i++) {
+				var numberString = (i + 1).toString();
+				var indent = "";
+
+				for (j = numberString.length; j < maxNumberLength; j++) {
+					indent += " ";
+				}
+				sourceLines[i] = indent + numberString + " " + sourceLines[i];
+			}
+
+			document.all.sourcetext.innerText = sourceLines.join("\n");
+
+			document.all.panelName.value = panel.Name;
+		}
+		
+		function OnBeforeShow(name, msg)
+		{
+			if (name == "source") {
+
+				BuildMenu();
+
+				if (msg == "") {
+					ShowSource(PanelManager.FocusedPanel);
+				}
+				else {
+					ShowSource(PanelManager.Item(msg));
+				}
+			}
+		}
+
+		function OnAfterHide(name)
+		{
+			if (name == "source") {
+				document.all.sourcetext.innerText =	"";
+			}
+		}
+
+		function HandleKeyDown()
+		{
+			if (event.keyCode = 27)
+				Cancel();
+		}
+		
+		Sink.AttachEvent(PanelManager, "OnBeforeShow", OnBeforeShow);
+		Sink.AttachEvent(PanelManager, "OnAfterHide",  OnAfterHide);
+
+	</SCRIPT>
+</HEAD>
+
+<BODY OnKeyDown=HandleKeyDown>
+Panel:
+<SELECT id=panelName onchange="ShowSource(PanelManager.Item(document.all.panelName.value))";>
+</SELECT>
+<BUTTON onclick="Cancel();">Close</BUTTON>
+<BR/><BR/>
+<PRE id="sourcetext" style="font-face:highway; font-size:16px;">
+<center><font color=red></font>Please wait while retrieving source code...</center>
+</PRE>
+</BODY>
+</HTML>

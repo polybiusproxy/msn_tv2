@@ -1,0 +1,542 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/SlideShow.htc">
+
+<head>
+<title>Photos SlideShow</title>
+
+<style type="text/css">
+body {
+	overflow: hidden;
+	margin:0px; 
+	background-color:black; 
+}
+
+
+#Table1
+{
+	position:absolute; 
+	z-index:-1; 
+	top:0px; 
+	left:0px; 
+	width:100%; 
+	height:100%;
+}
+
+#ControlPanel
+{
+	position:absolute; 
+	visibility:visible; 
+	top:359px; 
+	left:0px; 
+	width:100%; 
+	height:61px; 
+	display:inline-block;
+}
+
+#StatusStr 
+{
+	xbackground-color:red; 
+	padding-top:10px; 
+	color:#AFC0CC; 
+	font-size:42px; 
+	font-family:segoe; 
+	font-weight:bold; 
+	height: 420; 
+	width: 560; 
+	behavior: url(#default#gradient); 
+	startColor:black; 
+	endcolor:#909090; 
+	angle:0;
+}
+
+#OverlayCounterDiv
+{
+	position: absolute;
+	top: 360px;
+	left: 0px;
+	display: none;
+}
+
+#OverlayCounterTable
+{
+	background-color:#454545; 
+}
+
+#OverlayCounterSpan
+{
+	color:#AFC0CC; 
+	font-size:16px; 
+	font-family:segoe; 
+	font-weight:bold; 
+}
+
+</style>
+
+</head>
+
+<script LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></script>
+<script LANGUAGE=Javascript SRC="msntv:/Javascript/VKCodes.js"></script>
+<script src="msntv:/Javascript/Parameters.js"></script>
+<script LANGUAGE=Javascript SRC="msntv:/Javascript/DMRHome.js"></script>
+<script language="javascript" src="msntv:/Javascript/DMRCommon.js"></script>
+<script language="javascript" src="msntv:/Javascript/DMREnumerate.js"></script>
+<script LANGUAGE=Javascript SRC="msntv:/Photo/Photos.js"></script>
+<script language="JavaScript" type="text/javascript">
+<!--
+
+////////////////////////////////////////////////
+//
+//  Initialize 
+//
+////////////////////////////////////////////////
+
+var screenSaver = TVShell.ScreenSaver;
+var screenSaverOldState = screenSaver.Enable;
+// Turn off the screen saver and keep it from starting while
+// we are off.
+screenSaver.Stop();
+screenSaver.Enable = false;
+
+var PHOTO_COUNT_STRING;
+var SCREEN_WIDTH		= TVShell.DeviceControl.ScreenWidth;
+var SCREEN_HEIGHT		= TVShell.DeviceControl.ScreenHeight;
+
+var SAFE_HEIGHT			= SCREEN_HEIGHT;
+var SAFE_WIDTH			= SCREEN_WIDTH;
+var SAFE_BOTTOM			= SCREEN_HEIGHT;
+var SAFE_TOP			= 0;
+var SAFE_LEFT			= 0;
+if (TVShell.DeviceControl.UseSafeArea) 
+{
+	// Safe area excludes 1/16 of the total screen all around
+	SAFE_HEIGHT -= SCREEN_HEIGHT / 8;
+	SAFE_WIDTH  -= SCREEN_WIDTH  / 8;
+	SAFE_LEFT = (SCREEN_WIDTH -  SAFE_WIDTH)  / 2;
+	SAFE_TOP  = (SCREEN_HEIGHT - SAFE_HEIGHT) / 2;
+	SAFE_BOTTOM = SAFE_TOP + SAFE_HEIGHT;
+}
+var STATUS_HEIGHT = 36;
+var STATUS_TOP = SAFE_BOTTOM - STATUS_HEIGHT;
+
+var PHOTO_AREA_HEIGHT	= 420;
+var PHOTO_AREA_WIDTH	= 560;
+
+var startIndex  = parameters.startIndex;
+var autoPlay			= (parameters.autoPlay ? (parameters.autoPlay!="false") : true );
+var XMLFileURL			= parameters.XMLFileURL;
+var storageDeviceVN 	= parameters.StorageDeviceVN;
+
+var PSL_LOADING_STRING	= "Reading:";
+var PSL_SHOWING_STRING	= "Showing:";
+
+var controlPanelTimeoutID;
+var CONTROL_PANEL_TIMEOUT = 15000;
+
+var statusPanel  = PanelManager.Item("statusbar");
+var oldMainPanelZorder = mainPanel.ZOrder;	
+
+// Elongate main panel by the height of the status panel, which
+// is not to appear on slideshow
+if(statusPanel)
+{
+	mainPanel.StartRect(SAFE_LEFT, SAFE_TOP, SAFE_WIDTH, SAFE_HEIGHT);
+	mainPanel.ZOrder = statusPanel.ZOrder + 5;
+}
+
+var resizeImages = ( XMLFileURL != null || 
+	(parameters.location != null && parameters.location == 1/*BOX*/)?false : true );
+var ImageFilenames		= new Array();
+var tempURL 			= parameters.tempAllFileList;
+if(tempURL)
+{
+	var allImageFileNames = Utilities.ReadTextFile(tempURL);
+	if(allImageFileNames)
+	{
+		ImageFilenames = allImageFileNames.split('\n');
+		//Truncate the last entry. It will be '' 
+		if ( ImageFilenames.length > 0 )
+			ImageFilenames.length--;
+		//Just start up the other resize thread as soon as possible.
+		// See OnLoad for when we try to use this.
+		try 
+		{
+			if ( ImageFilenames.length > 0 && resizeImages)
+				ResizeAndGetURL( ImageFilenames[0], false, donothing, null);
+		}
+		catch (ex)
+		{
+		}
+	}
+}
+
+function donothing(){}
+
+////////////////////////////////////////////////
+//
+//   Functions
+//
+//
+////////////////////////////////////////////////
+
+function OnLoad()
+{	
+	//TVShell.Message("SlideShow.html: FinishInit(): ENTER ");
+
+	PhotoManager.ClearThumbnailRequestQueue();
+	PhotoManager.ClearImageResizeRequestQueue();
+
+	Sink.AttachEvent(TVShell, "OnServiceListKeyDown", OnServiceListKeyDown);
+		
+	if(document.all.Play)
+		document.all.Play.focus();
+
+	if ( ImageFilenames.length > 0 )
+	{
+		SlideShowRow.style.display = "none";
+		StatusRow.style.display = "block";
+		StatusStr.innerText = "Reading first image";
+
+		PhotoSlideShow.resizeImages = resizeImages;
+		PhotoSlideShow.imageFilenames = ImageFilenames;
+
+		if ( startIndex )
+			PhotoSlideShow.startIndex = startIndex;
+		PhotoSlideShow.viewWidth = PHOTO_AREA_WIDTH;
+		PhotoSlideShow.viewHeight = PHOTO_AREA_HEIGHT;
+		PhotoSlideShow.onPlayStateChange=OnPlayStateChange;
+		PhotoSlideShow.onBadPhoto=OnBadPhoto;
+		PhotoSlideShow.onNoPhotosToDisplay=OnNoPhotosToDisplay;
+		PhotoSlideShow.onImageTransitionStart=OnImageTransitionStart;
+		PhotoSlideShow.onImageTransitionComplete=OnImageTransitionComplete;
+		PhotoSlideShow.onImageReady=OnImageReady;
+		PhotoSlideShow.autoStart = autoPlay ? "true" : "false";
+		PhotoSlideShow.open();
+
+
+		PHOTO_COUNT_STRING = (PhotoSlideShow.numPhotos==1) ? " 1 photo"
+			: "" + PhotoSlideShow.numPhotos + " photos";
+
+		if ( autoPlay )
+			Play();
+
+		DisplayPlayState();
+	}
+	else 
+		TVShell.Message("\nSlideShow.html: OnLoad(): NO FIRST PHOTO FOR SLIDESHOW!!");
+
+	ShowControlPanel();
+	//TVShell.Message("SlideShow.html: FinishInit(): LEAVE ");
+}
+
+function OnUnload()
+{
+	//TVShell.Message("SlideShow.html: onUnload(): ENTER ");
+	
+	// restore screensaver state
+	screenSaver.Enable = screenSaverOldState;	
+	
+	PhotoManager.ClearThumbnailRequestQueue();
+	PhotoManager.ClearImageResizeRequestQueue();
+	
+	// Shorten main panel by the size of status panel
+	if(statusPanel)
+	{
+		mainPanel.StartRect(SAFE_LEFT, SAFE_TOP, SAFE_WIDTH, STATUS_TOP - SAFE_TOP);
+		mainPanel.ZOrder = oldMainPanelZorder;
+	}
+}
+
+function HandleKey()
+{
+	//TVShell.Message( "SlideShow.html: HandleKey(): event.type=" + event.type + " keyCode="+ event.keyCode );
+	if(ControlPanel.style.visibility != "visible")
+	{
+		if ( event.type == 'keydown' ) {
+			if ( event.keyCode == VK_LEFT ) {
+				Prev();
+				//Don't do default action for this key.
+				event.returnValue = false;
+				return;
+			} else if ( event.keyCode == VK_RIGHT ) {
+				Next();
+				//Don't do default action for this key.
+				event.returnValue = false;
+				return;
+			}
+		}
+		ShowControlPanel();
+		//Don't do default action for this key.
+		event.returnValue = false;
+	}
+
+	SetControlPanelTimeout();
+}
+	
+function OnServiceListKeyDown(ServiceEntry)
+{
+	// If a key is pressed to bring up a panel, then leave the slide show.
+	if (ServiceEntry.Panel && ServiceEntry.Panel != "") {
+		Done();
+		return;
+	}
+
+	if (PanelManager.FocusedPanel.Name == "main") {
+		var alertPanel = PanelManager.Item("alert");						
+		if (alertPanel && alertPanel.State == 0)
+			return;
+
+		if (ServiceEntry.name == "browser::esc") {
+			if(document.all.ControlPanel.style.visibility == "hidden")
+				ShowControlPanel();
+			else
+				HideControlPanel();
+		}
+	}
+}
+
+function OnPlayStateChange()
+{
+	DisplayPlayState();
+}
+
+function OnBadPhoto()
+{
+	var maxLen=20;
+	var len = event.photoURL.length;
+	var start = len < maxLen ? 0 : len - maxLen;
+	var fileName = event.photoURL.substring( start, len );
+	if ( len > maxLen )
+		fileName = "..." + fileName;
+
+	if (document.all.StatusRow.style.display == "block" )
+	{
+		StatusStr.innerHTML = "<p>Unable to read image " + (event.photoIndex+1) + " of " + PhotoSlideShow.numPhotos + "</p><p>Image was " + fileName + ".</p><p>Skipping it and reading the next image.</p>";
+	}
+	else
+	{
+		HideControlPanel();
+		SetOverlayText( 'Unable to read image ' + (event.photoIndex+1) + ". Filename is " + fileName);
+	}
+}
+
+function OnNoPhotosToDisplay()
+{
+    var msg="Unable to display any of your photos. Stopping the slideshow";
+	PanelManager.CustomMessageBox(msg,"Stopping slideshow", "Okay", 0,"",true);
+	Done();
+}
+
+function OnImageReady()
+{
+	PhotoManager.ClearThumbnailRequestQueue();
+	PhotoManager.ClearImageResizeRequestQueue();
+}
+
+function OnImageTransitionStart()
+{
+	DisplayPlayState();
+}
+
+function OnImageTransitionComplete()
+{
+	SlideShowRow.style.display = "block";
+	StatusRow.style.display = "none";
+
+	DisplayPlayState();
+}
+
+function Done()
+{
+	//TVShell.Message("SlideShow.html: Done(): ");
+
+	setTimeout(GoBack, 1);
+}	
+
+function GoBack()
+{
+	window.history.back();
+}
+
+function Play()
+{
+	SetControlPanelTimeout();
+	PhotoSlideShow.play();
+}
+
+function Pause()
+{
+	SetControlPanelTimeout();
+	PhotoSlideShow.pause();
+}
+
+function Prev()
+{
+	//TVShell.Message( "\n\nSlideShow.html: Prev(): ENTER" );
+
+	SetControlPanelTimeout();
+	PhotoManager.ClearThumbnailRequestQueue();
+	PhotoManager.ClearImageResizeRequestQueue();
+	PhotoSlideShow.prev();
+
+	if (PhotoSlideShow.numPhotos > 1)
+	{
+		SetOverlayText( "" + (PhotoSlideShow.desiredCurrentImageIndex + 1) 
+		                + "/" + (PhotoSlideShow.numPhotos) );
+	}
+	//TVShell.Message( "SlideShow.html: Prev(): LEAVE" );
+}
+
+function Next()
+{
+	//TVShell.Message( "\n\nSlideShow.html:  Next(): ENTER" );
+
+	SetControlPanelTimeout();
+	PhotoManager.ClearThumbnailRequestQueue();
+	PhotoManager.ClearImageResizeRequestQueue();
+	PhotoSlideShow.next();
+	if (PhotoSlideShow.numPhotos > 1)
+	{
+		SetOverlayText( "" + (PhotoSlideShow.desiredCurrentImageIndex + 1) 
+		                + "/" + (PhotoSlideShow.numPhotos) );
+	}
+	//TVShell.Message( "SlideShow.html: Next(): LEAVE" );
+}
+
+function SetControlPanelTimeout()
+{
+	//TVShell.Message( "SlideShow.html: SetControlPanelTimeout(): ENTER" );
+	clearTimeout(controlPanelTimeoutID);
+	controlPanelTimeoutID =
+		setTimeout(HideControlPanel, CONTROL_PANEL_TIMEOUT);
+}
+
+function HideControlPanel()
+{
+	//TVShell.Message("SlideShow.html: HideControlPanel: ENTER ");
+	ControlPanel.style.visibility = "hidden";
+	PhotoSlideShow.viewHeight=PHOTO_AREA_HEIGHT;
+}
+
+function ShowControlPanel()
+{
+	//TVShell.Message("SlideShow.html: ShowControlPanel: ENTER ");
+	
+	HideOverlayText();
+	PhotoSlideShow.viewHeight=359;
+	document.all.ControlPanel.style.visibility = "visible";
+	if(document.all.Play)
+		document.all.Play.focus();
+		
+	SetControlPanelTimeout();
+} 
+
+function DisplayPlayState()
+{
+	var index = PhotoSlideShow.currentImageIndex;
+
+	var psText = (PhotoSlideShow.numPhotos == 1 ? PSL_SHOWING_STRING : 
+		PhotoSlideShow.playState + ":");
+	if ( PhotoSlideShow.currentImageIsLoading )
+		psText = PSL_LOADING_STRING;
+
+	var cntText = (PhotoSlideShow.numPhotos>1) ? (index+1) + " of " + PHOTO_COUNT_STRING
+		: PHOTO_COUNT_STRING;
+	if ( index < 0 )
+		cntText = "";
+
+	CountStr.innerText = cntText;
+	PlayState.innerText = psText;
+
+	//TVShell.Message( psText + " " + cntText );
+}
+
+var overlayTimerID = -1;
+function SetOverlayText( text )
+{
+	TVShell.Message( "SetOverlayText(" + text + ")" );
+	if ( document.all.ControlPanel.style.visibility == "hidden" )
+	{
+		document.all.OverlayCounterDiv.style.display = "block";
+		document.all.OverlayCounterSpan.innerText =  text;
+		if (overlayTimerID!= -1)
+			clearTimeout(overlayTimerID);
+		overlayTimerID = setTimeout( HideOverlayText, 2000 );
+	}
+}
+
+function HideOverlayText()
+{
+	overlayTimerID = -1;
+	document.all.OverlayCounterDiv.style.display = "none";
+}
+
+//-->
+</script>
+
+<body onload="OnLoad();" onunload="OnUnload();" onKeydown="HandleKey();">
+<script>
+if (UNDER_NT) { 
+	document.body.onKeyUp=document.body.onKeyDown;
+	document.body.onKeyDown=null;
+}
+</script>
+
+<div>
+	<map name="NavMap1">						   
+		<area shape="RECT" coords="  0,4,  39,48" id="Play" tabindex=0 onClick="Play()">    
+		<area shape="RECT" coords=" 45,4,  84,48" id="Pause" tabindex=0 onClick="Pause()">    
+		<area shape="RECT" coords=" 90,4, 129,48" id="Prev" tabindex=0 onClick="Prev()"> 
+		<area shape="RECT" coords=" 130,4, 169,48" id="Next" tabindex=0 onClick="Next()"> 
+	</map>
+	<div id="ControlPanel">
+		<table cellpadding=0 cellspacing=0 ID="Table1">
+			<tr>
+				<td style="width:15px;"><img src="../Panels/Images/PanelPlayerSmallLeftSide.jpg"></td>
+				<td style="text-align:center; vertical-align:top; background-image:url(../Panels/Images/PanelPlayerSmallMiddleStretch.jpg)"><img src="../Panels/Images/PanelPlayerSmallBG.jpg"></td>
+				<td style="width:15px;"><img src="../Panels/Images/PanelPlayerSmallRightSide.jpg"></td>
+			</tr>
+		</table>
+		<div style="width:100%; height:100%; padding:8px 15px 7px 15px;">
+			<table cellpadding="0" cellspacing="0" width=100% height="46" ID="Table3">
+				<tr>
+					<td align="top">
+						<img style="vertical-align:top" src="../Images/1x1.gif" useMap="#NavMap1" style="width:174; height:46; border:none;">
+						<div id="PlayButton"  style=" position:absolute; left:15px; top:8px; width:39px; height:44px;  behavior:url(#default#alphaImageLoader); src:url(msntv:/Media/Assets/PanelPlayerControlPlay.png);"></div>
+						<div id="PauseButton" style="position:absolute; left:60px; top:8px; width:39px; height:44px; behavior:url(#default#alphaImageLoader); src:url(msntv:/Media/Assets/PanelPlayerControlPause.png);"></div>
+						<div style="position:absolute; left:105px; top:8px; width:39px; height:44px; behavior:url(#default#alphaImageLoader); src:url(msntv:/Media/Assets/PanelPlayerControlPrev.png);"></div>
+						<div style="position:absolute; left:145px; top:8px; width:39px; height:44px;  behavior:url(#default#alphaImageLoader); src:url(msntv:/Media/Assets/PanelPlayerControlNext.png);"></div>
+					<td id="PlayState" align="right" vAlign=top style="position:absolute; left:200px; width:70px; xbackground-color:red; padding-top:10px; color:#AFC0CC; font-size:16px; font-family:segoe; font-weight:bold;"></td>
+					<td id="CountStr" align="right" vAlign=top style="position:absolute; left:290px; width:170px; xbackground-color:red; padding-top:10px; color:#AFC0CC; font-size:16px; font-family:segoe; font-weight:bold;"></td>
+					<td style="text-align:right;">					
+						<msntv:CustomButton label="Done" class="bottombarButtom" style="margin-left:15px;" id="Done" onclick="Done();"  />
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>
+
+<table cellpadding=0 cellspacing=0 width=100% xheight=100% ID="MainArea" STYLE="FILTER: progid:DXImageTransform.Microsoft.Fade(Overlap=1.00); " >
+	<tr id="StatusRow" style="display:none;" height="359" width="560">
+		<td id="StatusStr" align="center" vAlign=center>
+		</td>
+	</tr>
+	<tr id="SlideShowRow" >
+		<td id="SlideShowCell" align="center" vAlign="middle">
+<div id="PhotoSlideShowDiv" width="560" height="420" style='overflow: hidden' >
+		    <msntv:slideShow id="PhotoSlideShow" filter="blendTrans(duration=0.6)"/>
+</div>
+		</td>
+	</tr>
+</table>
+<div id=OverlayCounterDiv style='overflow:hidden; height: 60;'>
+<table id=OverlayCounterTable cellpadding=0 cellspacing=0> <tr>
+				<td style="width:15px;"><img src="../Panels/Images/PanelPlayerSmallLeftSide.jpg"></td>
+				<td style="text-align:center; vertical-align:top; background-image:url(../Panels/Images/PanelPlayerSmallMiddleStretch.jpg)"><br/><span id=OverlayCounterSpan></span></td>
+				<td style="width:15px;"><img src="../Panels/Images/PanelPlayerSmallRightSide.jpg"></td>
+			</tr>
+</table>
+</div>
+</body>
+</html>

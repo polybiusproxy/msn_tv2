@@ -1,0 +1,48 @@
+<html xmlns:msntv>
+<head>
+	<title>Connection Settings</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Changing connection settings" showScrollTop="true" />
+
+<div id="ScrollArea">
+	<span class="description">
+        To connect to the <script>document.write( ServiceFullName );</script>, your <script>document.write( ProductShortName );</script> uses a dial-up phone line or a broadband connection. See the Setup Guide that came with your <script>document.write( ProductShortName );</script> for information on connecting to the <SCRIPT>document.write( ServiceFullName );</SCRIPT>.
+        <p>
+        <p>
+        Once you've set up your connection, you can change various settings if necessary. For example, if you're using a dial-up connection, you might decide to block call waiting while you're connected to <script>document.write( ServiceShortName );</script>.
+	</p>
+        </p>
+        <p>
+        <p>
+	To view or change your connection settings:
+        </p>
+        </p>
+        <ol>
+                <li>Choose <b>Settings</b> from the top of the Sign-in page.</li>
+		<li>Choose <b>Connection settings</b>.</li>
+                <p>
+                <p>
+                You'll see a list of connection options.
+		</p>
+		</p>
+		<li>Choose an option and follow the instructions you see on screen.</li>
+
+        </ol>
+
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

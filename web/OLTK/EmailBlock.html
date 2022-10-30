@@ -1,0 +1,38 @@
+<html xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<title>You are not allowed to use Email</title>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script>
+	function FriendlyErrorTitle()
+	{
+		return "You are not allowed to use email";
+	}
+
+  	function FriendlyErrorBody()
+	{
+		var errorBody = "<p>Because of the restrictions your parent has placed on your account, you don't have permission to use Email.</p>";
+		return errorBody;
+	}
+    
+</script>
+</head>
+<BODY class=fullPage>
+	<div id="icon"></div>
+	<div id="title" class="header">
+		<SCRIPT>
+			document.write(FriendlyErrorTitle());
+		</SCRIPT>
+	</div>	
+	<div id="description">
+		<SCRIPT>
+		document.write(FriendlyErrorBody());
+		</SCRIPT>
+	</div>
+	<div id="buttonBar">
+		<msntv:CustomButton id=default label="OK" onClick="javascript:history.go(-1)" />
+		<script>document.all("default").focus();</script>
+	</div>
+</body> 
+</html>

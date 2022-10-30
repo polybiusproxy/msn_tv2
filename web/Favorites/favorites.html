@@ -1,0 +1,2164 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/panelheading.htc">
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+
+<title>Favorites Panel</title>
+
+<link rel=StyleSheet type="text/css" href="../CSS/Default.css">
+<link rel=StyleSheet type="text/css" href="../CSS/Panel.css">
+<style>
+.subHeader
+{
+	font-size:18px;
+	font-family:Highway;
+	color:1D1D1D;
+ 	width:440px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.subHeaderTitle
+{
+	font-size:18px;
+	font-family:Highway;
+	color:#1D1D1D;
+}
+.titleContent
+{
+	font-size:18px;
+	font-family:Highway;
+	color:#14224B;
+	width:220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.hrefContent
+{
+	font-size:16px;
+	font-family:Highway;
+	color:#27386D;
+	width:220px;
+	height:50px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-wrap:break-word;
+}
+.addFavFolderTitleContent
+{
+	font-size:18px;
+	font-family:Highway;
+	color:#010C3E;
+	width:250px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.addFavTitleContent
+{
+	font-size:18px;
+	font-family:Highway;
+	font-weight:bold;
+	color:#1D1D1D;
+	width:250px;
+	height:60px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-wrap:break-word;
+}
+.addFavHrefContent
+{
+	font-size:16px;
+	font-family:Highway;
+	color:#1D1D1D;
+	width:350px;
+	height:18px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+</style>
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<script language="Javascript" src="../Javascript/PanelImpl.js"></script>
+<script language="Javascript" src="../Javascript/ContentPaneHelp.js"></script>
+<script language="jscript">
+
+	NumOfShortcuts = 3;
+	TimerOfShortCutKey = 3; //3 seconds
+	animationTimeOut = 4000;
+	PictureBKColor = '#B3E1D8';
+
+var thisPanel = PanelManager.Item("favoritespanel");
+var mainPanel = PanelManager.Item("main");
+var favoritesMgr = TVShell.UserManager.CurrentUser.Favorites;
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+var g_oFavXml = null;
+var g_sItemToSelect = null;
+var g_sIdToSelect = null;
+var g_iRenameCount = 0;
+var navigateID =""; // the ID of navigate favorite 
+var paramsArray = null;
+ var b_ActionDone = false;
+var	g_fPending=false;
+var	g_pendingURL="";
+var MAX_RECENT_THUMBNAILS=100;
+
+//--------------------------------------------------------------
+// General utilities
+//--------------------------------------------------------------
+
+// Removes leading and trailing blanks
+function TrimUtil(sIn)
+{
+	return (sIn.replace(/^\s+|\s+$/g,''));
+}
+
+// Removes trailing blanks
+function RTrimUtil(sIn)
+{
+	return (sIn.replace(/\s+$/,''));
+}
+
+// Removes leading blanks
+function LTrimUtil(sIn)
+{
+	return (sIn.replace(/^\s+/,''));
+}
+
+function ltrim(strValue) 
+{
+	var i = 0;
+	while (strValue.charAt(i) == ' ') 
+	{
+		i++;
+	}
+	return strValue.slice(i);
+}
+
+function rtrim(strValue) 
+{
+	var i = strValue.length - 1;
+	while (strValue.charAt(i) == ' ') 
+	{
+		i--;
+	}
+	return strValue.slice(0, i + 1);
+}
+
+function removeUnusedSpace(strValue) 
+{
+	if(typeof(strValue) == "undefined" || strValue=="")
+	{
+		return("");
+	}
+	return ltrim(rtrim(strValue));
+}
+
+// strip folder/favorite name of leading/trailing spaces
+// add any other stripping here
+// called for rename and add folder
+// return empty string for invalid name
+function cleanName( s )
+{
+	var str = removeUnusedSpace( s );
+	return str;
+}
+
+// Escape backslashes and single quotes
+function escapeString(sIn)
+{
+	var sResult = '';
+	if (null != sIn && '' != sIn)
+	{
+		sResult = sIn.replace(/\\/g, "\\\\");
+		sResult = sResult.replace(/\'/g, "\\'");	// "
+	}
+	return sResult;
+}
+
+
+	/*
+  	this function should disappear with Mars V2, as we want the date
+  	formatted specific to the locale, and thus we will need a method to
+  	expose the systems local specific date formatting.
+  	this function is available in JS 5.5, but not 5.0
+	*/
+
+	function niceDate(sDate)
+	{
+      // ugh, JScript wants dates with slashes, not dashes.
+		var re = /-/i;
+		var sDateString = sDate.replace(re,"/");
+		var iOneDay = 1000*60*60*24;
+
+		var oDate = new Date(sDateString);
+		var oNow = new Date();
+		var oToday = new Date(oNow.getYear(),oNow.getMonth(),oNow.getDate());
+		var oYesterday = new Date (oToday - iOneDay);
+		var oDifference = (oNow - oDate) / iOneDay;
+
+		if ( oDate > oToday )
+		{
+			var L_TODAY_TEXT = /* locstart fav.today.txt/ */"Today"/* locend */;
+			oDifference = L_TODAY_TEXT;
+		}
+		else if ( oDate > oYesterday )
+		{
+			var L_YESTERDAY_TEXT = /* locstart fav.yesterday.txt */"Yesterday"/* locend */;
+			oDifference = L_YESTERDAY_TEXT;
+		}
+		else if  ( oDifference < 6 )
+		{
+			var L_SUNDAY_TEXT = /* locstart fav.Sunday.txt */"Sunday"/* locend */;
+			var L_MONDAY_TEXT = /* locstart fav.Monday.txt */"Monday"/* locend */;
+			var L_TUESDAY_TEXT = /* locstart fav.Tuesday.txt */"Tuesday"/* locend */;
+			var L_WEDNESDAY_TEXT = /* locstart fav.Wednesday.txt */"Wednesday"/* locend */;
+			var L_THURSDAY_TEXT = /* locstart fav.Thursday.txt */"Thursday"/* locend */;
+			var L_FRIDAY_TEXT = /* locstart fav.Friday.txt */"Friday"/* locend */;
+			var L_SATURDAY_TEXT = /* locstart fav.Saturday.txt */"Saturday"/* locend */;
+			var aDaysText = new Array(L_SUNDAY_TEXT, L_MONDAY_TEXT, L_TUESDAY_TEXT, L_WEDNESDAY_TEXT, L_THURSDAY_TEXT, L_FRIDAY_TEXT, L_SATURDAY_TEXT);
+			oDifference = aDaysText[oDate.getDay()];
+		}
+		else{
+			var L_DATEFORMAT_TEXT = /* locstart fav.DateFormat.txt */"MM/DD/YYYY"/* locend */;
+			oDifference = L_DATEFORMAT_TEXT;
+
+			var iYear = oDate.getFullYear();
+			var iMonth = oDate.getMonth() + 1;
+			var iDate = oDate.getDate();
+
+			oDifference = oDifference.replace(/YYYY/i, iYear);
+			oDifference = oDifference.replace(/MM/i, iMonth);
+			oDifference = oDifference.replace(/DD/i, iDate);
+		}
+
+		return oDifference;
+	}
+
+// utility function - given a query string, return and array of name value pairs
+function buildParams()
+{
+	// this determines the ID of the XML node to render favorites
+	// from.  node is found eslewhere using selectSingleNode with an
+	// escaped version of this id string.
+	var url = thisPanel.URL;
+	var sSearch = url.indexOf("?") > 0 ? url.substr(url.indexOf("?")) : null;
+	var aValues = new Array();
+	if (sSearch) 
+	{
+		sSearch = sSearch.substr(1, sSearch.length);
+		var aPairs = sSearch.split("&");
+		var aPair = null;
+
+		for (i in aPairs) 
+		{
+			aPair = aPairs[i].split("=");
+			var sName = unescape(aPair[0]);
+			var sValue = unescape(aPair[1]);
+			var i=2;
+			while(sName=="folder" && i< aPair.length){
+				sValue +='=';
+				sValue += aPair[i++];
+			}
+			aValues[sName] = sValue;
+		}
+	}
+	return aValues;
+}
+
+function removeTags(plainText)
+{
+	if (plainText == "" || plainText == null)
+		return "";
+   return TVShell.Utilities.EscapeHTML(plainText);
+}
+
+// find the xml node to start rendering from - passed in via the query string
+function findCurrentNode()
+{
+	// Set the current node to the root 
+	var currentNode = g_oFavXml.selectSingleNode("/favorites");
+	// Try to find the current node from the (non-empty) query string
+	// If we have a folder id, set the start node to that node
+	var sFolderID = paramsArray["folder"];
+	if (null != sFolderID && "" != sFolderID){
+		currentNode = g_oFavXml.selectSingleNode("/favorites//favfolder[@id = '" + escapeString(sFolderID) + "']");
+	
+		// If for some reason, we're passed an invalid folder id, go to the root
+		// TODO: Should we just redirect to the entry page, so that the url is correct?
+		if (null == currentNode){
+			currentNode = g_oFavXml.selectSingleNode("/favorites");
+		}
+	}
+	return currentNode;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// Set global variable for callRename and callCreateFolder
+var L_NEWFOLDERNAME_TEXT = "Unnamed Folder";
+var L_NEWFAVORITENAME_TEXT = "Unnamed Favorite";
+var MaxNumOfFavoritesPerBox =800;
+
+function GetMainPanelURL()
+{
+	var docFileURL = "";
+	if(IsMainPanelInDocViewer())
+		docFileURL = thisPanel.UserStrData;
+	return (docFileURL!="") ? docFileURL : mainPanel.URL;
+}
+
+var NameOfNewFavoriteInAddFavorite = "";
+var NameOfTargetFolderInAddFavorite = "";
+function callCreateFavorite(index)//0: add to root; 1: add to a folder; -1: add to a new folder
+{
+	NameOfNewFavoriteInAddFavorite = "";
+	NameOfTargetFolderInAddFavorite = "";
+	TVShell.Message("TotalFavoritesCount="+TVShell.UserManager.TotalFavoritesCount);
+	var numOfAvailableFavorites=MaxNumOfFavoritesPerBox-TVShell.UserManager.TotalFavoritesCount;
+	if (numOfAvailableFavorites < 10) {
+		if (numOfAvailableFavorites <= 0) {
+			TVShell.PanelManager.CustomMessageBox("Sorry, you don’t have room for any more favorites. Please remove one of your favorites and try again.","", "OK", 0,"",false, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+			return null;
+		} else {
+			if (numOfAvailableFavorites == 1)
+				TVShell.PanelManager.CustomMessageBox("After we add this favorite, your list will be full. To add more, remove some of the favorites you don’t use.","", "OK", 0,"",false, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+			else if (numOfAvailableFavorites == 2)	/* 2 because we're just about to add one */
+				TVShell.PanelManager.CustomMessageBox("You have room for one more favorite.","", "OK", 0,"",false, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+			else
+				TVShell.PanelManager.CustomMessageBox("You have room for " + (numOfAvailableFavorites-1) + " more favorites.","", "OK", 0,"",false, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+		}
+	}
+    var sFavoriteNameBase = L_NEWFAVORITENAME_TEXT;
+	if (mainPanel.Document.title != "")
+		sFavoriteNameBase = mainPanel.Document.title; 
+	var sFavoriteName;
+	var pcwszUrl = GetMainPanelURL();
+	
+	var pcwszThumbNailUrl = TVShell.ThumbnailManager.URL;
+//	if (IsMainPanelInDocViewer())
+//		pcwszThumbNailUrl = ""; 
+	var oNode;
+	if (index == 0) {
+		var oNode = g_oFavXml.selectSingleNode("/favorites");
+	} else if(index == -1){
+		var folderID = callCreateFolder();
+		if(folderID != ""){
+		    oNode = g_oFavXml.selectSingleNode("//favfolder[@id = '" + escapeString(folderID) + "']"); 
+		}
+	} else {
+		var folderList = g_oFavXml.selectNodes("//favfolder");   // all folder nodes
+		if (index <= folderList.length) {
+			oNode = folderList.item(index-1); 
+		}
+	}
+	sFavoriteName = sFavoriteNameBase;
+    var iFavoriteIncrement = 1;
+    if (oNode) {	
+		if (oNode.nodeName == "favorites")
+			NameOfTargetFolderInAddFavorite = "Main";
+		else		
+			NameOfTargetFolderInAddFavorite = oNode.getAttribute("title")
+	
+		var fExisting;
+		var xmlFavoriteList = oNode.selectNodes("favorite");
+		var xmlFavListLen = xmlFavoriteList.length;
+		do {
+            fExisting = false;
+			var i = 0;
+			while (i < xmlFavListLen) {
+	            var xmlFavorite = xmlFavoriteList.item(i++);
+				if (xmlFavorite) {
+					if(xmlFavorite.selectSingleNode("title").text == sFavoriteName) {
+						if (xmlFavorite.selectSingleNode("href").text == pcwszUrl) {
+							// the favorite already matches an existing favorite
+							NameOfNewFavoriteInAddFavorite = sFavoriteName;
+							return xmlFavorite.getAttribute("id");
+						} else {
+							// There's an existing favorite with this name, but a different
+							// href.  Create a new name by appending (n) to it.
+							fExisting = true;
+							iFavoriteIncrement++;
+							sFavoriteName = sFavoriteNameBase + " (" + iFavoriteIncrement + ")";
+						}
+					}
+				}
+			}
+		}while(fExisting);
+        
+		var sName=sFavoriteName;		
+		if (sName) {
+	        var sFavoriteID = favoritesMgr.newFavorite(oNode, sName,pcwszUrl,pcwszThumbNailUrl);
+			if (sFavoriteID != "") {
+				NameOfNewFavoriteInAddFavorite = sName;
+				var favoritesList=g_oFavXml.selectNodes("//favorite");
+				TVShell.UserManager.CurrentUser.FavoritesCount=favoritesList.length;
+				TVShell.EventLog.Usage("favorites","action=create");
+			}
+			return sFavoriteID;
+		}
+    } else {
+        // something bad happened - we cant find the folder to create in
+    }   
+}
+
+var AddedFolderName = "";
+// look for the first available "New Folder (#)" and create it
+function callCreateFolder()
+{
+//  var oNode = findCurrentNode();
+	var oNode =g_oFavXml.selectSingleNode("/favorites");
+    var sFolderNameBase = L_NEWFOLDERNAME_TEXT;
+	var name = cleanName( document.all.folderTitleText.value );
+ 	if(name !="")
+		sFolderNameBase = name;
+	else
+	{
+		document.all.folderTitleText.value = sFolderNameBase;
+		TVShell.PanelManager.CustomMessageBox("<P>You must enter a folder name.</P>","", "OK", 0,"", false, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+		return 0;
+	}
+    var sFolderName = sFolderNameBase;
+    var iFolderIncrement = 1;
+    if (oNode) 
+    {
+        while (oNode.selectSingleNode("favfolder[@title = '" + escapeString(sFolderName) + "']"))
+        {
+            iFolderIncrement++;
+            sFolderName = sFolderNameBase + " (" + iFolderIncrement + ")";
+        }
+        
+        g_sItemToSelect = sFolderName; // store the newly created name so we can select it when we render 
+        var sFolderID = favoritesMgr.newFolder(oNode, sFolderName);
+		AddedFolderName = sFolderName;
+		return sFolderID;
+    }
+    else 
+    {
+        // something bad happened - we cant find the folder to create in
+	TVShell.PanelManager.CustomMessageBox("<P>Unable to complete operation.</P>","", "OK", 0,"", false, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+    } 
+	return 0;  
+}
+
+// call delete method on xml source object
+function callDelete()
+{
+	var oCurrentNode=findCurrentNode();
+	var xmlFavFolderList= oCurrentNode.selectNodes("favfolder");
+	var favFolderListLen=xmlFavFolderList.length;
+	var xmlFavoriteList= oCurrentNode.selectNodes("favorite");
+	var favoriteListLen= xmlFavoriteList.length;
+	numOfDeletedFav = 0;
+	numOfDeletedFolder = 0;
+	var numFoldersToDelete = 0;
+	var numFoldersToDeleteWithContent = 0;
+	var inputs = document.all.tags("input");
+	for (var i = favFolderListLen-1; i >= 0; i--)
+	{
+		if(inputs[i+favoriteListLen].checked == true)
+		{
+			numFoldersToDelete++;
+			var xmlFavFolder = xmlFavFolderList.item(i);
+			if(xmlFavFolder.selectNodes("favorite").length > 0)
+			{
+				numFoldersToDeleteWithContent++;
+			}
+		}
+	}
+
+// display a warning if a folder contains favorites
+	if ( numFoldersToDeleteWithContent > 0 )
+	{
+		var str;
+		var butStr;
+		if ( numFoldersToDelete == 1 )	// deleting one folder and it contains content
+		{
+			str = "<P>You have chosen to delete a folder that contains favorites.  Deleting this folder will also delete all of the favorites in it.</P>"; 
+			str += "<P>Do you want to delete this folder?</P>";
+			butStr = "Do not Delete Folder;Delete Folder";
+		}
+		else
+		{
+			str = "<P>You have chosen to delete folders.  One or more of these folders contain favorites.  Deleting folders will also delete all of the favorites in them.</P>"; 
+			str += "<P>Do you want to delete these folders?</P>";
+			butStr = "Do not Delete Folders;Delete Folders";
+		}
+		var result =  TVShell.PanelManager.CustomMessageBox(str, "" , butStr , 1,"", 1, MGX_ICON_WARNING, MGX_SIZE_LARGE);
+		if (result == 0)	return false;
+	}
+
+	for (var i = favoriteListLen-1; i >= 0; i--) {
+		if(inputs[i].checked == true) {
+			var xmlFavorite = xmlFavoriteList.item(i);
+			if(xmlFavorite) {
+			    favoritesMgr.deleteItem(xmlFavorite);
+				numOfDeletedFav ++;
+			}
+		}
+	}
+
+	for (var i = favFolderListLen-1; i >= 0; i--) {
+		if(inputs[i+favoriteListLen].checked == true){
+			var xmlFavFolder = xmlFavFolderList.item(i);
+			if(xmlFavFolder) {
+			    favoritesMgr.deleteItem(xmlFavFolder);
+				numOfDeletedFolder ++;
+			}
+		}
+	}
+
+	if (numOfDeletedFav == 0 && numOfDeletedFolder == 0) {
+		TVShell.PanelManager.CustomMessageBox("Please select a favorite or a folder to delete.","", "OK", 0,"", 1, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+		return false;
+	}
+	
+	if(numOfDeletedFav > 0)
+		TVShell.EventLog.Usage("favorites","action=delete");
+	
+	return true;
+}
+var NumOfRename=0;
+// call rename method on xml source object
+function callRename()
+{
+	var oCurrentNode=findCurrentNode();
+	var xmlFavoriteList = oCurrentNode.selectNodes("favorite");
+	var favListLen = xmlFavoriteList.length;
+	for (var i = 0; i < favListLen; i++) {
+		var xmlFavorite = xmlFavoriteList.item(i);
+		if(xmlFavorite){
+			var title = xmlFavorite.selectSingleNode("title").text;
+			if(textBoxRenameArray != null && textBoxRenameArray[i] != null && textBoxRenameArray[i]!="" && textBoxRenameArray[i]!=title){
+				title = textBoxRenameArray[i];
+				NumOfRename ++;
+				favoritesMgr.renameItem(xmlFavorite,title);
+			}		
+		}
+	}
+
+	var xmlFavFolderList= oCurrentNode.selectNodes("favfolder");
+	var favFolderListLen=xmlFavFolderList.length;
+	for (var j = 0; j < favFolderListLen; j++) {
+		var xmlFavFolder = xmlFavFolderList.item(j);
+		if (xmlFavFolder){
+			var title = xmlFavFolder.getAttribute("title");
+			if (textBoxRenameArray != null && textBoxRenameArray[j+favListLen] != null && textBoxRenameArray[j+favListLen] != "" && textBoxRenameArray[j+favListLen]!=title){
+				title = textBoxRenameArray[j+favListLen];
+				NumOfRename ++;
+				favoritesMgr.renameItem(xmlFavFolder,title);
+			}
+		}
+	}
+
+	textBoxRenameArray = null;
+}
+
+function callMoveToFolder() 
+{	
+	var parentFolder = findCurrentNode();           
+    var folderList = g_oFavXml.selectNodes("//favfolder");   // all folder nodes
+    var folderListLen = folderList.length; 
+	var specialLen = 1;//new folder
+	var index = -1;
+	var cnt = 0;
+	var inputs = document.all.tags("input");
+	for (var i = 0; i < inputs.length && index == -1; i++) {
+		if (inputs[i].checked == true)
+			index = i;
+	}
+//	TVShell.Message("index="+index + " folderListLen="+folderListLen + "numOfMovedFav="+numOfMovedFav);
+	var folder;
+	if (index == folderListLen + specialLen - 1) {
+		var folderID = callCreateFolder();
+		if (folderID != 0) {
+		    folder = g_oFavXml.selectSingleNode("//favfolder[@id = '" + escapeString(folderID) + "']"); 
+		}
+	} else if (parentFolder.nodeName != "favorites" && index == 0) {
+		folder = g_oFavXml.selectSingleNode("/favorites");  // root node
+	} else {
+		if(parentFolder.nodeName != "favorites") {
+			var num = -1;
+			for (var i = 0; i < folderListLen && num == -1; i++) {
+				var tempFolder = folderList.item(i);
+				if (tempFolder.getAttribute("id") == parentFolder.getAttribute("id")) 
+					num = i;
+			}
+			TVShell.Message(" index= "+index + " num= " + num);
+			if (index <= num)
+				folder = folderList.item(index-1);
+			else
+				folder = folderList.item(index);
+		} else
+			folder = folderList.item(index);
+	}
+	if (folder != null) {
+		if (folder.nodeName == "favorites")
+			targetFolderName = "main";
+		else
+			targetFolderName = folder.getAttribute("title");
+
+		var xmlFavoriteList= parentFolder.selectNodes("favorite"); 
+		var favListLen=xmlFavoriteList.length;
+		var favArray;
+		var indexStr = paramsArray["favoriteIndex"];
+		if (indexStr != null && indexStr!="") {
+			favArray = indexStr.split("-");
+		}
+		var len = favArray.length;
+		for (var i = len-1; i >= 0; i--) {
+			if(favArray[i] != null && favArray[i] != "") {
+				var index=parseInt(favArray[i]);
+				if(index < favListLen)
+					cnt += MoveTheFavorite( xmlFavoriteList.item(index), folder );
+			}
+		}
+	}
+	return cnt;
+}
+
+function MoveTheFavorite( fav , folder )
+{
+	var targetFavoriteList = folder.selectNodes("favorite");
+	var favName = fav.selectSingleNode("title").text;
+	var folderName = folder.getAttribute("title");
+	if ( folderName == null ) folderName = "Main Folder";
+	var len = targetFavoriteList.length;
+	for ( var i = 0 ; i < len ; i++ )
+	{
+		if ( targetFavoriteList.item(i).selectSingleNode("title").text == favName )
+		{
+			var str = "<P>The folder ("+folderName+") already contains a favorite with the name: <EM>"+favName+"</EM>.</P>";
+			str += "This favorite will not be moved.";
+			TVShell.PanelManager.CustomMessageBox( str ,"", "OK", 0,"",	 false,MGX_ICON_WARNING, MGX_SIZE_SMALL);
+			return 0;
+		}
+	}
+	favoritesMgr.moveItem(fav, folder);
+	return 1;
+}
+
+function callMoveFavorites()
+{
+	var sLocation = thisPanel.URL;
+	var targetURL= sLocation.substr(0,(sLocation.indexOf("?")>0)?sLocation.indexOf("?"):sLocation.length)+ "?action=MoveFavorites-ChooseFolder";
+	var folderID = paramsArray["folder"];
+	if(folderID!=null && folderID!="")
+		targetURL +="&folder="+folderID;
+	var oCurrentNode=findCurrentNode();
+	var xmlFavoriteList= oCurrentNode.selectNodes("favorite");
+	var favListLen=xmlFavoriteList.length;
+	var indexStr='';
+	var inputs = document.all.tags("input");
+	for (var j = 0; j < favListLen; j++) {
+		if(inputs[j].checked ==true){
+			if(indexStr!='')
+				indexStr += '-'
+			indexStr += j;
+		}
+	}
+	if(indexStr!=''){		
+		targetURL+="&favoriteIndex="+indexStr;
+		thisPanel.GotoURL(targetURL);
+		return true;
+	}else {
+		TVShell.PanelManager.CustomMessageBox("Please select a favorite to move.","", "OK", 0,"", 1, MGX_ICON_WARNING, MGX_SIZE_SMALL);
+		return false;
+	}
+}
+
+// track state of folders thru query string
+function showFolder(id)
+{
+	var sLocation = thisPanel.URL;
+	var aValues = buildParams();
+	id = escape(id);
+	var targetURL= sLocation.substr(0,(sLocation.indexOf("?")>0)?sLocation.indexOf("?"):sLocation.length) + "?folder=" + id;
+	if(aValues["action"]!=null && aValues["action"]!="")
+		targetURL +="&action="+aValues["action"];
+	thisPanel.GotoURL(targetURL);
+}
+
+function navigate(sId)
+{
+	var sPath = "//favorite[@id = '" + escapeString(sId) + "']";
+	var oNode = g_oFavXml.selectSingleNode(sPath);
+	if (null != oNode) {
+		navigateID=sId;	
+		var href=oNode.selectSingleNode("href").text;	
+		TVShell.Message("Favorites: href="+href+" navigateId="+navigateID);
+		if(href!=null && href!="")
+			ShowMainPanelWithURL(href);
+	} else {
+		var oErr = new Error();
+		oErr.description += "No node found for " + sPath;
+		throw(oErr);
+	}
+}
+
+function setNextURL(action)
+{
+	var sLocation = thisPanel.URL;
+	var targetURL=sLocation.substr(0,(sLocation.indexOf("?")>0)?sLocation.indexOf("?"):sLocation.length);
+	if (action != null && action != "")
+		targetURL += "?action="+action;
+	if (paramsArray["folder"] != null && paramsArray["folder"] != "") {
+		if(targetURL.indexOf("?")<=0)
+			targetURL += '?';
+		else
+			targetURL += '&';
+		targetURL += "folder="+paramsArray["folder"];
+	}
+	thisPanel.GotoURL(targetURL);
+}
+
+var numOfMovedFav = 0;
+var numOfDeletedFav = 0;
+var numOfDeletedFolder = 0;
+var targetFolderName = null;
+var gClk_id="";
+
+function handleMouse(id)
+{
+	gClk_id = id;
+}
+
+// general click handler to call rename and delete functions
+function handleAction(sVerb) 
+{
+	TVShell.Message("favorites.html: handleAction sVerb="+sVerb);
+	var eSrc = window.event.srcElement;
+	var sId = eSrc.clk_id;
+
+	// If we're handling the onclick event, return false
+	if (sVerb != null && sVerb != "") {
+		window.event.returnValue = false;
+	
+		var sLocation = thisPanel.URL;
+		if (b_ActionDone) {
+			return;
+		} 
+		switch(sVerb){
+		case "addfavorite":
+			setNextURL("AddFavorite");
+			b_ActionDone = true;
+			break;
+		case "createFavorite":
+			var index;
+			if (document.all.ChooseFolderRadio) {
+				for (var i = 0; i < document.all.ChooseFolderRadio.length; i++) {
+					if (document.all.ChooseFolderRadio[i].checked == true) {
+						index = i;
+						break;
+					}
+				}
+			} else 
+				index = 0;
+			if (callCreateFavorite(index) != null) {
+				SaveFavorites();
+				var str="Favorite has been successfully saved.";
+				setTimeout("PanelManager.Hide(window.name);",animationTimeOut);
+				TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Favorites/img/FavSave.gif", "Task_Complete", animationTimeOut);
+				b_ActionDone = true;
+				if ( TVShell.UserManager.CurrentUser.FavoritesCount > MAX_RECENT_THUMBNAILS )
+					favoritesMgr.saveMostRecentThumbNails(MAX_RECENT_THUMBNAILS);
+			}
+			break;
+		case "organizeFavorites":
+			setNextURL("OrganizeFavorites");
+			b_ActionDone = true;
+			break;
+
+		case "addNewFolder":
+			setNextURL("AddFolder");
+			b_ActionDone = true;
+			break;
+		case "createFolder":
+			if (createFolderExit() != 0) {
+				b_ActionDone = true;
+			}
+			break;
+
+		case "deleteFavorites":
+			setNextURL("DeleteFavorites");
+			b_ActionDone = true;
+			break;
+		case "delete":
+			if (callDelete() == true) {
+				SaveFavorites();
+				var str = "Deleted.";
+				TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", animationTimeOut);
+				b_ActionDone = true;
+			}
+			break;
+
+		case "renameFavorites":
+			setNextURL("RenameFavorites");
+			b_ActionDone = true;
+			break;
+		case "rename":
+			callRename();
+			SaveFavorites();
+			if (NumOfRename > 0) {
+				var str = "Renaming favorite";
+				if (NumOfRename > 1)
+					str +="s...";
+				else
+					str +="...";
+				TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", animationTimeOut);
+			}
+			b_ActionDone = true;
+			break;
+
+		case "moveFavorites":
+			setNextURL("MoveFavorites");
+			b_ActionDone = true;
+			break;
+		case "moveFavoritesChooseFolder":
+			if (callMoveFavorites() == true)
+				b_ActionDone = true;
+			break;			
+		case "moveToFolder":
+			if ( callMoveToFolder() > 0 ) {
+				SaveFavorites();
+				var str="Moving ";
+				if (numOfMovedFav > 1)
+					str +=" favorites";
+				else
+					str +=" a favorite";
+				str+=" to <b>" + targetFolderName +"</b> folder";
+				TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Favorites/img/FavMove.gif", "Task_Complete", animationTimeOut);
+			}
+			b_ActionDone = true;
+			break;
+
+		case "display":	// navigate to a sub folder
+			if ((sId == "" || sId == null) && gClk_id != ""){
+				sId = gClk_id;
+				gClk_id = "";
+			}
+			showFolder(sId);
+			b_ActionDone = true;
+			break;
+		case "navigate": // navigate to a favorite, the favorites panel does not change
+			if ((sId == "" || sId == null) && gClk_id != "" ){
+				sId = gClk_id;
+				gClk_id = "";
+			}
+			navigate(sId);
+			TVShell.EventLog.Usage("favorites","action=viewingFav");
+			break;
+		case "shortcuts":
+			setNextURL("Shortcuts");
+			b_ActionDone = true;
+			break;
+		case "showFavorites":
+			setNextURL("");	
+			b_ActionDone = true;
+			break;
+		case "showRootFavorites":
+			thisPanel.GotoURL(sLocation.substr(0,(sLocation.indexOf("?")>0)?sLocation.indexOf("?"):sLocation.length));
+			b_ActionDone = true;
+			break;
+		case "dismissPanel":
+			PanelManager.Hide(window.name);
+			break;
+		}
+	}
+}
+
+function init()
+{
+	// There are rare occasions, usally under stress with no favcache.xml, where the behavior is  not properly instantiated
+	// In these cases, which we detect via an error calling favorites.xml, handle the error by:
+	//   Calling HandleError() which shows a dialog and trace message in debug
+	//   Calling location.reload() to reload the page in 15 seconds
+	//   Returning from the function
+
+	try
+	{
+		g_oFavXml = favoritesMgr.xml;
+	}
+	catch(e)
+	{
+		e.description += "\r\nError getting favorites.xml";
+		window.setTimeout("location.reload()",15000);
+		return;
+	}
+ 		var favoritesList = g_oFavXml.selectNodes("//favorite");
+
+		TVShell.UserManager.CurrentUser.FavoritesCount = favoritesList.length;
+
+		var sShowThumbs = g_oFavXml.documentElement.getAttribute("showthumbs");
+		if (sShowThumbs == null) {
+			sShowThumbs = "true";
+			g_oFavXml.documentElement.setAttribute("showthumbs", sShowThumbs);
+		}
+		var sShowUrls = g_oFavXml.documentElement.getAttribute("showurls");
+		if (sShowUrls == null) {
+			sShowUrls = "true";
+			g_oFavXml.documentElement.setAttribute("showurls", sShowUrls);
+		}
+
+		var sShowFeatured = g_oFavXml.documentElement.getAttribute("showfeatured");
+		if (sShowFeatured == null) {
+			sShowFeatured = "true";
+			g_oFavXml.documentElement.setAttribute("showfeatured", sShowFeatured);
+		}
+
+		paramsArray = buildParams();
+		
+		switch(paramsArray["action"]){
+			case "Shortcuts":
+				DrawShortcuts();
+				document.all.Done.focus();
+				break;
+			case "AddFavorite":
+				DrawAddFavorite();
+				document.all.Add.focus();
+				break;
+			case "OrganizeFavorites":
+				DrawOrganizeFavorites();
+				if (document.all.Add_Folder)
+					document.all.Add_Folder.focus();
+				else
+					document.all.Delete_OrganizeFavorites.focus();
+				break;
+			case "AddFolder":
+				DrawAddFolder();
+				document.all.folderTitleText.focus();
+				document.all.folderTitleText.select();
+				break;
+			case "DeleteFavorites":
+				DrawDelete();
+				if(document.all.firstBar)
+					document.all.firstBar.focus();
+				else
+					document.all.Cancel.focus();
+				break;
+			case "RenameFavorites":
+				DrawRename();
+				if(document.all.firstBar){
+					document.all.firstBar.focus();
+					document.all.firstBar.select();
+				}else
+					document.all.Cancel.focus();
+				break;
+			case "MoveFavorites":
+				if ( DrawMoveFavorites() )
+				{
+					if(document.all.firstBar)
+						document.all.firstBar.focus();
+					else
+						document.all.Cancel.focus();
+				}
+				break;
+			case "MoveFavorites-ChooseFolder":
+				DrawMoveFavoritesChooseFolder();
+				if(document.all.firstBar)
+					document.all.firstBar.focus();
+				else
+					document.all.Cancel.focus();
+				break;
+			case "ShowFavorites":
+			default:
+				DrawShowFavorites();
+				if(document.all.firstBar)
+					document.all.firstBar.focus();
+				else
+					document.all.Done.focus();
+				break;
+				
+		}
+}
+
+function GetThumbNailURL(node)
+{
+	return favoritesMgr.thumbNailURL(node);
+}
+
+function DrawAddFavorite()
+{
+    var folderList = g_oFavXml.selectNodes("//favfolder");   // all folder nodes
+    var folderListLen = folderList.length;
+	
+	document.all.PanelSubHeader.innerHTML = "Save as a favorite";
+	
+	var pcwszUrl = GetMainPanelURL();
+	
+	var str="<table width=100% valign=top style=\"margin-top:10px;\" cellspacing=0 cellpadding=0>"
+		   +	"<tr><td style=\"border-bottom:2px solid #438BCD \">"
+		   +			"<table style=\"margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>"
+		   +				"<tr><td><table cellspacing=0 cellpadding=0 border=0>"
+		   +							"<tr><td width=103 height=76><img style=\"width:96px; height:66px; border:1px solid black;\" src=\"";
+								str +="file:" + TVShell.ThumbnailManager.URL;
+		str	+=								"\"></td><td width=6></td><td><span id=addFavTitle class=\"addFavTitleContent\"></span></td></tr>"
+			+						"</table></td></tr>"
+			+				"<tr><td height=4></td></tr>"
+			+				"<tr><td><span id=addFavURL class=addFavHrefContent></span></td></tr>"
+			+				"<tr><td height=10></td></tr>"
+			+			"</table></td></tr>";
+	if (folderListLen > 0) {
+		str +=	"<tr><td height=4></td></tr>"
+			+	"<tr><td><table style=\"margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>"
+			+				"<tr><td>From the list below, select a folder for this favorite.   Then choose <b>Save</b>.</td></tr>"
+			+				"<tr><td height=6></td></tr>"
+			+				"<tr><td><table cellspacing=0 cellpadding=0 border=0>"
+			+							"<tr><td valign=middle align=center><input type=radio id=firstBar name=ChooseFolderRadio value=\"ROOT\" checked ></td>"
+			+								"<td width=6></td><td>Main folder</td></tr>"
+			+						"</table></td></tr>";
+		// go thru each folder item
+		for (var i = 0; i < folderListLen; i++){
+			var folder = folderList.item(i);
+			var id = folder.getAttribute("id");
+			var title = folder.getAttribute("title");
+			str +=			"<tr><td height=4></td></tr>"
+				+			"<tr><td><table cellspacing=0 cellpadding=0 border=0>"
+				+						"<tr><td valign=middle align=center><input type=radio name=ChooseFolderRadio id=\"radio"+i+"\" ></td>"
+				+							"<td width=6></td><td><font class=\"addFavFolderTitleContent\">" + removeTags(title) +"<font></td></tr>"
+				+					"</table></td></tr>";
+		}
+		str +=			"</table></td></tr>";
+	}else {
+		str +=	"<tr><td height=4></td></tr>"
+			+	"<tr><td><table style=\"margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>"
+			+				"<tr><td>To save this Web page as a favorite, choose <b>Save</b>.</td></tr>"
+			+			"</table></td></tr>";
+	}										
+		str	+="</table>";
+	document.all.leftContent.innerHTML=str;
+    var sFavoriteName = L_NEWFAVORITENAME_TEXT;
+	if (mainPanel.Document.title != "")
+		sFavoriteName = mainPanel.Document.title; 
+	document.all.addFavTitle.innerText = sFavoriteName;
+	document.all.addFavURL.innerText = pcwszUrl;
+
+	str  ="<msntv:CustomButton id=\"Add\" class=\"sidebarButton\" label=\"Save\" onClick=\"handleAction(\'createFavorite\')\" />"
+		+ "<msntv:CustomButton id=\"Cancel\" class=\"sidebarButton\" label=\"Cancel\" onClick='handleAction(\"dismissPanel\");' />";
+	document.all.rightMenu.innerHTML=str;
+}
+
+function CutLongTitle(s)
+{
+	if (s.length <20)
+		return s;
+	else
+		return s.substring(0,20)+'...';
+}
+
+function ShowEmptyError( n )
+{
+	var str;
+	
+	switch( n )
+	{
+		case 1:
+			str = "There are no favorites or folders to remove.";
+			break;
+		case 2:
+			str = "There are no favorites or folders to rename.";
+			break;
+		case 3:
+			str = "There are no favorites to move.";
+			break;
+		default:
+			str = "There are no favorites or folders to act on.";
+			break;
+	}
+	TVShell.PanelManager.CustomMessageBox( str ,"", "OK", 0,"",	 false,MGX_ICON_WARNING, MGX_SIZE_SMALL);
+}
+
+function DrawOrganizeFavorites()
+{
+	var node =findCurrentNode();
+	var xmlFavFolderList= node.selectNodes("favfolder");
+	var favfolderListLen=xmlFavFolderList.length;
+	var xmlFavoriteList= node.selectNodes("favorite");
+	var favoriteListLen=xmlFavoriteList.length;
+	var str;	
+	if (node.nodeName == "favorites")
+		str = "Main folder - Organize";
+	else {
+		str = "<table cellspacing=0 cellpadding=0 border=0>"
+			+		"<tr><td><div style=\"padding:0px; height:35px; width:35px; border:0; behavior: url(#default#alphaImageLoader); src:img/FavIconFolderHeader.png;\"></div></td>"
+			+			"<td width=8></td><td><font class=subHeaderTitle> " + removeTags(CutLongTitle(node.getAttribute("title"))) + "</font> - Organize this folder</td></tr>"
+			+ "</table>";
+	}
+	document.all.PanelSubHeader.innerHTML = str;
+
+	str="<table style=\"margin-top:10px; margin-left:8px;\" valign=top cellspacing=0 cellpadding=0 border=0>";
+	if (node.nodeName == "favorites") {
+		str +="<tr><td><a id=\"Add_Folder\" onClick=\"handleAction(\'addNewFolder\')\" tabindex=0><b>Add a folder</b></a></td></tr>"
+			+ "<tr><td>Add a new folder</td></tr>"
+			+ "<tr><td height=15></td></tr>";
+	}
+	if (favoriteListLen == 0 && favfolderListLen == 0) {
+		str+="<tr><td><a id=\"Delete_OrganizeFavorites\" onClick=\"ShowEmptyError(1)\" tabindex=0><b>Delete</b></a></td></tr>"
+		+ "<tr><td>Remove unwanted folders and favorites</td></tr>"
+		+ "<tr><td height=15></td></tr>"
+		+ "<tr><td><a id=\"Rename_OrganizeFavorites\" onClick=\"ShowEmptyError(2)\" tabindex=0><b>Rename</b></a></td></tr>"
+		+ "<tr><td>Rename favorites and folders</font></td></tr>";
+	} else {
+		str+="<tr><td><a id=\"Delete_OrganizeFavorites\" onClick=\"handleAction(\'deleteFavorites\')\" tabindex=0><b>Delete</b></a></td></tr>"
+		+ "<tr><td>Remove unwanted folders and favorites</td></tr>"
+		+ "<tr><td height=15></td></tr>"
+		+ "<tr><td><a id=\"Rename_OrganizeFavorites\" onClick=\"handleAction(\'renameFavorites\')\" tabindex=0><b>Rename</b></a></td></tr>"
+		+ "<tr><td>Rename favorites and folders</font></td></tr>";
+	}
+	if (favoriteListLen == 0) {
+		str+="<tr><td height=15></td></tr>"
+		+ "<tr><td><a id=\"Move_OrganizeFavorites\" onClick=\"ShowEmptyError(3)\" tabindex=0><b>Move favorites</b></a></td></tr>"
+		+ "<tr><td>Move favorites to other folders</td></tr>";
+	} else {
+		str+="<tr><td height=15></td></tr>"
+		+ "<tr><td><a id=\"Move_OrganizeFavorites\" onClick=\"handleAction(\'moveFavorites\')\" tabindex=0><b>Move favorites</b></a></td></tr>"
+		+ "<tr><td>Move favorites to other folders</td></tr>";
+	}
+	str	+="</font></table>";
+	document.all.leftContent.innerHTML=str;
+
+	document.all.rightMenu.innerHTML="<msntv:CustomButton id=\"Done\" class=\"sidebarButton\" label=\"Done\" onClick='history.go(-1);' />";
+	
+}
+function OnKeyPressAddFolder()
+{
+	var e = window.event;
+	if (window.event.keyCode == 13) {
+		createFolderExit();
+	}
+	return;
+}
+
+function createFolderExit()
+{
+	if (callCreateFolder() != 0) {
+		SaveFavorites();
+		var str="You have successfully added the folder <b>" + AddedFolderName + "</b>.";
+		TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", animationTimeOut);
+		history.go(-1);
+		return 1;
+	}
+	return 0;
+}
+
+function DrawAddFolder()
+{
+	document.all.PanelSubHeader.innerHTML = "Main folder - Add a folder";
+
+	var str="<table valign=top style=\"margin-top:10px; margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>"
+		+		"<tr><td>Type a name for the folder you want to add, and then choose <b>Add</b>.</td></tr>"
+		+		"<tr><td height=15></td></tr>"
+		+		"<tr><td><table cellspacing=0 cellpadding=0 border=0>"
+		+					"<tr><td>New folder:</td><td width=8></td><td><input id=\"folderTitleText\" name=\"titleText\" class=\"inputText\" type=text width=238 onblur=\"document.all.Add_AddFolder.focus()\" value=\"" +  L_NEWFOLDERNAME_TEXT + "\" onKeyPress=\"OnKeyPressAddFolder()\"></td></tr>"
+		+				"</table></td></tr>" 
+		+ "</table>";
+	document.all.leftContent.innerHTML=str;
+	str  ="<msntv:CustomButton id=\"Add_AddFolder\" class=\"sidebarButton\" label=\"Add\" onClick='createFolderExit();' />"
+		+ "<msntv:CustomButton id=\"Cancel\" class=\"sidebarButton\" label=\"Cancel\" onClick='history.go(-1);' />";
+	document.all.rightMenu.innerHTML=str;
+}
+
+function setDeleteArray(i)
+{
+	var inputs = document.all.tags("input");
+	if (inputs[i].checked == true)
+		eval('document.all.td'+i+'.bgColor = PictureBKColor');
+//		eval('document.all.td'+i+'.style = "behavior: url(#default#gradient); startColor: #B3E1D8; endcolor: #B3E1D8; starttransparency: 40%; endtransparency: 40%;	angle: 0; border-bottom:2px solid #438BCD;"');
+	else
+		eval('document.all.td'+i+'.bgColor = "transparent"');
+//		eval('document.all.td'+i+'.style = "border-bottom:2px solid #438BCD;"');
+}
+
+function deleteExit()
+{
+	handleAction( 'delete' );
+	history.go(-1);
+}
+
+function DrawDelete()
+{
+	var node = findCurrentNode();
+	var xmlFavFolderList = node.selectNodes("favfolder");
+	var favfolderListLen = xmlFavFolderList.length;
+	var xmlFavoriteList = node.selectNodes("favorite");
+	var favoriteListLen = xmlFavoriteList.length;
+
+	if (node.nodeName == "favorites") {
+		if (favoriteListLen > 0) {
+			if (favfolderListLen > 0)
+				str = "Main folder - Delete a favorite or folder";
+			else
+				str = "Main folder - Delete a favorite";
+		} else
+			str = "Main folder - Delete a folder";
+	}else{
+		str = "<table cellspacing=0 cellpadding=0 border=0>"
+			+		"<tr><td><div style=\"padding:0px; height:35px; width:35px; border:0; behavior: url(#default#alphaImageLoader); src:img/FavIconFolderHeader.png;\"></div></td>"
+			+			"<td width=8></td><td><font class=subHeaderTitle>" + removeTags(CutLongTitle(node.getAttribute("title"))) + "</font> - Delete a favorite</td></tr>"
+			+ "</table>";
+	}
+	document.all.PanelSubHeader.innerHTML = str;
+
+	var str ="<table width=100% cellspacing=0 cellpadding=0 border=0 style=\"margin-top:10px;\">"
+		   +	"<tr><td ";
+			if (favfolderListLen != 0 || favoriteListLen != 0) 
+				str += "style=\"border-bottom:2px solid #438BCD \" ";
+	str +=			"><table cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">";
+	if (favoriteListLen > 0) {
+			if (favfolderListLen > 0)
+				str +=	"<tr><td>To delete a favorite or a folder and all the favorites in it, check the box next to it, and then choose <b>Delete</b>.</td></tr>";
+			else
+				str +=	"<tr><td>To delete a favorite, check the box next to it, and then choose <b>Delete</b>.</td></tr>";
+	} else
+		str +=			"<tr><td>To delete a folder and all the favorites in it, check the box next to it, and then choose <b>Delete</b>.</td></tr>";
+	str +=				"<tr><td height=10></td></tr>"
+		+			"</table></td></tr>";
+	var i,j;
+	for (i = 0; i < favoriteListLen; i++) {
+		var xmlFavorite = xmlFavoriteList.item(i);
+		var title = xmlFavorite.selectSingleNode("title").text;
+		var href = xmlFavorite.selectSingleNode("href").text;
+		if (xmlFavorite) {
+			str +="<tr><td id=\"td"+ i +"\" bgColor=transparent style=\"border-bottom:2px solid #438BCD \">"
+				+			"<table height=50 cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">"
+				+				"<tr><td height=100% valign=middle align=center><input type=checkbox ";
+							if(i == 0)
+								str +=" id=firstBar";
+							else
+								str +=" id=\"checkBox"+i+"\" ";
+			str +=					"	onClick=\"setDeleteArray("+ i +")\" nextright=Right></td><td width=8></td>"
+				+					"<td width=50 height=100% valign=middle align=center><img style=\"border: 1px solid black;\" width=50 height=35 src=\"";
+								var thumbNailURL=GetThumbNailURL(xmlFavorite);
+								if(thumbNailURL!=null && thumbNailURL!="")
+									str +="file:"+thumbNailURL;
+								else
+									str +="img/fav-default.gif";
+			str	+=					"\"></td><td width=6></td>"
+				+					"<td valign=middle height=100%><font class=\"titleContent\">"+ removeTags(title) + "</font></td></tr>"
+				+			"</table></td></tr>";
+		}
+	}
+
+	for (j = i; j < favfolderListLen + favoriteListLen; j++) {
+		var xmlFavFolder = xmlFavFolderList.item(j-favoriteListLen);
+		var id = xmlFavFolder.getAttribute("id");
+		var title = xmlFavFolder.getAttribute("title");
+		if (xmlFavFolder) {
+			str +=	"<tr><td id=\"td"+ j +"\" bgColor=transparent style=\"border-bottom:2px solid #438BCD \">"
+				+			"<table height=50 cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">"
+				+				"<tr><td height=100% valign=middle align=center><input type=checkbox ";
+							if (j == 0)
+								str +=" id=firstBar";
+							else 
+								str +=" id=\"checkBox"+j+"\" ";
+			str +=					"onClick=\"setDeleteArray("+ j +")\" nextright=Right></td><td width=8></td>"
+				+					"<td width=50 height=100% valign=middle align=center><div style=\"width:35px; height:35; border:0;behavior: url(#default#alphaImageLoader); src:img/FavIconFolderOrganize.png;\"></div></td>"
+				+					"<td width=6></td>"
+				+					"<td valign=middle height=100%><font class=\"titleContent\">"+ removeTags(title) + "</font></td></tr>"
+				+			"</table></td></tr>";
+		}
+	}
+
+	str +="</table>";
+	document.all.leftContent.innerHTML=str;
+
+	str  ="<msntv:CustomButton id=\"Right\" class=\"sidebarButton\" label=\"Delete\" onClick='deleteExit();' />"
+		+ "<msntv:CustomButton id=\"Cancel\" class=\"sidebarButton\" label=\"Cancel\" onClick='history.go(-1);' />";
+	document.all.rightMenu.innerHTML=str;
+}
+
+function AutoSelect(arrayIndex)
+{
+	var inputs = document.all.tags("input");
+	inputs[arrayIndex].select();
+}
+
+var textBoxRenameArray=null;
+
+// called onBlur
+// do not allow an empty string name
+// do not allow 2 folders to be the same name
+// do not allow 2 favorites to be the same name
+function SetTextBoxRenameArray(arrayIndex)
+{
+	var inputs = document.all.tags("input");
+	var s = cleanName(inputs[arrayIndex].value);
+	var node = findCurrentNode();
+	var b_NameExisted = false;
+	var xmlFavoriteList = node.selectNodes("favorite");
+	var favoriteListLen = xmlFavoriteList.length;
+	var xmlFavFolderList = node.selectNodes("favfolder");
+	var favfolderListLen = xmlFavFolderList.length;
+	var initialValue = '';
+	var isFolder = false;
+	var matchesFolder = false;
+
+	if ( arrayIndex < favoriteListLen )
+	{
+		initialValue = xmlFavoriteList.item(arrayIndex).selectSingleNode("title").text;
+	}
+	if ( arrayIndex >= favoriteListLen )
+	{
+		initialValue = xmlFavFolderList.item(arrayIndex-favoriteListLen).getAttribute("title");
+		isFolder = true;
+	}
+
+	if ( initialValue == s) {
+		inputs[arrayIndex].value = s; // no change on this title
+		return;
+	}
+
+	if ( s == '' )
+	{
+		TVShell.PanelManager.CustomMessageBox("You must enter a name for this " +
+			 ( ( arrayIndex < favoriteListLen ) ? "favorite." : "folder.") ,"", "OK", 0,"",
+					false,MGX_ICON_WARNING, MGX_SIZE_SMALL);
+		inputs[arrayIndex].focus();
+		// restore initial value
+		inputs[arrayIndex].value = initialValue;
+		document.all.PanelSubHeader.innerHTML = document.all.PanelSubHeader.innerHTML;
+		return;
+
+	}
+
+	if (arrayIndex < favoriteListLen && xmlFavoriteList.item(arrayIndex).selectSingleNode("title").text == s
+		|| arrayIndex >= favoriteListLen && xmlFavFolderList.item(arrayIndex-favoriteListLen).getAttribute("title")== s) {
+		inputs[arrayIndex].value = s; // no change on this title
+		return;
+	}
+
+	if ( !isFolder )
+	{	// if we are a favorite, check if any other favorite is named the same
+		for (var i = 0; i < favoriteListLen ; i++)
+		{
+			if ( i != arrayIndex )
+			{
+				if ( xmlFavoriteList.item(i).selectSingleNode("title").text == s )	b_NameExisted = true;
+				// also check if we have renamed another favorite to this name but not yet saved
+				if ( textBoxRenameArray[i] == s )	b_NameExisted = true;
+			}
+		}
+	}
+	else
+	{	// otherwise, check folders
+		for (var i = 0; i < favfolderListLen ; i++)
+		{
+			if ( ( i + favoriteListLen ) != arrayIndex )
+			{
+				if ( xmlFavFolderList.item(i).getAttribute("title") == s)
+				{
+					b_NameExisted = true;
+					matchesFolder = true;
+				}
+				// check if another folder was renamed to this name
+				if ( textBoxRenameArray[i+favoriteListLen] == s )
+				{
+					b_NameExisted = true;
+					matchesFolder = true;
+				}
+			}
+		}
+	}
+
+	// if we are a folder and another folder by that name exists or if we are favorite and another favorite by that name exist
+	if ( ( b_NameExisted == true ) && ( isFolder == matchesFolder ) )
+	{
+		TVShell.PanelManager.CustomMessageBox("A " + (isFolder ? "folder" : "favorite") + " already exists with this name (" + s + ").","", "OK", 0,"",
+					false,MGX_ICON_WARNING, MGX_SIZE_SMALL);
+		inputs[arrayIndex].focus();
+		// restore initial value
+		inputs[arrayIndex].value = initialValue;
+		document.all.PanelSubHeader.innerHTML = document.all.PanelSubHeader.innerHTML;
+		return;
+	}
+	textBoxRenameArray[arrayIndex] = s;
+	inputs[arrayIndex].value = s;
+}
+
+function CancelRename()
+{
+	var b_NameChanged=false;
+	var oCurrentNode=findCurrentNode();
+	var xmlFavoriteList = oCurrentNode.selectNodes("favorite");
+	var favListLen = xmlFavoriteList.length;
+
+	for (var i = 0; i < favListLen && b_NameChanged == false; i++) {
+		var xmlFavorite = xmlFavoriteList.item(i);
+		if(xmlFavorite){
+			var title = xmlFavorite.selectSingleNode("title").text;
+			if(textBoxRenameArray != null && textBoxRenameArray[i] != null && textBoxRenameArray[i]!="" && textBoxRenameArray[i]!=title){
+				b_NameChanged= true;
+			}		
+		}
+	}
+
+	var xmlFavFolderList= oCurrentNode.selectNodes("favfolder");
+	var favFolderListLen=xmlFavFolderList.length;
+	for (var j = 0; j < favFolderListLen && b_NameChanged == false; j++) {
+		var xmlFavFolder = xmlFavFolderList.item(j);
+		if (xmlFavFolder){
+			var title = xmlFavFolder.getAttribute("title");
+			if (textBoxRenameArray != null && textBoxRenameArray[j+favListLen] != null && textBoxRenameArray[j+favListLen] != "" && textBoxRenameArray[j+favListLen]!=title){
+				b_NameChanged= true;
+			}
+		}
+	}
+	if (b_NameChanged) {
+		var str ="<P>If you choose <EM>Do not Save Changes</EM> on this page, the changes you have made will not be saved.</P>";
+		str += "<P>To save the changes you have made, choose <EM>Save Changes</EM>.</P>";
+		var chooseResult =  TVShell.PanelManager.CustomMessageBox(str,"", "Do not Save Changes;Save Changes", 0,"", 1, MGX_ICON_WARNING, MGX_SIZE_LARGE);
+		if (chooseResult) {
+			handleAction('rename');
+		}
+	}
+	history.go(-1);
+}
+
+function renameExit()
+{
+	handleAction( 'rename' );
+	history.go(-1);
+}
+
+function DrawRename()
+{
+	var node = findCurrentNode();
+	var xmlFavFolderList = node.selectNodes("favfolder");
+	var favfolderListLen = xmlFavFolderList.length;
+	var xmlFavoriteList = node.selectNodes("favorite");
+	var favoriteListLen = xmlFavoriteList.length;
+	var str;
+	if (node.nodeName == "favorites") {
+		if (favoriteListLen > 0) {
+			if (favfolderListLen > 0)
+				str = "Main folder - Rename a favorite or folder";
+			else
+				str = "Main folder - Rename a favorite";
+		} else
+			str = "Main folder - Rename a folder";
+		document.all.PanelSubHeader.innerText = str;
+	}else{
+		str = "<table cellspacing=0 cellpadding=0 border=0>"
+			+		"<tr><td><div style=\"padding:0px; height:35px; width:35px; border:0; behavior: url(#default#alphaImageLoader); src:img/FavIconFolderHeader.png;\"></div></td>"
+			+			"<td width=8></td><td><font class=subHeaderTitle>" + removeTags(CutLongTitle(node.getAttribute("title"))) + "</font> - Rename a favorite</td></tr>"
+			+ "</table>";
+		document.all.PanelSubHeader.innerHTML = str;
+	}
+
+	textBoxRenameArray=new Array(favfolderListLen+favoriteListLen);
+	for(var i=0;i< favfolderListLen+favoriteListLen;i++)
+		textBoxRenameArray[i] = "";
+
+	str = "<table width=100% cellspacing=0 cellpadding=0 border=0 style=\"margin-top:10px;\">"
+		+		"<tr><td><table cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">";
+	if (favoriteListLen > 0) {
+		if (favfolderListLen > 0)
+			str +="<tr><td>Type a new name for any of the favorites or folders below, and then choose <b>Save Changes</b>.</td></tr>";
+		else
+			str +="<tr><td>Type a new name for any of the favorites below, and then choose <b>Save Changes</b>.</td></tr>";
+	} else
+			str +="<tr><td>Type a new name for any of the folders below, and then choose <b>Save Changes</b>.</td></tr>";
+	str +=		"<tr><td height=10></td></tr>"
+		+ "</table></td></tr>";
+	var i,j;
+
+	for (i = 0; i < favoriteListLen; i++) {
+		var xmlFavorite = xmlFavoriteList.item(i);
+		var title = xmlFavorite.selectSingleNode("title").text;
+		var href = xmlFavorite.selectSingleNode("href").text;
+		var id = xmlFavorite.getAttribute("id");
+		var lv = xmlFavorite.getAttribute("lv");
+		if(xmlFavorite){
+			str +="<tr><td><table cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">"
+				+			"<tr><td width=52 height=43 valign=middle align=center><img style=\"border: 1px solid black;\" width=50 height=35 src=\"";
+								var thumbNailURL=GetThumbNailURL(xmlFavorite);
+								if(thumbNailURL!=null && thumbNailURL!="")
+									str +="file:"+thumbNailURL;
+								else
+									str +="img/fav-default.gif";
+			str	+=					"\"></td><td width=8></td>"
+				+				"<td><input nextright=Right tabindex=0 type=text size=25 class=\"inputText\" onFocus=\"AutoSelect(" +i+ ")\" onBlur=\"SetTextBoxRenameArray("+i+");\" ";
+				if (i == 0)
+					str +=" id=firstBar";
+				else 
+					str +=" id=\"textBox"+ i +"\" ";
+			str +=" value=\""+ removeTags(title) + "\" ></td></tr>"
+				+		"</table></td></tr>"
+				+ "<tr><td height=3></td></tr>";
+		}
+	}
+	for (j = i; j < favfolderListLen + favoriteListLen; j++) {
+		var xmlFavFolder = xmlFavFolderList.item(j-favoriteListLen);
+		var id = xmlFavFolder.getAttribute("id");
+		var title = xmlFavFolder.getAttribute("title");
+		if (xmlFavFolder) {
+			str +="<tr><td><table cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">"
+				+			"<tr><td width=52 height=43 valign=middle align=center><div style=\"padding:0px; width:35px; height:35px; border:0; behavior: url(#default#alphaImageLoader); src:img/FavIconFolderOrganize.png;\"></div></td>"
+				+				"<td width=8></td><td><input nextright=Right tabindex=0 type=text size=25 class=\"inputText\" onFocus=\"AutoSelect(" +j+ ")\" onBlur=\"SetTextBoxRenameArray("+j+");\"";
+				if (j == 0)
+					str +=" id=firstBar";
+				else
+					str +=" id=\"textBox"+j+"\" ";
+			str +=" value=\""+ removeTags(title) + "\" ></td></tr>"
+				+		"</table></td></tr>"
+				+ "<tr><td height=3></td></tr>";
+		}
+	}
+
+	str +="</table>";
+	document.all.leftContent.innerHTML=str;
+
+	str  ="<msntv:CustomButton id=\"Right\" class=\"sidebarButton\" label=\"Save Changes\" onClick='renameExit();' />"
+		+ "<msntv:CustomButton id=\"Cancel\" class=\"sidebarButton\" label=\"Cancel\" onClick=\"CancelRename()\" />";
+	document.all.rightMenu.innerHTML=str;
+}
+
+function setMoveArray(i)
+{
+	var inputs = document.all.tags("input");
+	if (inputs[i].checked == true)
+		eval('document.all.td'+i+'.bgColor = PictureBKColor');
+	else
+		eval('document.all.td'+i+'.bgColor = "transparent"');
+}
+
+function DrawMoveFavorites()
+{
+	var node = findCurrentNode();
+	var xmlFavoriteList = node.selectNodes("favorite");
+	var favoriteListLen = xmlFavoriteList.length;
+	if ( favoriteListLen == 0 ) return false;
+	var xmlFavFolderList = node.selectNodes("favfolder");
+	var favfolderListLen = xmlFavFolderList.length;
+
+	var str;
+	if (node.nodeName == "favorites") {
+		if (favoriteListLen > 1) {
+			str = "Main folder - Move favorites";
+		} else
+			str = "Main folder - Move a favorite";
+	}else{
+		str = "<table cellspacing=0 cellpadding=0 border=0>"
+			+		"<tr><td><div style=\"padding:0px; height:35px; width:35px; border:0; behavior: url(#default#alphaImageLoader); src:img/FavIconFolderHeader.png;\"></div></td>"
+			+			"<td width=8></td><td><font class=subHeaderTitle>" + removeTags(CutLongTitle(node.getAttribute("title"))) + "</font> - Move a favorite</td></tr>"
+			+ "</table>";
+	}
+	document.all.PanelSubHeader.innerHTML = str;
+
+	str = "<table width=100% style=\"margin-top:10px;\" cellspacing=0 cellpadding=0>"
+		+		"<tr><td "
+			if (favfolderListLen != 0 || favoriteListLen != 0) 
+				str +=	"style=\"border-bottom:2px solid #438BCD \" ";
+	str +=				"><table style=\"margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>";
+				if (favoriteListLen > 1) 
+					str += "<tr><td>Check the boxes next to the favorites you want to move to another folder, and then choose <b>Choose a Folder</b>.</td></tr>";
+				else
+					str += "<tr><td>Check the box next to the favorite you want to move to another folder, and then choose <b>Choose a Folder</b>.</td></tr>";
+				str +=	   "<tr><td height=10></td></tr>"
+					+	"</table></td></tr>";
+
+	for (var j = 0; j < favoriteListLen; j++) {
+		var xmlFavorite = xmlFavoriteList.item(j);
+		var title = xmlFavorite.selectSingleNode("title").text;
+		var href = xmlFavorite.selectSingleNode("href").text;
+		var id = xmlFavorite.getAttribute("id");
+		var lv = xmlFavorite.getAttribute("lv");
+		if(xmlFavorite){
+			str +="<tr><td height=50 id=\"td" + j + "\" bgColor=transparent style=\"border-bottom:2px solid #438BCD \">"
+				+		"<table height=100% style=\"margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>"
+				+			"<tr><td valign=middle width=20><input type=checkbox ";
+				if (j == 0)
+					str +=" id=firstBar ";
+				else
+					str +=" id=\"checkBox"+j+"\" ";
+			str +=					" onClick=\"setMoveArray("+j+")\" nextright=Right"
+				+				"></td>"
+				+				"<td width=8></td>"
+				+				"<td valign=middle align=center><img style=\"border: 1px solid black;\" width=50 height=35 src=\"";
+								var thumbNailURL=GetThumbNailURL(xmlFavorite);
+								if(thumbNailURL!=null && thumbNailURL!="")
+									str +="file:"+thumbNailURL;
+								else
+									str +="img/fav-default.gif";
+			str	+=				"\"></td><td width=6></td>"
+				+				"<td valign=middle><font class=\"titleContent\">"+ removeTags(title) + "</font></td></tr>"
+				+		"</table></td></tr>";
+		}
+	}
+	for (var i = 0; i < favfolderListLen; i++) {
+		var xmlFavFolder = xmlFavFolderList.item(i);
+		var id = xmlFavFolder.getAttribute("id");
+		var title = xmlFavFolder.getAttribute("title");
+		if (xmlFavFolder) {
+			str +=	"<tr><td style=\"border-bottom:2px solid #438BCD \">"
+				+		"<table height=50 style=\"margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>"
+				+			"<tr><td valign=middle width=20></td>"
+				+				"<td width=8></td>"
+				+				"<td width=50 height=100% valign=middle align=center><div style=\"width:35px; height:35; border:0;behavior: url(#default#alphaImageLoader); src:img/FavIconFolderOrganize.png;\"></div></td>"
+				+				"<td width=6></td>"
+				+				"<td valign=middle height=100%><font class=\"titleContent\">"+ removeTags(title) + "</font></td></tr>"
+				+		"</table></td></tr>";
+		}
+	}
+	str +="</table>";
+	document.all.leftContent.innerHTML = str;
+
+	str  ="<msntv:CustomButton id=\"Right\" class=\"sidebarButton\" label=\"Choose a Folder\" onClick=\"handleAction(\'moveFavoritesChooseFolder\')\" />"
+		+ "<msntv:CustomButton id=\"Cancel\" class=\"sidebarButton\" label=\"Cancel\" onClick='history.go(-1);' />";
+	document.all.rightMenu.innerHTML = str;
+	return true;
+}
+
+var folderTitleTextValue = L_NEWFOLDERNAME_TEXT;
+function CheckMoveFolderRadioNew(num)
+{
+	var e = window.event;
+	if (e.altKey || e.ctrlKey || e.shiftKey)
+		return;
+	if(document.all.folderTitleText.value!=folderTitleTextValue){
+		document.all.lastBar.checked=true;
+		folderTitleTextValue=document.all.folderTitleText.value;
+	}
+}
+
+function moveToFolderExit()
+{
+	handleAction( 'moveToFolder' );
+	history.go(-2);	// back to the Organize panel
+}
+
+function DrawMoveFavoritesChooseFolder()
+{
+	document.all.PanelSubHeader.innerHTML = "Move favorites - Choose a Folder";
+	
+	var parentFolder=findCurrentNode();           
+    var folderList = g_oFavXml.selectNodes("//favfolder");   // all folder nodes
+    var folderListLen = folderList.length; 
+	var specialLen = 1;//new folder
+	if (parentFolder.nodeName != "favorites")
+		specialLen++;//root folder
+	var favArray = null;
+	var indexStr = paramsArray["favoriteIndex"];
+	if (indexStr!=null && indexStr!=""){
+		favArray= indexStr.split("-");
+	}
+	numOfMovedFav = favArray.length;
+	var num=0;
+	var str = "<table width=100% style=\"margin-top:10px;\" cellspacing=0 cellpadding=0 border=0>"
+			+	"<tr><td><table style=\"margin-left:8px;\" cellspacing=0 cellpadding=0 border=0>"
+			+	"<tr><td>Choose the folder you want to move the favorite";
+						if (favArray.length > 1)
+							str +="s";
+				str +=" to, and then choose <b>Continue</b>. To create a new folder, type the name in the box at the bottom of the list.</td></tr>"
+					+	"<tr><td height=10></td></tr>"
+					+ "</table></td></tr>";
+
+	if(parentFolder.nodeName != "favorites"){
+		str	+=		"<tr><td><table height=24 cellspacing=0 cellpadding=0 border=0>"
+			+				"<tr><td valign=middle align=center><input id=firstBar type=radio name=ChooseMoveFolderRadio nextright=Right checked></td>"
+			+					"<td width=8></td><td><font class=\"titleContent\">Main folder</font></td></tr>"
+			+				"</table></td></tr>"
+			+		"<tr><td height=3></td></tr>";
+		num++;
+	}
+
+    // go thru each folder item
+	for (var i = num; i < folderListLen + specialLen-1; i++) {
+        var folder = folderList.item(i-specialLen+1);
+		var title = folder.getAttribute("title");
+		var id = folder.getAttribute("id");
+		if (folder.getAttribute("id") != parentFolder.getAttribute("id")) {
+			str +=	"<tr><td><table height=24 width=100% cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">"
+				+				"<tr><td width=20><input type=radio name=ChooseMoveFolderRadio nextright=Right ";
+				if(i == 0) 
+					str +=" id=firstBar checked";
+				else
+					str +=" id=\"radio"+i+"\" ";
+
+			str +=					"></td>"
+				+					"<td width=8></td><td><font class=\"titleContent\">" + removeTags(title) +"</font></td></tr>"
+				+			"</table></td></tr>"
+				+	"<tr><td height=3></td></tr>";
+			num++;
+		}
+    }  
+	str +=			"<tr><td><table height=30 width=100% cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">"
+		+						"<tr><td width=20><input type=radio name=ChooseMoveFolderRadio id=lastBar ";
+							if (num ==0)
+								str +=" checked ";
+	str +=							"></td><td width=8></td><td>New folder:</td><td width=6></td>"
+		+							"<td align=right><input id=folderTitleText name=titleText class=\"inputText\" onKeyUp=\"CheckMoveFolderRadioNew("+num+")\" nextright=Right type=text size=19 value=\""+ L_NEWFOLDERNAME_TEXT +"\"></td><td width=8></td></tr>"
+		+					"</table></td></tr>"
+		+			"<tr><td height=3></td></tr>";
+	num++;
+
+	str	+="	</table>";
+	document.all.leftContent.innerHTML = str;
+
+	str  ="<msntv:CustomButton id=\"Right\" class=\"sidebarButton\" label=\"Continue\" onClick='moveToFolderExit();' />"
+		+ "<msntv:CustomButton id=\"Cancel\" class=\"sidebarButton\" label=\"Cancel\" onClick='history.go( -1 );' />";
+	document.all.rightMenu.innerHTML = str;
+}
+
+function DrawShortcuts()
+{
+	document.all.PanelSubHeader.innerHTML = "Favorites shortcuts";
+
+	var shortcutFavList = new Array (NumOfShortcuts);
+	var shortcutNum = 0;
+	for (var i = 0; i < NumOfShortcuts; i++) {
+		var shortcutValue = 'F' + (i+1);
+		var propbagNode = g_oFavXml.selectSingleNode("//(propbag)[@sect = 'MSNTV-SHORTCUT'][@val ='" + shortcutValue + "']"); 
+		if (propbagNode) {
+			shortcutNum ++;
+			shortcutFavList[i] = propbagNode.parentNode;
+			// == favoriteNode.selectSingleNode("href").text;
+		}else
+			shortcutFavList[i] = null;
+	}
+	var str	 ="<table width=100% valign=top cellspacing=0 cellpadding=0 border=0 style=\"margin-top:10px;\">"
+			+	"<tr><td><table cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">";
+			if (shortcutNum > 0) {
+				str +=		"<tr><td>You have the following favorites shortcut";
+				if (shortcutNum > 1)
+							str += "s";
+				str +=		" set:</td></tr>"
+					+		"<tr><td height=10></td></tr>";
+				for (var i = 0; i < NumOfShortcuts; i++) {
+					if (shortcutFavList[i] != null) {
+					   str+="<tr><td width=350><font style=\"word-wrap:break-word;\"><b>Fav # "+ (i+1) +"</b>: "+ removeTags(shortcutFavList[i].selectSingleNode("title").text) +"</font></td></tr>";
+					}
+				}
+				str +=		"<tr><td height = 15></td></tr>"
+					+		"<tr><td>To set up another shortcut, go to a Web page, and then press one of the <b>Fav #</b> keys on your keyboard. You can then use that <b>Fav #</b> key to return to the Web page at any time.</td></tr>";
+			} else {
+				str +=		"<tr><td>You can use the <b>Fav #1, #2, and #3</b> keys on your keyboard as shortcuts to the favorites you visit most frequently. After you set up a shortcut for a <b>Fav #</b> key, you can use that key to go directly to one of your favorites.</td></tr>"
+					+		"<tr><td height = 15></td></tr>"
+					+		"<tr><td>To set up a shortcut, go to a Web page, and then press one of the <b>Fav #</b> keys on your keyboard. You can then use that <b>Fav #</b> key to return to the Web page at any time.</td></tr>";
+			}
+		str +=			"</table></td></tr>"
+			+ "</table>";
+	document.all.leftContent.innerHTML=str;
+
+	document.all.rightMenu.innerHTML="<msntv:CustomButton id=\"Done\" class=\"sidebarButton\" label=\"Done\" onClick='history.go(-1);' />";	
+}
+
+function DrawShowFavorites()
+{
+	var node = findCurrentNode();
+	var xmlFavFolderList = node.selectNodes("favfolder");
+	var favfolderListLen = xmlFavFolderList.length;
+	var xmlFavoriteList = node.selectNodes("favorite");
+	var favoriteListLen = xmlFavoriteList.length;
+	var str;
+	if (node.nodeName == "favorites") {
+		var strName = removeTags(TVShell.UserManager.CurrentUser.Name);
+		str = "<font class=subHeader>Main folder for <b>" + strName + "</b></font>";
+	}else{
+		str = "<table cellspacing=0 cellpadding=0 border=0>"
+			+		"<tr><td><div style=\"padding:0px; height:35px; width:35px; border:0; behavior: url(#default#alphaImageLoader); src:img/FavIconFolderHeader.png;\"></div></td>"
+			+			"<td width=8></td><td><font class=subHeader>" + removeTags(node.getAttribute("title")) + "</font></td></tr>"
+			+ "</table>";
+	}
+	document.all.PanelSubHeader.innerHTML = str;
+			
+	str	  ="<table style=\"margin-top:10px;\" width=100% valign=top cellspacing=0 cellpadding=0>"
+		 +		"<tr><td ";
+			if (favfolderListLen != 0 || favoriteListLen != 0) 
+				str +=	"style=\"border-bottom:2px solid #438BCD \" ";
+	str  +=				"><table cellspacing=0 cellpadding=0 border=0 style=\"margin-left:8px;\">";
+	if (favfolderListLen == 0 && favoriteListLen == 0) {
+					// if we've got no nodes, figure out how deep we are and             
+					// tell the user they have no favorites or just none in this folder  
+			if (node.nodeName == "favorites") {
+					str += "<tr><td>You don\'t have any favorites saved. Favorites are Web pages you visit frequently and want to return to.</td></tr>"
+						+  "<tr><td height=10></td></tr>"
+						+  "<tr><td>To save a Web page as a favorite, go to the page, and then press the <b>Save Fav</b> key on your keyboard.</td></tr>"
+						+  "<tr><td height=10></td></tr>"
+						+  "<tr><td>To learn more about using Favorites, choose this link:</td></tr>"
+						+  "<tr><td height=10></td></tr>"
+						+  "<tr><td><table cellspacing=0 cellpadding=0 border=0>"
+						+				"<tr><td><span style=\"padding:0px; height:14px; width:7px; behavior:url(#default#alphaImageLoader); src:../images/bulletcustom.png;\"></span></td>"
+						+					"<td width=5></td><td><a tabindex=0 onclick=\"ShowHelp(GetPaneHelpURL(PH_topicTOC, 'MSNTV_TRS_TOC_Favs.htm', 'FavoritesOverView'))\">Favorites Overview</a></td></tr>"
+						+			"</table></td></tr>";
+			} else {
+					str += "<tr><td>You don\'t have any favorites saved in this folder.</td></tr>"
+						+  "<tr><td height=10></td></tr>"
+						+  "<tr><td>To learn more about saving or moving favorites to this folder, choose this link:</td></tr>"
+						+  "<tr><td height=10></td></tr>"
+						+  "<tr><td><a tabindex=0>"
+						+  "<tr><td><table cellspacing=0 cellpadding=0 border=0>"
+						+				"<tr><td><span style=\"padding:0px; height:14px; width:7px; behavior:url(#default#alphaImageLoader); src:../images/bulletcustom.png;\"></span></td>"
+						+					"<td width=5></td><td><a tabindex=0 onclick=\"ShowHelp(GetPaneHelpURL(PH_topicTOC, 'MSNTV_TRS_TOC_Favs.htm', 'FoldersOverview'))\">Folders Overview</a></td></tr>"
+						+			"</table></td></tr>";
+			}
+	} else {
+			if (node.nodeName == "favorites") {
+				if (favfolderListLen >0 && favoriteListLen>0)
+					str += "<tr><td>Choose a folder to see its contents, or choose a favorite to go directly to it.</td></tr>";
+				else if (favfolderListLen > 0)
+					str += "<tr><td>Choose a folder to see its contents.</td></tr>";
+				else if (favoriteListLen > 0)
+					str += "<tr><td>Choose a favorite to go directly to it.</td></tr>";
+			} else {
+					str += "<tr><td>Choose a favorite to go directly to it.</td></tr>";
+			}	
+	}
+	str +="					<tr><td height=10></td></tr>"
+	    + "			</table></td></tr>";
+	for (var i = 0; i < favoriteListLen; i++) {
+		var xmlFavorite = xmlFavoriteList.item(i);
+		var title = xmlFavorite.selectSingleNode("title").text;
+		var href = xmlFavorite.selectSingleNode("href").text;
+		var id = xmlFavorite.getAttribute("id");
+		var lv = xmlFavorite.getAttribute("lv");
+		if (xmlFavorite) {
+			str +=	"<tr><td style=\"border-bottom:2px solid #438BCD \"><a onClick=\"handleAction(\'navigate\')\" onmousedown=\"handleMouse(this.clk_id)\" tabindex=0 clk_id=\"" + id + "\" ";
+				if (i == 0)
+					str +=" id=firstBar ";
+				else  
+					str +=" id=\"open" + (favfolderListLen + i) + "\" ";
+			str +=			"><table width=100% height=84 cellspacing=0 cellpadding=0 border=0>"
+				+				"<tr><td width=8></td>"
+				+					"<td width=96 valign=middle align=center><img style=\"width:96px; height:66px; border:1px solid black;\" src=\"";
+								var thumbNailURL=GetThumbNailURL(xmlFavorite);
+								if(thumbNailURL!=null && thumbNailURL!="")
+									str +="file:"+thumbNailURL;
+								else
+									str +="img/fav-default.gif";
+			str	+=					"\"></td>"
+				+					"<td width=6></td>"
+				+					"<td><span class=\"titleContent\">" + removeTags(title) + "</span><br>"
+				+						"<span class=\"hrefContent\">"+ removeTags(href) + "</span></td></tr>"
+				+			"</table></a></td></tr>";
+		}
+	}
+	for (var i = 0; i < favfolderListLen; i++) {
+		var xmlFavFolder = xmlFavFolderList.item(i);
+		var id = xmlFavFolder.getAttribute("id");
+		var title = xmlFavFolder.getAttribute("title");
+		if (xmlFavFolder) {
+			str +=	"<tr><td style=\"border-bottom:2px solid #438BCD \"><a onClick=\"handleAction(\'display\')\" onmousedown=\"handleMouse(this.clk_id)\" tabindex=0 clk_id=\"" + id + "\"";
+				if (favoriteListLen + i == 0)
+					str +=" id=firstBar";
+				else  
+					str +=" id=\"open" + (favoriteListLen + i) + "\" ";
+			str +=			"><table width=100% height=50 cellspacing=0 cellpadding=0 border=0>"
+				+				"<tr><td width=8></td>"
+				+					"<td width=96 valign=middle align=center><div style=\"padding:0px; height:48px; width:48px; border:0; behavior: url(#default#alphaImageLoader); src:img/FavIconFolderList.png;\"></div></td>"
+				+					"<td width=6></td>"
+				+					"<td><span class=\"titleContent\">"+ removeTags(title) + "</span></td></tr>"
+				+			"</table></a></td></tr>";
+		}
+	}
+
+	str +="</table>";
+	document.all.leftContent.innerHTML=str;
+
+	str  ="";
+	if(favoriteListLen > 0 && node.nodeName != "favorites"){
+		str	+="<msntv:CustomButton id=\"Organize_ShowFavorites\" class=\"sidebarButton\" label=\"Organize Folder\" onClick=\"handleAction(\'organizeFavorites\')\" />";
+	}
+	if (node.nodeName == "favorites") {
+		str	+="<msntv:CustomButton id=\"Organize_ShowFavorites\" class=\"sidebarButton\" label=\"Organize\" onClick=\"handleAction(\'organizeFavorites\')\" />";
+		str	+="<msntv:CustomButton id=\"Shortcut\" class=\"sidebarButton\" label=\"Shortcuts\" onClick=\"handleAction(\'shortcuts\')\" />";
+	}
+	str	+="<msntv:CustomButton id=\"Done\" class=\"sidebarButton\" label=\"Done\" onClick='goBack();' />";
+	document.all.rightMenu.innerHTML=str;
+}
+
+function goBack()
+{
+	if ( paramsArray["folder"] == null )
+		PanelManager.Hide(window.name);
+	else
+		history.go(-1);
+}
+
+function ShowHelp( url )
+{
+	var pStr = "favoritespanel?" + thisPanel.URL;
+	TVShell.PanelManager.Item("main").SetTravelLogFlag( "openpanel" , pStr );
+	ShowMainPanelWithURL( url );
+}
+
+function ShowMainPanelWithURL(URL)
+{
+	PanelManager.Show('main');
+	if (PanelManager.FocusedPanel.Name == 'favoritespanel') {
+        g_fPending=true;
+        g_pendingURL=URL;
+
+	} else {
+        PanelManager.Item('main').GotoURL(URL);
+	}
+}
+
+function UpdateThumbnail()
+{
+	var sPath = "//favorite[@id = '" + escapeString(navigateID) + "']";
+	var oNode = g_oFavXml.selectSingleNode(sPath);
+	if (null != oNode) {
+		var href = oNode.selectSingleNode("href").text;
+		var pcwszUrl = GetMainPanelURL();
+		if (href == pcwszUrl)
+			favoritesMgr.navigate(oNode, TVShell.ThumbnailManager.URL);;
+	}
+	navigateID="";
+	var sLocation = thisPanel.URL;
+	if( sLocation.indexOf("?")>0 ){
+		thisPanel.GotoURL(sLocation.substr(0,(sLocation.indexOf("?")>0)?sLocation.indexOf("?"):sLocation.length));
+	} else {
+		init();
+	}
+}
+
+function OnCapture()
+{
+	if (navigateID != "") {
+		UpdateThumbnail();
+		if ( TVShell.UserManager.CurrentUser.FavoritesCount > MAX_RECENT_THUMBNAILS )
+			favoritesMgr.saveMostRecentThumbNails(MAX_RECENT_THUMBNAILS);
+	}
+}  
+
+function OnAfterHide(name)
+{
+	if (name == "favoritespanel") {
+		var sLocation = thisPanel.URL;
+		if(g_fPending){
+			g_fPending=false;
+			var URL= g_pendingURL;
+			g_pendingURL="";
+			PanelManager.Item('main').GotoURL(URL);
+		}
+		if (navigateID == "" && sLocation.indexOf("?")>0) {
+			thisPanel.GotoURL(sLocation.substr(0,(sLocation.indexOf("?")>0)?sLocation.indexOf("?"):sLocation.length));
+		}
+	}
+}
+
+var shortCutKeyCode = 0;
+var numOfShortcutKeyDown = 0;
+var halfKeyDownCountTimerID = 0;
+var fullKeyDownCountTimerID = 0;
+var shortcutKeyNum = 0;
+
+function OnServiceListKeyDown(ServiceEntry)
+{
+	if (!TVShell.IsOn || !TVShell.UserManager.CurrentUser.IsAuthorized)
+		return;
+	//
+	// Check if the current panel is marked "modal", in which case we leave it alone.
+	//
+	var CurrentPanel = TVShell.PanelManager.FocusedPanel;
+	var Modal = false;
+	if (CurrentPanel && CurrentPanel.Modal)
+		Modal = true;
+	if (!Modal) {
+		// If the entry is a favorite's shortcut, then set a timer 
+		//
+		if (ServiceEntry.name.substr(0,ServiceEntry.name.length-1) == "favorite::shortcut") {
+			TVShell.Message("Favorites.html: shortcut keydown: keycode="+ServiceEntry.KeyCode);
+			var currentDate = new Date();
+			if (shortCutKeyCode == 0) {
+				halfKeyDownCountTimerID = setTimeout("CheckHalfKeyDownCount()", 1800);
+				fullKeyDownCountTimerID = setTimeout("CheckFullKeyDownCount()", 3000);
+				shortCutKeyCode = ServiceEntry.KeyCode;
+				shortcutKeyNum = ServiceEntry.name.charAt(ServiceEntry.name.length-1);
+				numOfShortcutKeyDown = 1;
+			} else if (shortCutKeyCode == ServiceEntry.KeyCode) {
+				numOfShortcutKeyDown ++;
+			} else {
+				clearTimeout(halfKeyDownCountTimerID);
+				clearTimeout(fullKeyDownCountTimerID);
+				halfKeyDownCountTimerID = setTimeout("CheckHalfKeyDownCount()", 1800);
+				fullKeyDownCountTimerID = setTimeout("CheckFullKeyDownCount()", 3000);
+				shortCutKeyCode = ServiceEntry.KeyCode;
+				shortcutKeyNum = ServiceEntry.name.charAt(ServiceEntry.name.length-1);
+				numOfShortcutKeyDown = 1;
+			}
+		}
+	}
+}
+
+function CheckHalfKeyDownCount()
+{
+	TVShell.Message("favorites.html CheckHalfKeyDownCount numOfShortcutKeyDown ="+numOfShortcutKeyDown);
+	var shortcutValue = 'F'+ shortcutKeyNum;
+	if (numOfShortcutKeyDown < 2) {
+
+		clearTimeout(fullKeyDownCountTimerID);
+		numOfShortcutKeyDown = 0;
+		shortCutKeyCode = 0;
+
+		var propbagNode = g_oFavXml.selectSingleNode("//(propbag)[@sect = 'MSNTV-SHORTCUT'][@val ='" + shortcutValue + "']"); 
+		// directly go to the favorite URL
+		TVShell.Message("Favorites.html: directly go to the favorite URL shortcutValue="+ shortcutValue);
+		if (propbagNode) {
+			var favoriteNode = propbagNode.parentNode;
+			var href = favoriteNode.selectSingleNode("href").text;
+			TVShell.Message("Favorites.html: href=" + href);
+			ShowMainPanelWithURL(href);
+		} else {
+			AssignNewShortcut();
+		} 
+	}
+}
+
+function CheckFullKeyDownCount()
+{
+	TVShell.Message("favorites.html CheckFullKeyDownCount numOfShortcutKeyDown ="+numOfShortcutKeyDown);
+	if (numOfShortcutKeyDown <= 1) 
+		return;
+	var shortcutValue = 'F'+ shortcutKeyNum;
+	var propbagNode = g_oFavXml.selectSingleNode("//(propbag)[@sect = 'MSNTV-SHORTCUT'][@val ='" + shortcutValue + "']"); 
+	var title, href, favoriteNode;
+	
+	if (numOfShortcutKeyDown <= 5) {
+		shortCutKeyCode = 0;
+		numOfShortcutKeyDown = 0;
+
+		// directly go to the favorite URL
+		if (propbagNode) {
+			favoriteNode = propbagNode.parentNode;
+			href = favoriteNode.selectSingleNode("href").text;
+			TVShell.Message("Favorites.html: href=" + href);
+			ShowMainPanelWithURL(href);
+		} else {
+			AssignNewShortcut();
+		} 
+	} else {
+		shortCutKeyCode = 0;
+		numOfShortcutKeyDown = 0;
+
+		// assign the main panel URL to this shortcut key
+		TVShell.Message("Favorites.html: assign new URL to this shortcut key");
+		if (propbagNode) {
+			favoriteNode = propbagNode.parentNode;
+			title = favoriteNode.selectSingleNode("title").text;
+			href = favoriteNode.selectSingleNode("href").text;
+			if (href == GetMainPanelURL()) {
+				var str ="<b>Fav # " + shortcutKeyNum + "</b> shortcut has been set.";
+				TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", animationTimeOut);
+			} else {
+				ReassignShortcut(favoriteNode);
+			}
+		} else {
+				AssignNewShortcut();
+		}
+	}
+}
+
+function AssignNewShortcut()
+{
+	var shortcutValue = 'F'+ shortcutKeyNum;
+	var str ="To set up the <b>Fav # "+ shortcutKeyNum +"</b> key as a shortcut to <b>";
+	var sFavoriteNameBase = L_NEWFAVORITENAME_TEXT;
+	if (mainPanel.Document.title != "")
+		sFavoriteNameBase = mainPanel.Document.title;
+	str += removeTags(sFavoriteNameBase) + "</b>, choose <b>Set Shortcut</b>. <br><br>You can then return to <b>"+removeTags(sFavoriteNameBase)+"</b> at any time by pressing <b>Fav # "+ shortcutKeyNum +"</b> on your keyboard.";
+	var chooseResult =  TVShell.PanelManager.CustomMessageBox(str,"", "Set Shortcut;Cancel", 0,"", 1, MGX_ICON_INFO, MGX_SIZE_LARGE);
+	if (!chooseResult) {
+		var favID = callCreateFavorite(0);
+		if (favID != null) {
+			var favNode = g_oFavXml.selectSingleNode("//(favorite)[@id = '" + escapeString(favID) + "']");
+			if (favNode)
+				favoritesMgr.newShortcut(favNode,shortcutValue);
+			var title = favNode.selectSingleNode("title").text;
+			var str ="<b>Fav # " + shortcutKeyNum + "</b> shortcut has been set.";
+			TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", animationTimeOut);
+			TVShell.EventLog.Usage("favorites","action=adding"+shortcutValue);
+			SaveFavorites();
+			init();
+		}
+	}
+}
+
+function ReassignShortcut(favoriteNode)
+{
+	var shortcutValue = 'F'+ shortcutKeyNum;
+	var title = favoriteNode.selectSingleNode("title").text;
+	var str ="The <b>Fav # " + shortcutKeyNum + "</b> key is currently set up as a shortcut to <b>"+ removeTags(title) + "</b>."
+		   + "<br><br>To set up the <b>Fav # " + shortcutKeyNum + "</b> key as a shortcut to <b>";
+	var sFavoriteNameBase = L_NEWFAVORITENAME_TEXT;
+	if (mainPanel.Document.title != "")
+		sFavoriteNameBase = mainPanel.Document.title;
+	str += removeTags(sFavoriteNameBase) + "</b> instead, choose <b>Change Shortcut</b>. To keep it as it is right now, choose <b>Cancel</b>."; 
+	var chooseResult =  TVShell.PanelManager.CustomMessageBox(str,"", "Change Shortcut;Cancel", 0,"", 1, MGX_ICON_INFO, MGX_SIZE_LARGE);
+	if (!chooseResult) {
+		favoritesMgr.deleteShortcut(favoriteNode,shortcutValue);
+		var favID = callCreateFavorite(0);
+		if (favID != null) {
+			var favNode = g_oFavXml.selectSingleNode("//(favorite)[@id = '" + escapeString(favID) + "']");
+			favoritesMgr.newShortcut(favNode , shortcutValue);
+			var title = favNode.selectSingleNode("title").text;
+			var str ="<b>Fav # " + shortcutKeyNum + "</b> shortcut has been set.";
+			TVShell.PanelManager.AnimationMessageBox(str, "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", animationTimeOut);
+			TVShell.EventLog.Usage("favorites","action=adding"+shortcutValue);
+			SaveFavorites();
+			init();
+		}
+	}
+}
+
+function SaveFavorites()
+{
+	favoritesMgr.saveFavorites();
+}
+
+function OnFavoritesChanged(hr)
+{
+	if (hr ==0) {
+//		init();
+	}
+}
+
+function OnBeforeShow(name)
+{
+	if (name == window.name) {
+		TVShell.EventLog.Usage("favorites","action=launch");
+	}
+}
+
+Sink.AttachEvent(TVShell,		"OnServiceListKeyDown",	OnServiceListKeyDown);
+Sink.AttachEvent(TVShell.ThumbnailManager,	"OnCapture",	OnCapture);
+Sink.AttachEvent(PanelManager,	"OnAfterHide",			OnAfterHide);
+Sink.AttachEvent(favoritesMgr,	"OnFavoritesChanged",	OnFavoritesChanged);
+Sink.AttachEvent(PanelManager, "OnBeforeShow", OnBeforeShow);
+
+</script>
+</head>
+<body style="behavior:none;margin:0px;">
+ <div style="width:100%;height:100%;behavior: url(../HTC/PanelBG.htc);">
+	<div style="width:100%;height:100%;padding:15px;">
+	<table class="contentText" style="width:100%; height:100%;"  cellspacing=0 cellpadding=0 border=0>
+		<tr><td class="heading" height=30>
+<script>
+var helpURL = GetPaneHelpURL(PH_topicTOC,'MSNTV_TRS_TOC_Favs.htm');
+document.write("<msntv:PanelHeading id=\"PanelHeader\" label=\"Favorites\" helpURL=\""+ helpURL + "\" />");
+</script>
+			</td></tr>
+		<tr><td height=35 align="left">
+				<div id="PanelSubHeader" style="padding:0px 0px 0px 8px;"></div>
+			</td></tr>
+		<tr><td class="topGradient" style="height:1px;"></td></tr>
+		<tr><td height=100%>
+				<table width=100% height=100% cellspacing=0 cellpadding=0 border=0>
+					<tr><td class="content" style="width:73%; vertical-align:top;">
+							<div id="scroller" class="scroller" style="padding:0px 24px 0px 0px;">
+								<div id="leftContent"></div>
+							</div></td>
+						<td class="sidebar" style="width:27%; vertical-align:top; padding:9px 0px 0px 6px;">
+							<div id="rightMenu"></div></td></tr>
+				</table></td></tr>
+	</table>
+		</div>
+	</div>
+	<script>
+        init();
+	</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<html xmlns:msntv>
+<head>
+	<title>Emoticons</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Finding your computer's name" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+To share files that are on your computer, you'll need to add the computer's name when you set up home networking on your <script>document.write( ProductShortName );</script>. In most cases, you can choose <b>Find</b> on the <b>Home network</b> settings page, and your <script>document.write( ProductShortName );</script> will automatically locate all the available computers on your home network. If your <script>document.write( ProductShortName );</script> does not locate your computer, you can choose the <b>Add</b> button and manually enter the computer's name.
+<p>
+<p>
+First, determine which operating system (OS) your computer is using. (If you're not sure, go to your computer's online Help and search for <b>OS</b>.)
+</p>
+</p>
+<p>
+<p>
+Choose your computer's OS below to learn how to find the computer's name:
+</p>
+</p>
+<UL class=links>
+<LI><a id="pageresizeWebID" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Name98_v11.htm');">Windows 98</a></LI>
+<LI><a id="pageresizeWebID" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_NameMe_v11.htm');">Windows Millennium Edition (Me)</a></LI>
+<LI><a id="pageresizeWebID" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_NameXP_v11.htm');">Windows XP</a></LI>
+</UL>
+
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

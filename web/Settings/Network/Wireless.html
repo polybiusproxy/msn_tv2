@@ -1,0 +1,763 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?import namespace="msntv" implementation="msntv:/HTC/ScrollList.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/IPAddress.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/Progress.htc"> <TITLE>Select a wireless network</TITLE><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <style> table.controlTable td { padding: 5px 5px 0px 0px; } .icon { margin-left:0px; margin-right:0px; width:20px; height:24px; vertical-align:middle; display:none; } .signalMeter { margin-left:0px; margin-right:0px; width:37px; height:24px; vertical-align:middle; display:none; } .bar { margin-left:8px; margin-right:0px; margin-bottom:0px; height:24px; vertical-align:middle; } </STYLE></HEAD> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript src="../../Javascript/Panels.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/Wireless.js"></SCRIPT> <SCRIPT>
+	var WirelessAdapter = TVShell.ConnectionManager.WirelessAdapter;
+	var WirelessSettings = null;
+	var scrollList;
+	var kMaxSignalSamples = 5;
+	var prevConnectedNetwork = "";
+	
+	var UsingWPAIgnorantDriver = false;
+		
+	var AvailableNets;
+	
+	if (WirelessAdapter) {
+		WirelessSettings = WirelessAdapter.Settings;
+		if ( WirelessSettings == null ) {
+			TVShell.Message("WirelessAdapter WirelessSettings not found");
+		}
+// if a driver can't tell WPA from WEP in the BSSID list, add it's name(s) here
+//		var ignorantDrivers = ""
+//		var n = ignorantDrivers.split(",");
+//		var i;		
+//		for ( i=0; i < n.length; i++ ) {
+//			if ( WirelessSettings.Name.toLowerCase() == n[i].toLowerCase() ) {
+//				UsingWPAIgnorantDriver = true;
+//				break;
+//			}
+//		}
+	} else {
+		TVShell.Message("WirelessAdapter not found");
+	}
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+
+	var networkList;
+	var refreshTimeout;
+	var refreshInterval = 1000;
+	var focusOnDone = false;
+	
+	var imgSig0 = "msntv:/Images/Signal0.png";
+	var imgSig1 = "msntv:/Images/Signal1.png";
+	var imgSig2 = "msntv:/Images/Signal2.png";
+	var imgSig3 = "msntv:/Images/Signal3.png";
+	var imgSig4 = "msntv:/Images/Signal4.png";
+	var imgSig5 = "msntv:/Images/Signal5.png";
+
+	function SignalImage(signal)
+	{
+		signal = signal/20;
+		var img = "";
+		if ( signal > 4 ) {
+			img = imgSig5;
+		} else if ( signal > 3 ) {
+			img = imgSig4;
+		} else if ( signal > 2 ) {
+			img = imgSig3;
+		} else if ( signal > 1 ) {
+			img = imgSig2;
+		} else if ( signal > 0 ) {
+			img = imgSig1;
+		} else  {
+			img = imgSig0;
+		}
+		var img = "<img src=" + img + ">"
+		//var img = "<span id=signalMeter style='behavior:url(#default#alphaImageLoader); src:url(" + img + ");'></span>"
+		return img;
+	}
+	
+	function SignalLabel(signal)
+	{
+		signal = signal/20;
+		var sigName = "";
+		if ( signal > 4 ) {
+			sigName = "Strong signal";
+		} else if ( signal > 3 ) {
+			sigName = "Good signal";
+		} else if ( signal > 2 ) {
+			sigName = "Fair signal";
+		} else if ( signal > 1 ) {
+			sigName = "Weak signal";
+		} else if ( signal > 0 ) {
+			sigName = "Poor signal";
+		} else  {
+			sigName = "Not found";
+		}
+		return sigName;
+	}
+	
+	
+	var TheFocusNet = "";
+	
+	function FocusNet(indx)
+	{
+		TheFocusNet = networkList[indx].ssid;
+	}
+	
+	function BlurNet()
+	{
+		TheFocusNet = "";
+	}
+	
+	function NetworkRow(i,ssid,secure,signal,isConnected)
+	{
+		var html;		
+		
+		// ssid can be 32 random characters, including spaces
+		
+		var sigImg = SignalImage(signal);
+		var sigName = SignalLabel(signal);
+		
+		var modeName = "Open";
+		TVShell.Message(ssid + " Privacy = " + secure);
+		if ( UsingWPAIgnorantDriver ) {
+			modeName = "Locked";
+		} else {
+			if ( secure == Wireless_WPAEnable  )
+				modeName = "Locked - WPA";
+			else if ( secure == Wireless_WEPEnable ) 
+				modeName = "Locked - WEP";
+		}
+		var ssidDisplay = ssid;
+		ssidDisplay = TVShell.Utilities.EscapeHTML(ssidDisplay);
+		
+		html = "<div style='height:80px;'>"
+		html += "<table><tr>";
+		html += "<td style='width:400px; word-break:break-all' valign=top>" + ssidDisplay ;
+		html += "<td style='width:20%;'><span id=sig_" + i + ">" + sigImg + "</span>";
+		html += "<td style='width:15%;'>";
+		if ( secure != Wireless_WEPDisable  ) {
+			html += "<span id=lockIcon style=\"behavior:url(#default#alphaImageLoader); src:url(msntv:/Panels/Images/Icon_SecurePageStatusBar.png);\"></span>"
+		}
+		html += "</tr><tr valign=bottom>";
+		html += "<td valign=top><font size=-3>"
+		if ( isConnected ) {
+			html += "<br>(Connected)";
+		}
+		html += "<td valign=top><font size=-3><div id=siglab_" + i + ">" + sigName + "</div>";
+		html += "<td valign=top><font size=-3>" + modeName;
+		
+		html += "</font></tr></table></div>";
+		
+					
+
+		return html;
+	}
+	
+	function UpdateSignalStrength(i,signal)
+	{
+		var sigImg = SignalImage(signal);
+		var sigName = SignalLabel(signal);
+		var cmd = "document.all.sig_" + i + ".innerHTML=\"" + sigImg + "\";";
+		cmd +=  "document.all.siglab_" + i + ".innerHTML=\"" + sigName + "\";";
+		
+		eval(cmd);
+	}
+	
+	
+	function UpdateNetworkSignal(ssid,signal)
+	{
+		for ( i=0; i < networkList.length; i++ ) {
+			if ( networkList[i].ssid == ssid ) {
+				var j;
+
+				//TVShell.Message("UpdateNetworkSignal " + ssid + " sig: " + signal + " avg: " + networkList[i].avgSignal);
+				if ( networkList[i].avgSignal == 0 && signal != 0 ) {
+					// head start for new signal
+					for ( j=0; j < kMaxSignalSamples; j++ ) {
+						networkList[i].avgSignal = signal;
+					}
+				}
+				
+				networkList[i].signals[networkList[i].signalIndex] = signal;
+				networkList[i].signalIndex += 1;
+				if ( networkList[i].signalIndex == kMaxSignalSamples )
+					networkList[i].signalIndex = 0;
+
+				networkList[i].avgSignal = 0;
+				for ( j=0; j < kMaxSignalSamples; j++ ) {
+					networkList[i].avgSignal += networkList[i].signals[j];
+				}
+				networkList[i].avgSignal /= kMaxSignalSamples;
+				return;
+			}
+		}
+	}
+	
+	function AddNetwork(ssid,signal,secure,connected,authen,adhoc)
+	{
+		var i,j;
+		var changed;
+		
+		for ( i=0; i < networkList.length; i++ ) {
+			if ( networkList[i].ssid == ssid ) {
+				break;
+			}
+		}
+		changed = ( i == networkList.length );
+		if ( changed ) {
+			TVShell.Message("adding new network " + ssid + " sig: " + signal);
+			var network = new Object();
+			network.ssid = ssid;
+			network.signals = new Array();
+			for ( j=0; j < kMaxSignalSamples; j++ ) {
+				network.signals[j] = signal;
+			}
+			network.avgSignal = signal;
+			network.signalIndex = 0;
+			network.secure = secure;
+			network.selected = false;
+			network.connected = connected;
+			network.authentication = authen;
+			network.adhoc = adhoc;
+			networkList[i] = network;	
+			do {
+				var swaps = 0;
+				for ( i=0; i < networkList.length-1; i++ ) {
+					if ( networkList[i].ssid > networkList[i+1].ssid ) {
+						var t = networkList[i];
+						networkList[i] = networkList[i+1];
+						networkList[i+1] = t;
+						swaps++;
+					}
+				}
+			} while ( swaps != 0 );
+			
+		} else {
+			UpdateNetworkSignal(ssid,signal);
+			if ( networkList[i].secure != secure ) {
+				TVShell.Message("secure changed " + ssid);
+				changed = true; 
+				networkList[i].secure = secure;
+			}
+			if ( networkList[i].connected != connected ) {
+				TVShell.Message("connected changed " + ssid);
+				changed = true; 
+				networkList[i].connected = connected;
+			}	
+			if ( networkList[i].authentication != authen ) {
+				TVShell.Message("authentication changed " + ssid);
+				changed = true; 
+				networkList[i].authentication = authen;
+			}
+			if ( networkList[i].adhoc != adhoc ) {
+				TVShell.Message("adhoc changed " + ssid);
+				changed = true; 
+				networkList[i].adhoc = adhoc;
+			}
+		}
+		return changed;
+	}
+	
+	function RemoveNetwork(ssid)
+	{
+		TVShell.Message("RemoveNetwork " + ssid);
+		var newList = new Array();
+		for ( i=0; i < networkList.length; i++ ) {
+			if ( networkList[i].ssid != ssid ) {
+				newList[newList.length] = networkList[i];
+			}
+		}
+		networkList = newList;
+	}
+	
+	function RemoveDeadNetworks()
+	{
+		var i,j;
+		
+		var netsToRemove = new Array();
+		if ( GetAvailableNetworks() ) { 
+			for ( i=0; i < networkList.length; i++ ) {
+				for (j=0; j < AvailableNets.length; j++ ) {
+					if ( networkList[i].ssid == AvailableNets[j].name  ) {
+						break;
+					}
+				}
+				if ( j == AvailableNets.length ) {
+					netsToRemove[netsToRemove.length] = networkList[i].ssid;
+				}
+			}
+		}
+		if ( netsToRemove.length ) {
+			TVShell.Message("Found dead nets");
+			for ( i=0; i < netsToRemove.length; i++ ) {
+				RemoveNetwork(netsToRemove[i]);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	function SignalStrengthToSignalPercent(signalStrength)
+	{
+		var signalLevel = 0;
+		switch ( signalStrength ) {
+		case  WirelessSignal_VeryLow:
+			signalLevel = 20;
+			break;
+		case  WirelessSignal_Low:
+			signalLevel = 40;
+			break;
+		case  WirelessSignal_Medium:
+			signalLevel = 60;
+			break;
+		case  WirelessSignal_High:
+			signalLevel = 80;
+			break;
+		case  WirelessSignal_VeryHigh:
+			signalLevel = 100;
+			break;
+		default:
+		case WirelessSignal_None:
+			signalLevel = 0;
+			break;
+		}
+		return signalLevel;
+	}
+	
+	function CurrentlyConnectedText()
+	{
+		if ( prevConnectedNetwork != "" ) {
+			if ( WirelessSettings.SSID == "" || prevConnectedNetwork == WirelessSettings.SSID ) {
+				var con = IsConnected(prevConnectedNetwork);
+				var stateString = con ? "are already" : "were last";
+				return "You " + stateString + " connected to the following network: <em>" + prevConnectedNetwork + "</em>. ";
+			} else {
+				// could say were last connected to xxx and last tried to connect to yyy.
+			}
+		}
+		else if ( WirelessSettings.SSID != "" ) {
+			var con = IsConnected(WirelessSettings.SSID);
+			var stateString = con ? "are already connected" : "last tried to connect";
+			var ssid = TVShell.Utilities.EscapeHTML(WirelessSettings.SSID);
+			return "You " + stateString + " to the following network: <em>" + ssid + "</em>. ";
+		}
+		return "";
+	}
+	
+	function ShowNotAvailableMsg()
+	{
+	
+		var html = CurrentlyConnectedText();
+		
+		html += "If your network does not appear on this page, you may need to verify the ‘broadcast’ setting for your wireless access point or router’s ‘SSID’ name.";
+		document.all.headDesc.innerHTML = html;
+	}
+	
+	function ShowNoNetworksMsg()
+	{
+		var html;
+		
+		if (WirelessSettings.SSID == "" ) {
+			 html = "Your " + ProductShortName + " cannot find an available wireless network. "
+			 + "Please verify that your wireless network access point is working.<br>"
+			
+			 + "<br><br><ul><li>Verify the ‘broadcast’ setting for your wireless access point or router’s ‘SSID’ name is enabled.  (Consult your access point or router’s setup pages.)</li>"
+			 + "<li>Try repositioning your wireless USB adapter to see if it can detect a signal from your wireless network.</li>"
+			 + "<li>As a last resort, please test your wireless USB adapter by connecting it to another machine on your network. </li>"
+			 + "<li>Otherwise, please contact Customer Support for assistance.</li>"
+			 + "</ul>";
+		} else {
+			var ssid = TVShell.Utilities.EscapeHTML(WirelessSettings.SSID);
+			html = "Your " + ProductShortName + " cannot find your preferred network <em>" + ssid + "</em>. "
+				+ "(You may wish to verify that your wireless access point is working before continuing.)"
+				+ "<br><br><ul><li>If you changed the network name, and it appears below, please select it to continue.</li>"
+		
+				+ "<li>If you changed your router or AP to disable ‘broadcast’ of your network’s ‘SSID’ name, you will need to contact Customer Support for assistance.</li>"
+				+ "<li>If you have not made any change to your network and have verified that your wireless router/AP "
+				+	"is powered on, please try repositioning your wireless USB adapter to receive a clear signal.</li>"
+			   + "</ul>";
+		}
+		html += "<br>";
+		document.all.headDesc.innerHTML = html;
+	
+	}
+	
+	
+	
+	function ShowDefaultMsg(hasMultipleNets)
+	{
+		var introHtml = "<P>This page lists nearby wireless networks. Choose your wireless network to connect to it. " + 
+			"If your network requires a security key, you will be asked for it. Your wireless router's documentation " + 
+			"should tell you what your security key is.</P>";
+		var html = CurrentlyConnectedText();
+		
+		if ( html != "" ) {
+			// user had previously selected a network
+			html += "If the network is shown as <em>Not found</em>, you may need to verify the ‘broadcast’ setting " +
+			"for your wireless access point or router’s ‘SSID’ name.<br>";
+		} else {
+			// no previous selection
+			if ( hasMultipleNets )
+				html = "Select the wireless network from one of those displayed below. Some networks require a key before they can be used.<br>";
+			else
+				html = "If you want to use the network named below select it.<br>"
+		}
+		
+		html += "<br>";
+		document.all.headDesc.innerHTML = introHtml + "<P>" + html + "</P>";
+	}
+	
+	
+	function FindAvailableNetwork(name)
+	{
+		var i;
+		for ( i=0; i < AvailableNets.length; i++ ) {
+			if ( AvailableNets[i].name == name ) {
+				return i;
+			}	
+		}
+		return -1;
+	}
+	
+	function GetAvailableNetworks()
+	{
+		var i;
+
+		AvailableNets = new Array();
+		
+		var WirelessNetworkList = WirelessSettings.Network;
+		if ( WirelessNetworkList ) { 
+			for ( i=0; i < WirelessNetworkList.Count; i++ ) {		
+				var net = new Object();
+				net.signal = 0;
+				net.authen = false;
+				net.adhoc = false;
+				net.name = WirelessNetworkList.Item(i).Name;
+				
+				net.secure = WirelessNetworkList.Item(i).Privacy;
+				if ( net.secure == Wireless_WEPUnknown ) {
+					TVShell.Message("Unsupported encryption format network found : " +  WirelessNetworkList.Item(i).Privacy  + " : " +  WirelessNetworkList.Item(i).Name);
+					continue;
+				}
+				
+				//TVShell.Message("Network " + WirelessNetworkList.Item(i).Name + " mode is " + WirelessNetworkList.Item(i).InfrastructureMode);
+				//TVShell.Message("Network " + WirelessNetworkList.Item(i).Name + " auth is " + WirelessNetworkList.Item(i).AuthenticationMode);
+				
+				if ( WirelessNetworkList.Item(i).InfrastructureMode == WirelessMode_Ndis802_11IBSS ) {
+					net.adhoc = true;
+				}
+				if ( WirelessNetworkList.Item(i).AuthenticationMode == WirelessAuth_Ndis802_11AuthModeShared ) {
+					net.authen = true;
+				}
+				net.signal = SignalStrengthToSignalPercent(WirelessNetworkList.Item(i).SignalStrength);
+				var existing = FindAvailableNetwork(net.name);
+				// ignore weaker duplicates
+				if ( existing >= 0 ) {
+					if ( net.signal > AvailableNets[existing].signal ) {
+						AvailableNets[existing] = net;
+					}
+					continue;
+				}
+				AvailableNets[AvailableNets.length] = net;
+			}
+		//	TVShell.Message(AvailableNets.length + " available nets from " + WirelessNetworkList.Count + " stations" );
+		}
+		return AvailableNets.length > 0;
+	}
+	
+	function IsConnected(ssid)
+	{
+		if ( ssid != "" ) {
+			if ( ssid == WirelessSettings.SSID &&
+				 TVShell.ConnectionManager.LANAdapter == TVShell.ConnectionManager.WirelessAdapter &&
+				 TVShell.ConnectionManager.LANState == ConnectState_Connected ) {
+					
+				var AdapterStatus = TVShell.ConnectionManager.WirelessAdapter.CheckStatus();
+				TVShell.Message("Connected net status is " + AdapterStatus);
+					
+				if ( AdapterStatus == ConnectError_NoError )  {
+					// we could also ignore non-wireless errors ( DHCP, gateway )
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	function BuildNetworkList(listChanged, initial, signalStrengthOnly)
+	{
+		var html = "";
+		var i;
+		var listChanged = false;
+		
+		var curNetworkInList = false;
+		
+	
+		if ( GetAvailableNetworks() ) { 
+			for ( i=0; i < AvailableNets.length; i++ ) {			
+				if ( WirelessSettings.SSID != "" && WirelessSettings.SSID == AvailableNets[i].name ) {
+					curNetworkInList = true;
+				}
+				if ( signalStrengthOnly ) {
+					UpdateNetworkSignal(AvailableNets[i].name,AvailableNets[i].signal);
+					//TVShell.Message(AvailableNets[i].name + " sig = " + AvailableNets[i].signal);
+				}
+				else if ( AddNetwork(AvailableNets[i].name,AvailableNets[i].signal,
+									 AvailableNets[i].secure,false,
+									 AvailableNets[i].authen,AvailableNets[i].adhoc) ) {
+					listChanged = true;
+				}
+			}
+		} else {
+			TVShell.Message("No WirelessNetworkList");
+		}
+		
+		if ( signalStrengthOnly ) {
+			return;
+		}
+			
+		// add all visible networks, plus last one from settings if not visible
+
+		
+		if ( RemoveDeadNetworks() ) {
+			listChanged = true;
+		}
+		
+		if ( WirelessSettings.SSID != "" && !curNetworkInList ) {
+			TVShell.Message("Current selected SSID '" + WirelessSettings.SSID + "' not available, adding to list " );
+			if ( AddNetwork(WirelessSettings.SSID,0,(WirelessSettings.WEPEnable || WirelessSettings.WPAEnable),false,false) ) {
+				listChanged = true;
+			}
+		}
+		
+		if ( AvailableNets.length == 0 ) {
+			ShowNoNetworksMsg();
+		} else {
+			ShowDefaultMsg(AvailableNets.length > 1);
+		}
+		
+		if ( initial ) {
+			for ( i=0; i < networkList.length; i++ ) {
+				if ( networkList[i].ssid == WirelessSettings.SSID ) {
+					networkList[i].selected = true;
+				}
+			}
+		}
+		
+		if ( listChanged ) {
+		
+			var prevFocusNet = TheFocusNet;
+			
+
+			// Clear the table.
+			while (scrollList.ScrollListTable.rows.length > 0) {
+				scrollList.ScrollListTable.deleteRow(0);
+			}
+	
+			for ( i=0; i < networkList.length; i++ ) {
+				var signalLevel = 0;
+				
+				var isConnected = IsConnected(networkList[i].ssid);
+				
+				
+				var net = NetworkRow(i,networkList[i].ssid,networkList[i].secure,networkList[i].avgSignal,isConnected);
+				var html ="<UL class=links><LI><a id='anchor_" + i + "' tabIndex=0 onblur='BlurNet("+i+");' onfocus='FocusNet(" + i + ");' onClick='PickNetwork(" + i + ");'>" + net + "</A></LI></UL>";
+				scrollList.InsertRow();   
+				 
+ 				var cell = scrollList.InsertCellHTML(html);
+//				cell.style.borderTop = "2px solid #5193DF";
+				cell.style.paddingTop = "4px";
+			}
+			
+			
+			if ( !document.all["default"].hasFocus && prevFocusNet != "" ) {
+				for ( i=0; i < networkList.length; i++ ) {
+					if ( networkList[i].ssid == prevFocusNet ) {
+						var cmd = "anchor_" + i + ".focus()";
+						eval(cmd);
+						break;
+					}
+				}
+				if ( i == networkList.length ) {
+					document.all["default"].focus();
+				}
+			}
+		}	
+		for ( i=0; i < networkList.length; i++ ) {
+			UpdateSignalStrength(i,networkList[i].avgSignal);
+		}
+		
+	}
+	
+	
+	
+	
+	function PickNetwork(indx)
+	{
+		for ( var i=0; i < networkList.length; i++ ) {
+			networkList[i].selected = i == indx;
+		}
+		SetSettings();
+	}
+	
+	var deadSkipCount;
+	var refreshCount = 0;
+	function refreshStatus()
+	{	
+	
+		var WirelessNetworkList = WirelessSettings.Network;
+		if ( WirelessNetworkList &&  WirelessNetworkList.Count == 0 ) {
+			TVShell.Message("no nets found");
+			// sometimes we fail to get any nets. In that case retry for a while before killing the list
+			if ( deadSkipCount < 30 ) {
+				refreshTimeout = setTimeout(refreshStatus,500);
+				deadSkipCount += 1;
+				return;
+			}
+		} 
+		deadSkipCount  = 0;
+		refreshCount += 1;
+
+		BuildNetworkList(false,false,(refreshCount % 3) != 0 );
+		refreshTimeout = setTimeout(refreshStatus,refreshInterval);
+	}
+	
+		
+	var onSuccess = "";
+	
+	function onLoadPage()
+	{
+	
+		TheFocusNet = "";
+		scrollList = document.all.scrolllist;
+		
+		var res;
+		
+		var backTo;
+		
+		prevConnectedNetwork = "";
+		
+		var params = location.href.split("?");
+	
+		TVShell.Message("Params (len " + params.length + " ) = " + params);
+		TVShell.Message("params[1]  = " + params[1]);
+		
+		if ( params && params.length > 1 && params[1].indexOf("onSuccess=") >= 0 ) {
+			var v = params[1].substring(params[1].indexOf("onSuccess=")+10);
+			onSuccess = unescape(v);
+			TVShell.Message("on success go to: " + onSuccess);
+		}
+
+		if (WirelessSettings) {
+
+		//	if (WirelessSettings.IsAssociated)
+		//		AssociationState.innerText = "Connected";
+		
+			if ( WirelessSettings.SSID != "" ) {
+				if ( IsConnected(WirelessSettings.SSID) ) {
+					prevConnectedNetwork = WirelessSettings.SSID;
+				}
+			}
+			networkList = new Array();
+			BuildNetworkList(true,true,false);
+			
+			if ( networkList.length > 0 ) {
+				var selectedNet = "";
+				if (WirelessSettings && ( WirelessSettings.SSID != "" ) ) {
+					selectedNet = WirelessSettings.SSID;
+				} else {
+					selectedNet = networkList[0].ssid;
+				}
+			}
+			refreshTimeout = setTimeout(refreshStatus,refreshInterval);
+		}
+
+	}
+	
+	/*
+	function SetNewNetwork()
+	{
+	    var hiddenSSID=window.prompt("If you want to use a network with a non-broadcast name, you can enter the name here.","");
+		if ( hiddenSSID != null && hiddenSSID != "" ) {
+			var requiresWEP = true;			// do we need to ask this, or can we figure it out?
+			
+			AddNetwork(hiddenSSID,0,requiresWEP,false,false);
+			BuildNetworkList(true);
+		}
+	}
+	*/
+	
+	function SetSettings()
+	{
+		var pickedOpenNetwork = false;
+		var selectedSSID = "";
+		var signal = 0;	
+		var needAdvancedSettings = false;
+		var needWPASettings = false;
+		
+		TVShell.Message("wireless SetSettings " + networkList.length);
+		for ( var i=0; i < networkList.length; i++ ) {
+			if ( networkList[i].selected ) {
+				TVShell.Message("net selected: " + i);
+				pickedOpenNetwork = (networkList[i].secure == Wireless_WEPDisable);
+				selectedSSID = networkList[i].ssid;
+				signal = networkList[i].signal;
+				
+				if ( networkList[i].secure == Wireless_WPAEnable  ) {
+					needWPASettings = true;
+				}
+				break;
+			}
+		}
+		TVShell.Message("Selected: " + selectedSSID);
+		
+		if ( selectedSSID == WirelessSettings.SSID ) {
+			if ( WirelessSettings.KeyIdx != 1 && (WirelessSettings.WEPEnable || WirelessSettings.WPAEnable ) && !pickedOpenNetwork ) {
+				needAdvancedSettings = true;
+			}
+			if ( WirelessSettings.InfrastructureMode == WirelessMode_Ndis802_11IBSS) {
+				needAdvanedSettings = true;
+			}
+			if ( WirelessSettings.AuthenticationMode != WirelessAuth_Ndis802_11AuthModeOpen) {
+				needAdvanedSettings = true;
+			}
+		}
+		if ( !needAdvancedSettings && pickedOpenNetwork ) {
+			// if selected network is not encrypted, check the signal.
+			WirelessSettings.KeyIdx = 1;
+			WirelessSettings.KeyMaterial1 = "";
+			WirelessSettings.WEPEnable = false;
+			WirelessSettings.WPAEnable = false;
+			WirelessSettings.SSID = selectedSSID;
+			WirelessSettings.AuthenticationMode	= WirelessAuth_Ndis802_11AuthModeOpen;
+			WirelessSettings.IsDirty = true;
+
+			if ( signal == 0 ) {
+				TVShell.Message("Chose open network with no signal");
+			}
+			if ( onSuccess == "" ) 
+				onSuccess="javascript:history.go(-1)";
+			
+			CheckWirelessConnection(onSuccess,"");
+		} else {
+
+			selectedSSID = escape(selectedSSID);
+			var url = "";
+			// if picked encrypted network, check if advanced settings are present, if
+			if ( needAdvancedSettings ) {
+				url = "msntv:/Settings/Network/WirelessAdvanced.html";
+			} else if ( UsingWPAIgnorantDriver ) {
+				url = "msntv:/Settings/Network/WirelessSettingsChoose.html";
+			} else if ( needWPASettings ) {
+				url = "msntv:/Settings/Network/WirelessSettingsWPA.html";
+			} else  {
+				url = "msntv:/Settings/Network/WirelessSettings.html";
+			}
+			url += "?ssid="+selectedSSID;
+			
+			if ( onSuccess != "" ) {
+				var v = escape(onSuccess);
+				url += "&onSuccess=" + v;
+			}
+			
+			TVShell.Message("Going to: " + url);
+			TVShell.Url = url;
+		}
+		// in all these cases we should attempt to connect and report the result
+		return;
+	}
+	
+</SCRIPT><BODY onload="onLoadPage();"> <SCRIPT>OpenSettingsTable( "Settings" , "Select a wireless network to use" , "WirelessHelpNet.HTML"  );</SCRIPT><DIV id=sideBar> <msntv:CustomButton href="javascript:history.go(-1)" class=sideBarButton id="default" label="Done" /> </DIV><DIV id=scrollArea><div id=headDesc> </div> <br><div id="networks"> <msntv:scrollList id="scrolllist" scroll style="width:100%; height:100%; line-height:90px padding-top=8px;padding-bottom:42px; " /> </div> </DIV> <SCRIPT>
+		CloseSettingsTable();
+		
+	</SCRIPT> </BODY> </HTML>

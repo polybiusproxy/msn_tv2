@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>IM Help</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script language=javascript>
+var PanelManagerObj = TVShell.PanelManager;
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var MsgrObj = TVShell.UserManager.CurrentUser.Messenger;
+function OnBeforeShow(name,message)
+{
+	if(name=='impanel'){
+	// Get the location into a String typed variable
+		var here = document.location + "";
+		// Remove trailing file...
+		here = here.substr(0, here.lastIndexOf('/'));
+		// Remove everything under here from the history list
+		PanelManagerObj.Item("main").ClearTravelLog(here);
+		// Pop up one level
+		history.go(-1);
+	}
+}
+//Sink.AttachEvent(PanelManagerObj, "OnBeforeShow", OnBeforeShow);
+</script>
+</head>
+
+<body text="#ffff66" scrolling="no" height="360" width="560" bottomMargin="0" vLink="#ffff66" aLink="#ffff66" link="#ffff66" leftMargin="0" topMargin="0" rightMargin="0" >
+<table id="Table1" height="360" cellSpacing="0" cellPadding="0" width="560" bgcolor="#205c3f" border="0">
+  	<tr >
+    		<td  width="560" height="57">
+    			<img src="images\IMHelp_Header.bmp" useMap="#NavMap" border="0" width="560" height="57">
+    			<map name="NavMap">
+    					<area shape="RECT" coords="17, 9, 98, 45" href=#>    
+    					<area shape="RECT" coords="439, 22, 553, 53" href="#" onClick="PanelManagerObj.Show('impanel')">
+				</map></td>
+  	</tr>
+  	<tr ><td>
+  		
+  	</td></tr>
+</table>
+</body>
+</html>

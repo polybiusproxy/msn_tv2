@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<redirectcontrol>
+	<entry src="http://hotmail.com/" dest="http://www.hotmail.msn.com/cgi-bin/sbox?rru=HoTMaiL/" />
+	<entry src="http://www.hotmail.com/" dest="http://www.hotmail.msn.com/cgi-bin/sbox?rru=HoTMaiL/" />
+	<entry src="http://go.msn.com/P/1/" dest="http://www.hotmail.msn.com/cgi-bin/sbox?rru=HoTMaiL/" />
+	<entry src="http://go.msn.com/P/2/"  dest="http://www.hotmail.msn.com/cgi-bin/sbox?rru=HoTMaiL/" />
+	<entry src="http://go.msn.com/P/4/"  dest="http://www.hotmail.msn.com/cgi-bin/sbox?rru=HoTMaiL/" />
+	<entry src="http://hotmail.msn.com/"  dest="http://www.hotmail.msn.com/cgi-bin/sbox?rru=HoTMaiL/" />
+	<entry src="http://www.hotmail.msn.com/" dest="http://www.hotmail.msn.com/cgi-bin/sbox?rru=HoTMaiL/" />
+</redirectcontrol>

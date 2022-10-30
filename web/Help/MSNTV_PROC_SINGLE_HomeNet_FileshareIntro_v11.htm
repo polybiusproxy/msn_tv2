@@ -1,0 +1,37 @@
+<html xmlns:msntv>
+<head>
+	<title>FileshareIntro</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="File sharing basics" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+To use your <script>document.write( ProductShortName );</script> to access files that are on your computer, you must first enable file sharing on your computer.
+<p>
+<p>
+For detailed instructions on setting up file sharing, go to your computer's online Help and search for <b>sharing files.</b>
+</p>
+</p>
+For more information, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Home networking</b>, or go to www.msntv.com.
+</p>
+</p>
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("scrollArea").focus();</script>
+
+</div>
+
+</body>
+</html>

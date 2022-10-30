@@ -1,0 +1,59 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Settings</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY>
+
+<SCRIPT>
+var WANProvider = TVShell.ConnectionManager.WANProvider;
+if (!WANProvider) {
+	SetConnectionType(MSNIAModemProviderName);
+	WANProvider = MSNIAModemProviderName;
+}
+
+function TestLAN()
+{
+	if (BYOAEthernetProviderName == WANProvider) {
+		return GotoLANPage("msntv:/Settings/Network/HomeNetworking.html");
+	} else {
+		document.location = "msntv:/Settings/ConnectionSettings.html?LANSetup=1";
+	}
+}
+</SCRIPT>
+
+<SCRIPT>OpenSettingsTable( "Settings" , "" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton onclick="history.go(-1)" class=sideBarButton id="default" label="Done" />
+	<script>document.all("default").focus();</script>
+</DIV>
+
+<DIV id=scrollArea>
+	<A href="ConnectionSettings.html" class=topic id=BasicDialing>Choose connection settings</A>
+	<DIV class=description>View or change settings for how your <SCRIPT>document.write(ProductShortName);</SCRIPT> connects to the <SCRIPT>document.write(ServiceFullName);</SCRIPT></DIV>
+
+	<A onClick='TestLAN();' class=topic id=HomeNetwork>Manage your home network</A>
+	<DIV class=description>View or change settings for how your <SCRIPT>document.write(ProductShortName);</SCRIPT> connects to other computers on your home network</DIV>
+
+	<A href="NightlyUpdate.html" class=topic id=AutoUpdate>Set up automatic updates</A>
+	<DIV class=description>Set your <SCRIPT>document.write(ProductShortName);</SCRIPT> to automatically check for new mail and updates</DIV>
+
+	<A href="TV/SetupInfo.html" class=topic id=TVCenter>Adjust TV Settings</A>
+	<DIV class=description>Change your TV settings for optimal viewing</DIV>
+	
+	<A href="WMPVisualization.html" class=topic id=Visualization>Choose what to see when music plays</A>
+	<DIV class=description>Choose what is displayed while you play music on the Windows Media Player: album art, saved photos, or virtual fireworks animation</DIV>
+
+</DIV>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>

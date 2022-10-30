@@ -1,0 +1,69 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+
+<head>
+<title>IM Full Screen Alerts Setting</title>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<script language=Javascript src="IMCommon.js"></script>
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+<script language=javascript>
+var MsgrObj = TVShell.UserManager.CurrentUser.Messenger;
+var CurrentUser = TVShell.UserManager.CurrentUser;
+function SetAlertEvent()
+{
+	if(SupressAlerts.checked) {
+		MsgrObj.AlertLevel(MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN)=true;
+		CurrentUser.FeatureSettings = CurrentUser.FeatureSettings | MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN;
+	}
+	else {
+		MsgrObj.AlertLevel(MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN)=false;
+		CurrentUser.FeatureSettings = CurrentUser.FeatureSettings & (~(MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN));
+	}
+	TVShell.UserManager.Save();
+	TVShell.DeviceControl.PlaySound("Task_Complete");
+}
+function setCheckBox()
+{
+	if ((CurrentUser.FeatureSettings & MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN) > 0)
+		document.all.SupressAlerts.checked = true;
+	else 
+		document.all.SupressAlerts.checked = false;
+}
+
+</script>
+</head>
+<body>
+<SCRIPT>OpenSettingsTable( "Settings" , "Control alerts" , "" );</SCRIPT>
+
+	<DIV id=sideBar>
+		<msntv:CustomButton href="javascript:history.go(-1)" onClick="SetAlertEvent()" class=sideBarButton id=Save label="Save Changes" />
+		<msntv:CustomButton href="javascript:history.go(-1)" class=sideBarButton id="default" label="Cancel" />
+		<script>document.all("default").focus();</script>
+	</DIV>
+	
+	<DIV id=scrollArea>
+		<DIV class=description>
+			<p>
+			Alerts are notices that appear at the bottom of your screen when you receive a new e-mail message or when one of your Messenger contacts comes online.
+			</p>
+			<P>
+				You may not want to be interrupted by alerts when you are watching full-screen videos or slideshows. Select the checkbox below.
+			</P>
+			<P>
+				<table cellspacing=0 cellpadding=0 border=0>	
+				<tr><td valign=top><input type=CHECKBOX name=SupressAlerts></td><td width=8></td>
+					<td valign=top>Turn off alerts during videos and slideshows</td></tr>
+  				</table>
+			</P>
+			
+ 		</DIV>
+	</DIV>
+<script>
+	setCheckBox();
+</script>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</body>
+</html>

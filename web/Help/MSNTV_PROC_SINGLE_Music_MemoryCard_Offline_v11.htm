@@ -1,0 +1,56 @@
+<html xmlns:msntv>
+<head>
+	<title>Music MemCard</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Playing music that's on a memory card" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+With MSN TV Music, you can use your <script>document.write( ProductShortName );</script> to play music tracks that are stored on a memory card. To listen to the tracks, you must first attach a compatible USB memory card reader (sold separately) to your <script>document.write( ProductShortName );</script>, and then insert the card that contains the tracks.
+<p>
+<p>
+To learn more about attaching a memory card reader, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Music</b>.
+</p>
+</p>
+You don't have to sign in to the <script>document.write( ServiceFullName )</script> to listen to the music tracks that are stored on a memory card. Just turn on your <script>document.write( ProductShortName );</script> and follow these steps:
+<ol>
+<li>Attach a compatible memory card reader to one of the USB ports on the back of your <script>document.write( ProductShortName );</script>.</li>
+<li>Insert a card that contains music tracks into the card reader.</li>
+<p>
+<p>
+A message tells you that you've inserted a USB storage device.
+</p>
+</p>
+<li>Choose <b>Music</b>.</li>
+<p>
+<p>
+A playlist of Music Tracks appears on screen. (If any of the files on the memory card are in folders, the folder names are listed as well. Choose a folder to open it.)
+</p>
+</p>
+<li>Check the box next to each track you want to work with. Then you can do the following:</li>
+</ol>
+<ul>
+<li>Choose <b>Play</b> to play the selected track(s).</li>
+<li>Choose <b>Add Selections</b> to save copies of the selected tracks in a playlist on your <script>document.write( ProductShortName );</script>. (Choose <b>Music</b> from the Sign-in page, and go to <b>My selections</b> to see your playlist.</li>
+</ul>
+For more information about using Music, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Music</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

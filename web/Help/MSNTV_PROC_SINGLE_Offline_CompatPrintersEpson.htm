@@ -1,0 +1,33 @@
+<html xmlns:msntv>
+<head>
+	<title>Supported Epson printers</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Supported Epson printers" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+                The following Epson printers are supported:
+        <ul>
+                <li>Epson Stylus C20SX, C20UX, C40S, C40SX, C40UX, C41Plus, C41SX, C41UX, C42S, C42Plus, C42SX, C42UX, C43SX, C43UX, C44, C44Plus, C60, C61, C62, C80, and C83</li>
+                <li>Epson Stylus COLOR 670, 740, 740i, 760, 777, and 777i</li>
+                <li>Epson Stylus Photo 780, 790, 820, 890, 900, 915, 950, 960, and 1280</li>
+        </ul>
+        </span>
+</div>
+
+<div id="sideBar">
+        <msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("DoneID").focus();</script>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+<html xmlns:msntv>
+<head>
+	<title>CompNameMe</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Windows Me"  showScrollTop="false" />
+
+<div id="nonScrollArea">
+	<span class="description">
+To find your computer's name in Windows Millennium Edition (Me), follow these steps:
+<ol>
+	<li>Right-click <b>My Network Places</b>.</li>
+	<li>Left-click <b>Properties, Identification</b>.</li>
+</ol>
+
+	</span>
+</div>
+
+<div id="buttonBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

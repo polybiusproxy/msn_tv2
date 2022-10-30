@@ -1,0 +1,350 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+
+<HEAD>
+<TITLE>Access Numbers</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT language="Javascript" src="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT language="Javascript" src="../Javascript/ProgressPanel.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY>
+<SCRIPT>OpenSettingsTable( "Settings" , "Your " + ServiceShortName + " access numbers" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton onclick="submitChanges()" label="Save Changes" id="Done" />
+	<msntv:CustomButton onclick="GotoAdvanced()" label="Dialing Options" id="Advanced" />
+	<msntv:CustomButton onclick="CancelChanges()" label="Cancel" id="Cancel" />
+	<script>document.all("Cancel").focus();</script>
+	<script>	if (TVShell.ConnectionManager.WANAdapter.ErrorCode == ConnectError_DialSettingsStale) document.all.Done.label="Connect";</script>
+</DIV>
+
+<DIV id=scrollArea>
+	<DIV class=description>
+		<SCRIPT LANGUAGE=Javascript>
+
+		function getTollWarning( pbook )
+		{
+			var str = "<P>";
+			if ( SomeLongDistance( pbook ) )
+			{
+				if ( AllLongDistance( pbook ) )
+				{
+					
+					str += "Warning: All of the "+ProductShortName+" access numbers we found for your phone number appear to be toll or long-distance numbers.  ";
+				}
+				else
+				{
+					str +="Warning: Some of the "+ProductShortName+" access numbers we found for your phone number appear to be toll or long-distance numbers.  ";
+				}
+			}
+			str += "You are responsible for determining whether the access numbers you choose are subject to any long-distance, toll, or additional charges " +
+						"from your phone company, and for paying all of these additional charges.</P>";
+			return str;
+		}
+		
+		function getHomeNumber()
+		{
+			var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+			var AreaCode = ModemSettings.DialingAreaCode;
+			var Exchange = ModemSettings.DialingExchange;
+			var str = "";
+			if ( AreaCode && ( AreaCode != "" ) && Exchange && ( Exchange != "" ) )
+			{
+				str = "(" + AreaCode + ")-" + Exchange + "-XXXX";
+			}
+			return str;
+		}
+		
+		function displayHomePhoneLink()
+		{
+			var num = getHomeNumber();
+			var homeNumLink = "<UL class=links><LI><a onClick='GotoHomeNumber();'>Change home phone number</A></LI></UL>";
+			var txt;
+			if ( num != "" )
+				txt = "<P>Your " + ProductShortName + " is dialing from the phone number " + num + ".  To change it, choose <EM>Change home phone number</EM>.</P>";
+			else
+				txt = "<P>Your " + ProductShortName + " requires your home phone number.  To enter it, choose <EM>Change home phone number</EM>.</P>";
+			document.write( txt );
+			document.write( homeNumLink );
+		}
+
+		function getMoreAccessNumbers()
+		{
+			var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+			var AreaCode = ModemSettings.DialingAreaCode;
+			var Exchange = ModemSettings.DialingExchange;
+
+			if(ConnectState_Connected == TVShell.ConnectionManager.WANState &&
+				AdapterType_Modem == TVShell.ConnectionManager.WANAdapter.Type) {
+				SetProgressStopFunction(null);
+				SetProgressText("Please wait while we find nearby dial-up access numbers." );
+				SetProgressPercent(0);
+				ShowProgressPanel();
+				SetProgressPercent(50);
+				TVShell.ConnectionManager.MSNIASettings.PhonebookID = "";
+				TVShell.ConnectionManager.MSNIAManager.CurrentConnector.Poptimize("0", AreaCode, Exchange);
+				SetProgressPercent(100);
+				TVShell.ConnectionManager.WANAdapter.ErrorCode = ConnectError_DialSettingsStale;
+				// HideProgressPanel();  The disconnect will hide the progress panel
+			} else {
+				ClearLocalPopPhoneBook();
+				LoginToService();
+			}
+		}
+		
+		var Connector = TVShell.ConnectionManager.MSNIAManager.CurrentConnector;
+		var strOutOfDate = "<P>Your internet access numbers are out of date.  The next time you connect you will be supplied with new internet access numbers.</P>";
+
+		if (Connector && (Connector.Name != LocalConnectorName)) {
+			var Connector2 = GetConnectorByName(LocalConnectorName);
+
+			if (Connector2) {
+				Connector = Connector2;
+			}
+		}
+		
+		if (Connector && Connector.Name == LocalConnectorName) {
+			var Phonebook = Connector.Phonebook;	
+
+			if (Phonebook.Count == 0) {
+				document.all.Done.style.display = "none";
+				document.all.Advanced.style.display = "none";
+				document.write( strOutOfDate );
+				displayHomePhoneLink();
+			} else {
+				document.write("<P>These are the access numbers your " + ProductShortName + " dials to connect to the " + ServiceFullName + ".");
+
+				if (NumberOfLocalPhoneBookEntries(Phonebook) > 1 ) {
+					document.write("<P>Choose at least two " + ServiceShortName + " access numbers from the list below, and then choose <EM>Save Changes</EM>.</P>");
+				}
+
+				displayHomePhoneLink();
+
+				document.write( getTollWarning( Phonebook ) );
+
+				document.write("<P>Select the boxes next to the numbers you want your " + ProductShortName + " to dial.</P>");
+
+				function selectNumber(i)
+				{
+					if (Phonebook.Count > 1)
+						f = document.all.UseNumberCB[i].checked;
+					else
+						f = document.all.UseNumberCB.checked;
+					
+					if (f)
+					{
+						document.all["num"+i].style.backgroundColor = "#b6f2e7";
+					}
+					else
+					{
+						document.all["num"+i].style.backgroundColor = "";
+					}
+				}
+
+				document.write("<TABLE class=controlTable>");
+
+				for (var i=0; i<Phonebook.Count; i++) {
+					var pbEntry = Phonebook.Item(i);
+					
+					document.write(	"<TR name=num" + i + " id=num" + i + ">");
+					document.write( "<TD style=\"BORDER-TOP: #5981b3 2px solid\" align=\"center\">");
+					document.write( "<INPUT TYPE=\"checkbox\" NAME=\"UseNumberCB\" onClick=\"selectNumber("+i+");\"");
+					if ((!pbEntry.DontUseNumber && !pbEntry.NotUserVerified) && 
+						(TVShell.ConnectionManager.MSNIASettings.PhonebookID == Phonebook.LocationID)) {
+						document.write(" CHECKED ");
+					}
+					document.write( ">" );
+
+					document.write( "<TD style=\"BORDER-TOP: #5981b3 2px solid\">&nbsp;");
+					document.write( FormatPhoneByVal(pbEntry.Number) );
+					document.write( "&nbsp;&nbsp;("+pbEntry.Location+")" );
+					document.write(	"</TR>");
+				}
+
+				document.write("</TABLE>");
+
+				for (var i=0; i<Phonebook.Count; i++) {
+					selectNumber(i);
+				}
+
+				document.write("<P>If you would like to choose from a longer list of access numbers, choose <EM>Get more access numbers</EM>.");
+				document.write("<UL class=links><LI><a onClick='getMoreAccessNumbers()'>Get more access numbers</A></LI></UL>");
+			}
+		} else {
+			document.all.Cancel.label = "Done";
+			document.all.Done.style.display = "none";
+			document.all.Advanced.style.display = "none";
+			document.write( strOutOfDate );
+			displayHomePhoneLink();
+		}
+		</SCRIPT>
+	</DIV>
+</DIV>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>
+
+<SCRIPT LANGUAGE=Javascript>
+function NeedMorePhoneBookSelections(Phonebook, Selections)
+{
+	// how many numbers have been selected and how many local numbers are unselected
+	var selectedNumbers = 0;
+	var unselectedLocalNumbers = 0;
+	var unselectedTollNumbers = 0;
+	
+	for (var i = 0; i < Phonebook.Count; i++) {
+		if (Selections.UseNumberCB[i].checked) {
+			selectedNumbers++;
+		} else {
+			if (Phonebook.Item(i).IsLocal) {
+				unselectedLocalNumbers++;
+			} else {
+				unselectedTollNumbers++;
+			}
+		}
+	}
+
+	if (selectedNumbers < 2 && unselectedLocalNumbers > 0) {
+		window.alert("You must choose at least two access numbers so that we can connect you to the MSN TV Service.");
+		return true;
+	} else if (!selectedNumbers && unselectedTollNumbers) {
+		window.alert("You must choose at least one access number so that we can connect you to the MSN TV Service.");
+		return true;
+	}
+
+	return false;
+}
+
+function saveSettings()
+{
+	var dirty = false;
+	
+	if (Connector && (Connector.Name == LocalConnectorName)) {
+		var Phonebook = Connector.Phonebook;	
+
+		if (Phonebook.Count == 0) {
+			return true;
+		} else if (Phonebook.Count == 1) {
+			var pbEntry = Phonebook.Item(0);
+
+			if (!document.all.UseNumberCB.checked && pbEntry.IsLocal) {
+				window.alert("You must choose at least one access number so that we can connect you to the MSN TV Service.");
+				return false;
+			}
+			
+			if (pbEntry.DontUseNumber != !document.all.UseNumberCB.checked) {
+				pbEntry.DontUseNumber = !document.all.UseNumberCB.checked;
+				dirty = true;
+			}
+			
+			if (pbEntry.NotUserVerified != false) {
+				pbEntry.NotUserVerified = false;
+				dirty = true;
+			}
+		} else if (Phonebook.Count > 1) {
+			var chosen = false;
+			var i;
+
+			if (NeedMorePhoneBookSelections(Phonebook, document.all.UseNumberCB)) {
+				return false;
+			}
+		
+			for (i=0; i<Phonebook.Count; i++) {
+				var pbEntry = Phonebook.Item(i);
+
+				if (pbEntry.DontUseNumber != !document.all.UseNumberCB[i].checked) {
+					pbEntry.DontUseNumber = !document.all.UseNumberCB[i].checked;
+					dirty = true;
+				}
+				
+				if (pbEntry.NotUserVerified != false) {
+					pbEntry.NotUserVerified = false;
+					dirty = true;
+				}
+			}
+		}
+
+		// The below if() is for TEST ONLY
+		if (TVShell.ConnectionManager.MSNIASettings.PhoneBookID == TEST_BACKGROUND_REPOPTIMIZATION) {
+			dirty = true;
+			TVShell.ConnectionManager.MSNIASettings.PhoneBookID = Phonebook.LocationID;
+		}
+
+		if (TVShell.ConnectionManager.MSNIASettings.PhonebookID != Phonebook.LocationID) {
+			dirty = true;
+			TVShell.ConnectionManager.MSNIASettings.PhonebookID = Phonebook.LocationID;
+		}
+		
+	}
+
+	if(dirty) {
+		ClearBootromAccessNumber();
+		ConnectionManagerSave();
+	}
+
+	return true;
+}
+
+function NavigateBack()
+{
+	if (TVShell.ConnectionManager.WANAdapter.ErrorCode == ConnectError_DialSettingsStale) {
+		if (TVShell.ConnectionManager.ServiceState == Service_Authorized) {
+			LoginToService("connection::reconnect");
+			setTimeout( 'GoBackOnceConnected();' , 1000);
+		} else {
+			LoginToService("connection::login");
+		}
+	} else {
+		history.go(-1);
+	}
+}
+
+function submitChanges()
+{
+	if (!saveSettings())
+		return false;
+
+	TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+	NavigateBack();
+
+	return true;
+}
+
+function CancelChanges()
+{
+	var parameters = FindParameters(TVShell.PanelManager);
+
+	if (parameters["AutoNavigated"]) {
+		TVShell.ConnectionManager.ServiceState = Service_ReSignIn;
+		GotoSignOn();
+	} else {
+		history.go(-1);
+	}
+}
+
+function GotoAdvanced()
+{
+	if (!saveSettings())
+		return false;
+
+	document.location = "AdvancedNumbers.html";
+
+	return true;
+}
+
+function GotoHomeNumber()
+{
+	document.location = "GetHomeNumber.html";
+
+	return true;
+}
+
+</SCRIPT>

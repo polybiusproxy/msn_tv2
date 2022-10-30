@@ -1,0 +1,43 @@
+<html xmlns:msntv>
+<head>
+	<title>Photos Troubleshoot</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Troubleshooting" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+If you're having trouble viewing photos with your <script>document.write( ProductShortName );</script>, check out the troubleshooting tips here.
+<p>
+<p>
+If you choose <b>Photos</b> from the bottom of the Sign-in page and are asked to sign in to the <script>document.write( ServiceFullName )</script>, enter your password and sign in. You must sign in to <script>document.write( ServiceShortName );</script> periodically to ensure that your account is current. The next time you turn on your <script>document.write( ProductShortName );</script> you'll be able to choose <b>Photos</b> from the Sign-in page.
+</p>
+</p>
+If you don't see the photos on your memory card, make sure your memory card reader is connected to the USB port on the back of your <script>document.write( ProductShortName );</script>, and that a card that contains photos is inserted in the card reader. Make sure the card is inserted correctly, with the proper side facing up (see the instructions that came with your card reader for details).
+<p>
+<p>
+If you don't see the photos on a computer that's connected to your home network, try the following:
+<ul>
+<li>Make sure the computer is connected to the network, and that the network hub or router is turned on and working properly.</li>
+<li>Make sure that your <script>document.write( ProductShortName );</script> is connected to the home network. To check, choose <b>Settings</b> from the Sign-in page, then choose <Connection settings</b> or <b>Manage your home network</b>, and follow the instructions there.</li>
+<li>Go to your computer and make sure that the folder that contains the photos is set up as a shared folder. (See your computer's online help for details on file sharing.)</li>
+</ul>
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

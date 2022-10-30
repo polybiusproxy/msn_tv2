@@ -1,0 +1,123 @@
+<html><head> <title>Photos Screen Saver</title> <style type="text/css"> body { margin-left: 0px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; background-color:black; } </style> </head> <script LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></script> <script src="msntv:/Javascript/Parameters.js"></script> <script language="Javascript" src="msntv:/Javascript/DMRCommon.js"></script> <script language="Javascript" src="msntv:/Javascript/DMREnumerate.js"></script> <script LANGUAGE=Javascript SRC="msntv:/Photo/Photos.js"></script> <script language="JavaScript" type="text/javascript">
+<!--
+<!-- Called by Flash when loaded and ready -->
+							
+var index=0;
+var FileNameArray = new Array();
+var allImageFileNames = "";
+var nPhotos = 0;
+
+var ScreenSaverFilePath = userDataVolumeName+"\\"+PhotoSettingsPath+"\\"+scFileName;
+var albumStr=Utilities.ReadTextFile(ScreenSaverFilePath);
+var foundAlbumPhotosForSC = false;
+if(albumStr)
+{
+	allImageFileNames = "";
+	
+    var StorageDevice = StorageManager.Item(userDataVolumeName);
+	if (StorageDevice) 
+	{	    
+		var albums=albumStr.split("\n");
+		var i;
+		
+		for(i=0; i<albums.length; i++)
+		{
+			var albumPath = PhotoStorePath+"\\"+albums[i];
+				
+			var AlbumXmlStr = GetImageHREFNodes(StorageDevice, albumPath);
+			if (AlbumXmlStr)
+			{
+				allImageFileNames+=AlbumXmlStr;
+			}
+		}
+		
+		if (allImageFileNames)
+		{
+			FileNameArray = allImageFileNames.split('\n');
+			nPhotos = FileNameArray.length - 1;
+			
+			if(nPhotos > 0)
+				foundAlbumPhotosForSC = true;
+		}
+	}
+}
+
+if(!foundAlbumPhotosForSC)
+{
+	// no user photos found for screen saver, so enumerate signin pics
+	allImageFileNames = "";
+	
+	var StorageDevice = StorageManager.Item("\\web");
+	if (StorageDevice) 
+	{
+		var pathText = "Settings\\ScreenSaver\\default\\images";
+		allImageFileNames = GetImageHREFNodes(StorageDevice, pathText);
+		if (allImageFileNames)
+		{
+			FileNameArray = allImageFileNames.split('\n');
+			nPhotos = FileNameArray.length - 1;
+		}
+	}
+}
+
+var i;
+for(i=0; i<nPhotos; i++)
+{
+	if(FileNameArray[i])
+		FileNameArray[i] = FormatURL(FileNameArray[i]);
+}
+
+/****************************************************************************************/
+
+// Function captures and parses FScommands issued from Flash
+function mmSlideShow_DoFSCommand(command, args) {
+	var mmSlideShowObj = document.all.mmSlideShow;
+	//
+	  if (command == "ssReady") 
+	  {
+		//Loaded and ready
+		if(!FileNameArray || FileNameArray.length <= 0)
+			return;
+		index=0;	
+
+	//	ssDisablePanZoom();
+		ssNextImage(FileNameArray[index]);
+		ssStart();
+      }
+	  else if (command == "ssImageStart") 
+	  {
+		//Begining of slide
+		//args == file path and name
+		//this FScommand also serves as notification that Flash is ready for the next image name
+		//replacing ssReqImage in previous versions
+	     
+	    index++;
+		if(index >= nPhotos)
+			index=0;
+				
+		if(	FileNameArray[index]!="" )
+			ssNextImage(FileNameArray[index]);
+	  }    
+}
+
+<!-- Called by OS to send next image name and path  -->
+function ssNextImage(sNextImage){
+   window.document.mmSlideShow.SetVariable("_global.gsNextImage", sNextImage);
+}
+<!-- Called by OS AFTER passing Flash name and path of first image -->
+function ssStart(){
+   window.document.mmSlideShow.TCallLabel("_root.mcFunctionCaller", "frmStart");
+}
+<!-- Called by OS to disable Pan and Zoom -->
+<!-- This leaves TransType as "alpha" -->
+function ssDisablePanZoom(){
+   window.document.mmSlideShow.SetVariable("_global.gsPanZoom", "false");
+}
+<!-- Called by OS to set TransType - Choose: "alpha", "push" or "wipe" -->
+function ssTransType(sType){
+   window.document.mmSlideShow.SetVariable("_global.gsTransType", sType);
+}
+
+</script><body><table cellpadding=0 cellspacing=0 width=100% height=100%> <tr> <td align=center vAlign=middle> <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,29,0" TABINDEX=-10001 width="560" height="420" id="mmSlideShow" VIEWASTEXT> <param name="movie" value="file:/web/Photo/slideshow.swf" /> <param name="quality" value="best" /> </object> </td> </tr> </table> <script language=JavaScript event="FSCommand(command, args)" for=mmSlideShow>
+		mmSlideShow_DoFSCommand(command, args);
+</script> </body> </html>

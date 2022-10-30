@@ -1,0 +1,68 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Reset connection settings</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY>
+<SCRIPT>OpenSettingsTable( "Settings" , "Reset connection settings" , "" , true );</SCRIPT>
+
+<DIV id=buttonBar>
+	<msntv:CustomButton href="javascript:ResetSettings()" class=buttonBarButton id=Reset label="Reset" />
+	<msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id=Done label="Cancel" />
+	<script>document.all("Done").focus();</script>
+</DIV>
+
+<DIV id=nonScrollArea>
+	<DIV class=description>
+		<P>
+		Your <SCRIPT>document.write(ProductShortName);</SCRIPT>'s broadband options were set at the
+		factory to work for the most common broadband
+		situations. 
+		</P>
+		<P>
+		To return your <SCRIPT>document.write(ProductShortName);</SCRIPT>'s broadband options to their
+		original settings, choose <EM>Reset</EM>.
+		</P>
+		<P>
+		Note: Choosing <EM>Reset</EM> will delete
+		any changes you've made to your 
+		<SCRIPT>document.write(ProductShortName);</SCRIPT>'s broadband options.
+		</P>
+	</DIV>
+</DIV>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+<SCRIPT>
+	function NavigateBack()
+	{
+		history.go(-2);
+	}
+	
+	function ResetSettings()
+	{
+		TVShell.ConnectionManager.EthernetAdapter.Settings.ResetSettings();
+		TVShell.ConnectionManager.EthernetAdapter.ApplySettings();
+		
+		if (TVShell.ConnectionManager.WirelessAdapter) {
+			TVShell.ConnectionManager.WirelessAdapter.Settings.ResetSettings();
+			TVShell.ConnectionManager.WirelessAdapter.ApplySettings();
+		}
+
+		TVShell.ConnectionManager.HTTPProxy.Enabled = false;
+		TVShell.ConnectionManager.HTTPProxy.ApplySettings();
+		TVShell.ConnectionManager.IMProxy.Enabled = false;
+		ConnectionManagerSave();
+		TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+		NavigateBack();
+	}
+</SCRIPT>
+
+</BODY>

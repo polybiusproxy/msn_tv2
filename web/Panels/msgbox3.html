@@ -1,0 +1,29 @@
+<html xmlns:msntv>
+<HEAD>
+<TITLE>MSGBOX_OK</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script>
+var PanelManager = TVShell.PanelManager;
+var thisName = window.name;
+function SetContent()
+{
+
+	var thisPanel=PanelManager.Item(thisName);
+	document.all.contentFrame.src = thisPanel.UserStrData;
+    document.all.contentFrame.focus();
+}
+
+function OnLoadFrame()
+{
+
+	document.all.contentFrame.focus();
+
+}
+</script>
+</HEAD>
+<BODY width=100% height=100%>
+	<iframe width=100% height=100% id="contentFrame" frameborder="no" style="background-color:transparent" allowtransparency="true" src="about:blank" onload="OnLoadFrame()"></iframe>
+	<script>SetContent();</script>
+</body>
+</html>

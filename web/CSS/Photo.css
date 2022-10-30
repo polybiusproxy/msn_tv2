@@ -1,0 +1,388 @@
+body
+{
+	background-color: #B3B3B3;
+	font-family: Segoe TV;
+	overflow: hidden;
+	margin: 0px;
+}
+
+td
+{
+	font-family: Segoe TV;
+}
+
+a:visited
+{
+	color:#1C2A40;
+	text-decoration: none;
+}
+
+a:link
+{
+	color:#1C2A40;
+	text-decoration: none;
+}
+
+em
+{
+	font-weight: bold;
+	font-style: normal;
+}
+
+#header
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 56px;
+	width: 100%;
+}
+
+#headerTitle
+{
+	position: absolute;
+	top: 27px;
+	left: 15px;
+	width: 400px;
+	color: #C4C2C4;
+	font: 21px bold;
+}
+
+#title
+{
+	position: absolute;
+	top: 27px;
+	left: 90px;
+	width: 400px;
+	color: #F3F3F3;
+	font: 21px bold;
+}
+
+#subTitle
+{
+	color: #C4C2C4;
+	font-size: 18px;
+	white-space: nowrap;
+	margin-bottom: 10px;
+}
+
+#signIn
+{
+	position: absolute;
+	bottom: 30px;
+	right: 88px;
+	color: #F3F3F3;
+	font-size: 18px;
+	text-align: right;
+}
+#help
+{
+	position: absolute;
+	bottom: 30px;
+	right: 8px;
+	color: #F3F3F3;
+	font-size: 18px;
+	text-align: right;
+}
+
+#helpIcon
+{
+	position: relative;
+	top: 1px;
+	left: 4px;
+	margin-left: 4px;
+	behavior: url(#default#alphaImageLoader);
+	src: url(msntv:/Shared/images/Icon_Help_RelatedLink.png);
+	width: 20px;
+	height: 20px;
+}		
+#sideBar
+{
+	position: absolute;
+	top: 56px;
+	right: 0px;
+	width: 26%;
+	height:85%;
+	padding-right: 0px;
+	padding-left: 2px;
+	padding-top:5px;
+	background-color: #999999;
+
+}	
+.sideBarButton, #sideBar msntv\:CustomButton
+{
+	height: 26px;
+	width: 100%;
+	display: block;
+	text-align:left;
+	margin: 0 4px 4px 6px;
+	font-size:16px; 	
+}
+
+#centerSideBar
+{	
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 27%;
+	height:100%;
+	padding-top: 66px;	
+	z-index:-1;
+	background:url(msntv:/Photo/Assets/PhotoNavBar.jpg);
+}
+
+.centerSideBarButton
+{
+	height: 24px;
+	width: 100%;
+	text-align:left;
+	margin: 0;
+	padding-left: 8px;
+	padding-right: 5px;
+	font-family: Segoe;
+	font-size:16px; 
+	color:#1D1D1D;	
+}
+
+.centerSideBarButtonSelected
+{
+	height: 24px;
+	width: 100%;
+	text-align:left;
+	margin: 0;
+	padding-left: 8px;
+	padding-right: 5px;
+	font-family: Segoe;
+	font-size:16px; 
+	font-weight:bold;	
+	color:#492912; 
+	background-color:#F0ECE0; 
+}
+
+TD.csbDiv1 { height:1px; background:#53421B;}
+TD.csbDiv2 { height:1px; background:#F4F1EA;}
+
+#buttonBar
+{
+	position: absolute;
+	right: 20px;
+	bottom: 25px;
+	width: 540px;
+	text-align: right;
+}
+
+.buttonBarButton, #buttonBar msntv\:CustomButton
+{
+	margin-left: 10px;
+}
+#scrollArea
+{
+	position: absolute;
+	top: 56px;
+	left: 0px;
+	width: 74%;
+	bottom: 0px;
+	padding-left: 20px;
+	padding-right: 10px;
+	overflow-y: hidden;
+	behavior: url(msntv:/HTC/ScrollingDIV.htc) url(#default#gradient);
+	startColor:#b0b0b0;
+	endcolor: #e8e8e8;
+	angle:0;
+}
+
+.centerScrollArea
+{
+	position: absolute;
+	top: 56px;
+	right: 0px;
+	width: 73%;
+	bottom: 0px;
+	overflow-y: hidden;
+	behavior: url(msntv:/HTC/ScrollingDIV.htc);
+}
+
+#nonScrollArea
+{
+	position: absolute;
+	top: 71px;
+	left: 0px;
+	width: 100%;
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+
+table.controlTable
+{
+	border-collapse:collapse;
+}
+table.controlTable td
+{
+	padding: 10px 5px 0px 0px;
+	vertical-align: top;
+	/* see also below under .control */
+}
+
+.control, table.controlTable td
+{
+	font-weight: bold;
+}
+
+.topic
+{
+	margin-top: 4px;
+	font: bold 18px;
+	color: #492912;
+	display: inline-block;
+}
+
+.description, .description td
+{
+	font-size: 18px;
+	color: #1D1D1D;
+	font-weight: normal;
+	text-align: left;
+	margin-bottom: 7px;
+}
+.description
+{
+	width: 100%;
+}
+.sectionTitle
+{
+	color:#444444;
+	padding-bottom: 5px;
+	display: block;
+}
+
+hr
+{
+	height:2px;
+	width: 100%;
+	border:#5981B3 solid 2px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
+.groupLabel
+{
+	border-bottom:2px solid #999999;
+	display:block;
+	font-size: 18px;
+	font-weight:bold;	
+	color: #1D1D1D;
+	width: 100%;
+	height: 24px;
+	padding-left: 15px;
+}
+
+.imgThumbnailCellOuterSpan
+{
+	width: 92;
+	height: 69;
+}
+
+.imgThumbnailCellSpan
+{
+	width: 92;
+	height: 69;
+}
+
+.imgThumbnailCellImg
+{
+	height: 69;
+}
+
+div.itemLabel table
+{
+	 border-bottom:2px solid #999999;
+}
+
+.folderName
+{
+	font-size: 18px;
+	color: #14224b;
+}
+
+#startofframe
+{
+	border-bottom:2px solid #999999;
+	width: 100%;
+	height: 2px;
+	padding-left: 15px;
+	margin-right: 22px;
+
+}
+
+
+/* If you have a two-column table with check-boxes or radio-buttons
+*  or text fields (or a table that should look the same way), use
+*  <TABLE class=controlTable>.  However, when using a table of
+*  radio-buttons or check-boxes where some of the description
+*  will span two or more lines, use class=options instead.
+*/
+table.controlTable, table.options
+{
+	margin-top:-5px;
+	margin-bottom:9px;
+	border-collapse:collapse;
+}
+table.controlTable td, table.options td
+{
+	padding: 0px 8px 5px 0px;
+}
+table.options td
+{
+	vertical-align:top;
+}
+
+
+.normalTopFolder
+{
+	font-style: normal;
+	font-family: segoe tv;
+	font-size: 18px;
+	color: #14224B;
+}
+
+.selectedTopFolder
+{
+	font-style: normal;
+	font-family: segoe tv;
+	font-size: 18px;
+	color: #1d1d1d;
+	background-color: #667670;
+	border: 1px solid #422F2E;
+}
+
+#topLevelViewBy
+{
+	margin-left: 15px;
+	height: 24px;
+}
+
+#topLevelFolderDiv
+{
+	margin-top: 10px;
+	margin-left: 9px;
+	height: 24px;
+}
+
+.viewerTitleText
+{
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #1D1D1D;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.noPhotosText
+{
+	font-size: 18px;
+	color: #14224b;
+}
+
+

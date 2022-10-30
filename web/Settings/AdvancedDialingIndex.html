@@ -1,0 +1,54 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Troubleshooting and other dialing options</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/parameters.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY>
+<SCRIPT>OpenSettingsTable( "Settings" , "Dialing options" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton onclick="history.go(-1)" class=sideBarButton id="default" label="Done" />
+	<script>document.all("default").focus();</script>
+</DIV>
+
+<DIV id=scrollArea>
+	<A href="CallWaiting.html" id=CallWaiting class=topic>Change call waiting settings</A>
+	<DIV class=description>Block or allow call waiting</DIV>
+
+	<A href="OffHook.html" id=OffHook class=topic>Choose whether to hang up if another phone is picked up</A>
+	<DIV class=description>Choose to have <SCRIPT>document.write(ServiceShortName);</SCRIPT> hang up or stay connected when a phone on your line is picked up</DIV>
+
+	<A href="AudibleDialing.html" class=topic id=AudibleDialing>Choose whether to listen to dialing</A>
+	<DIV class=description>Choose whether or not to hear your <SCRIPT>document.write(ProductShortName);</SCRIPT> connect to <SCRIPT>document.write(ServiceShortName);</SCRIPT></DIV>
+
+	<A href="BasicDialing.html" id=BasicDialing class=topic>Other dialing options</A>
+	<DIV class=description>Choose a dialing prefix, use pulse dialing, turn off wait for dial tone</DIV>
+
+	<A href="ResetDialing.html" id=ResetDialing class=topic>Reset connection settings</A>
+	<DIV class=description>Return to your <SCRIPT>document.write(ProductShortName);</SCRIPT>'s original dialing settings</DIV>
+</DIV>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+<SCRIPT>
+	var parameters = FindParameters(TVShell.PanelManager);
+
+	if (parameters["confirm"])
+	{
+		for (var i = 0; i < document.links.length; i++)
+		{
+			if (document.links[i].href.indexOf("?") >= 0)
+				document.links[i].href += "&confirm=true";
+			else if (document.links[i].href != "")
+				document.links[i].href += "?confirm=true";
+		}
+	}
+</SCRIPT>
+
+</BODY>

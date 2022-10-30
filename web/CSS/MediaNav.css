@@ -1,0 +1,362 @@
+body
+{
+	font-family: Segoe TV;
+	overflow: hidden;
+	margin: 0px;
+	font-size: 18px;
+}
+
+td
+{
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #14224b;
+}
+
+a:visited
+{
+	color: #14224B;
+	text-decoration: none;
+}
+
+a:link
+{
+	color: #14224B;
+	text-decoration: none;
+}
+
+.headingLabel
+{
+	background-color:#82BAF4;
+	display:block;
+	font-size:18px;
+	font-weight:bold;
+	color:#6A5422;
+	padding:2px 0px 2px 10px;
+	margin:2px;
+}
+
+.groupLabel
+{
+	border-bottom:1px solid #89C0EB;
+	display:block;
+	font-size: 18px;
+	font-weight:bold;
+	padding: 2px 0px 2px 10px;
+	margin:2px;
+}
+
+.folderLabel
+{
+	padding:15px 0 0 15px;
+	font-size: 18px;
+}
+
+div.itemLabel table
+{
+	 width:100%;
+	 border-bottom:1px solid #89C0EB;
+}
+
+div.playlistLabel table
+{
+	 width:100%;
+	 border-bottom:1px solid #89C0EB;
+}
+
+.selected
+{
+	background-color:#C0F6DF;
+}
+
+.description
+{
+}
+
+.sectionTitle
+{
+	color:#1159B3;
+	padding-bottom: 5px;
+	display: block;
+}
+
+.sideBarButton, #sideBar msntv\:CustomButton
+{
+	height: 26px;
+	width: 96%;
+	display: block;
+	text-align:left;
+	margin: 0 0 4px 0;
+	font-size:16px; 	
+}
+
+.content
+{
+	behavior: url(#default#gradient);
+	startColor:#ff0000;
+	endcolor: #000000;
+	angle:0;
+}
+
+#header
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 56px;
+	width: 100%;
+	background: url(msntv:/MediaNav/Assets/MediaNavHeader.jpg) no-repeat;
+	
+}
+
+#headerMusic
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 56px;
+	width: 100%;
+	background: url( msntv:/Music/Images/MusicHeader.jpg ) no-repeat;
+}
+
+#headerPhoto
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 56px;
+	width: 100%;
+	background: url( msntv:/Photo/Assets/PhotoHeader.jpg ) no-repeat;
+}
+
+#headerVideo
+{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 56px;
+	width: 100%;
+	background: url( msntv:/Video/Assets/VideoDMRHeader.jpg ) no-repeat;
+}
+
+
+#headerTitle
+{
+	position: relative;
+	top: 27px;
+	margin-left: 15px;
+	margin-right: 15px;
+	color: #D0E4FF;
+	font: 21px bold;
+}
+
+#headerTitlePhoto
+{
+	position: relative;
+	top: 27px;
+	margin-left: 15px;
+	margin-right: 15px;
+	color: #C4C2C4;
+	font: 21px bold;
+}
+
+#headerTitleMusic
+{
+	position: relative;
+	top: 27px;
+	margin-left: 15px;
+	margin-right: 15px;
+	color: #D0E4FF;
+	font: 21px bold;
+}
+
+#headerTitleVideo
+{
+	position: relative;
+	top: 27px;
+	margin-left: 15px;
+	margin-right: 15px;
+	color: #D0E4FF;
+	font: 21px bold;
+}
+
+#headerSubTitle
+{
+	position: relative;
+	top: 27px;
+	color: #F2F2F2;
+	font: 21px bold;
+}
+
+#headerSubTitlePhoto
+{
+	position: relative;
+	top: 27px;
+	color: #F2F2F2;
+	font: 21px bold;
+}
+
+#headerSubTitleMusic
+{
+	position: relative;
+	top: 27px;
+	color: #EFEFEF;
+	font: 21px bold;
+}
+
+#headerSubTitleVideo
+{
+	position: relative;
+	top: 27px;
+	color: #F2F2F2;
+	font: 21px bold;
+}
+
+#subTitle
+{
+	color: #07214D;
+	font-size: 18px;
+	white-space: nowrap;
+	margin-bottom: 10px;
+}
+
+#signIn
+{
+	position: absolute;
+	bottom: 30px;
+	right: 88px;
+	color: #F2F2F2;
+	font-size: 18px;
+	text-align: right;
+}
+
+#help
+{
+	color: #F2F2F2;
+	font-size: 18px;
+	text-align: right;
+}
+
+#settings
+{
+	color: #F2F2F2;
+	font-size: 18px;
+	text-align: right;
+}
+
+#helpIcon
+{
+	behavior: url(#default#alphaImageLoader);
+	src: url(msntv:/Shared/images/Icon_Help_RelatedLink.png);
+	width: 20px;
+	height: 20px;
+	margin-left: 4px;
+}
+
+
+
+#contentFrame
+{
+	position: absolute;
+	top: 55px;
+	width:100%;
+	behavior: url(#default#gradient);
+	startColor:#B20000;
+	endcolor: #EB0000;
+	angle:0;
+}
+
+#computerBlockMusic{
+	background-color:#EFF0F2;
+}
+
+#computerBlockVideo{
+	background-color:#510A0A;
+}
+
+#computerBlockPhoto{
+	background-color:#EFF0F2;
+}
+
+.computerNameMusic {
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #1d1d1d;
+	font-weight:bold;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.computerNamePhoto {
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #1d1d1d;
+	font-weight:bold;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.computerNameVideo {
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #DAC46E;
+	font-weight:bold;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.shareNameVideo {
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #F9F9F9;
+	font-weight: normal;
+}
+
+.shareNamePhoto {
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #14224B;
+	font-weight: normal;
+}
+
+.shareNameMusic {
+	font-family: Segoe TV;
+	font-size: 18px;
+	color: #14224B;
+	font-weight: normal;
+}
+
+.pcBlockGradVideo{
+	behavior: url(#default#gradient);
+	startColor:#510A0A;
+	endcolor: #230404;
+	angle:0;
+
+}
+
+.pcBlockGradMusic {
+	behavior: url(#default#gradient);
+	startColor:#EDF1F7;
+	endcolor: #B8D6EF;
+	angle:0;
+
+}
+
+.pcBlockGradPhoto {
+	behavior: url(#default#gradient);
+	startColor:#EFF0F2;
+	endcolor: #AEAEAF;
+	angle:0;
+
+}
+
+#shareListDiv {
+	width: 100%;
+	overflow-y: hidden;
+	behavior:url(../HTC/ScrollingDIV.htc);
+}
+
+

@@ -1,0 +1,15 @@
+<!-- Power On -->
+<HEAD>
+
+<SCRIPT SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+<SCRIPT>
+	function OnLoad()
+	{
+		var main = TVShell.PanelManager.Item("main");
+		main.ClearTravelLog();
+		main.NoBackToMe = true;
+	}
+</SCRIPT>
+</HEAD>
+<BODY BGCOLOR=BLACK ONLOAD='OnLoad()'>
+</BODY>

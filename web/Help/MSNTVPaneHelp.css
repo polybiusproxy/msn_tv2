@@ -1,0 +1,93 @@
+/* The styles in Settings.css are used as a base. Settings.css in turn uses the styles in Base.css as a base.
+
+	In this file, override the ones that need to be different 
+
+*/
+@import url(msntv:/Shared/CSS/Settings.css);
+
+
+/* These styles override the ones in Settings.css 
+
+		The following styles override the ones in Settings.css partially or fully
+*/
+#header
+{
+	position: absolute;
+	background: #1C5798 url('HelpHeaderBG.jpg') no-repeat;
+	top:0px; left:0px; height:56px; width:100%;
+}
+
+.topic
+{
+	font: bold 20px;
+}
+
+
+/* Custom styles
+
+		The following styles are custom for MSN TV help
+*/
+
+a.topicLink:link, a.topicLink.hover, a.topicLink:visited 
+{
+	color:#07214D;
+	text-decoration: none;
+	font-size: 18px;
+	margin-top: 6px;
+	display: inline-block;
+}
+
+div.moreTopicsLink
+{
+	width: 100%;
+	text-align: right;
+	color:#07214D;
+	text-decoration: none;
+	font-size: 18px;
+}
+
+
+ul
+{
+	margin-top: 10px;
+        margin-left: 40px;
+}
+
+ol
+{
+        margin-top: 10px;
+}
+
+	li
+	{
+		margin-top: 10px;
+                margin-left: -15px;
+	}
+
+table.textPlusGraphics
+{
+        position:relative; 
+	margin-top: 10px; 
+	left:-5px;
+}
+
+.PNGImage {
+	behavior: url(#default#alphaImageLoader);
+	margin-right: 10px;
+}		
+
+.customBullet
+{
+	top:2px;
+	left:-15px;
+	padding-left:13px;
+	background:url(msntv:/Shared/images/BulletCustom.gif) no-repeat;
+	background-position-y:3px;
+}
+
+.linkArrow
+{
+	width: 10px;
+	height: 10px;
+        border: 0px;
+}

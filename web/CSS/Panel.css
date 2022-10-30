@@ -1,0 +1,94 @@
+@import url(msntv:/CSS/Base.css);
+
+body {
+	background-image: none;
+	behavior: url(../HTC/PanelBG.htc);
+	font-size: 18px;
+	color: #07214D;
+	margin: 15px;
+}
+
+a:link {
+	color: #14224B;
+}
+a:visited {
+	color: #14224B;
+}
+a:active {
+	color: #14224B;
+}
+a:hover {
+	color: #14224B;
+}
+
+td 
+{
+	font-size: 18px;
+	color: #1D1D1D;
+}
+
+.sidebarButton {
+	font-size: 16px;
+	color: #002157;
+	width: 100%;
+	text-align: left;
+	margin: 0px 0px 4px 0px;
+}
+
+.bottombarButton {
+	font-size: 16px;
+	color: #002157;
+	text-align: center;
+	margin: 0px 0px 0px 8px;
+}
+
+.topGradient {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 0%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.heading {
+	font-size: 21px;
+	line-height: 23px;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: center;
+	padding-left: 8px;
+	color: #F2F2F2;
+}
+
+.subHeading {
+	padding: 0px 8px;
+	color: #000000;
+}
+
+.content {
+	font-size: 18px;
+	color: #1D1D1D;
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #678CCD;
+	starttransparency: 65%;
+	endtransparency: 65%;
+	angle: 0;
+}
+
+.sidebar {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 65%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.linkText 
+{
+	font-size: 18px;
+	color: #14224B;
+}
+

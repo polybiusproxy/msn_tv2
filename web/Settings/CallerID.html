@@ -1,0 +1,73 @@
+<HEAD>
+<TITLE>Caller ID</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY onLoad="onLoadPage();">
+<FORM name="dialSettingsForm">
+<SCRIPT>OpenSettingsTable( "Settings" , "Caller ID options" , "msntv:/Help/Contents.html" );</SCRIPT>
+
+	<DIV id=sideBar>
+		<A href="javascript:submitChanges()" class=sideBarButton id=Done>Save changes</A>
+		<A href="javascript:history.go(-1)" class=sideBarButton id="default">Cancel</A>
+		<script>document.all("default").focus();</script>
+	</DIV>
+
+	<DIV id=scrollArea>
+		<DIV class=description>
+			If you have caller ID service on your phone
+			line, you can set your <SCRIPT>document.write(ProductShortName);</SCRIPT> to show a
+			notice on-screen with the caller ID information
+			of anyone who calls while you're connected to
+			<SCRIPT>document.write(ServiceShortName);</SCRIPT>.
+			<P>
+			Choose an option below.
+			</P>
+			<TABLE class=controlTable>
+			<TR>
+				<TD><INPUT type=radio name=callerID checked>
+				<TD>I don't have caller ID service or I want to block caller ID
+			</TR>
+			<TR>
+				<TD><INPUT type=radio name=callerID>
+				<TD>I have caller ID service and want to see caller ID notices when I'm connected to <SCRIPT>document.write(ServiceShortName);</SCRIPT>
+			</TR>
+			</TABLE>
+		</DIV>
+	</DIV>
+</FORM>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>
+
+<SCRIPT>
+var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+
+function onLoadPage()
+{
+	if (ModemSettings.CallerID) {
+		document.dialSettingsForm.callerID[1].checked = true;
+	} else {
+		document.dialSettingsForm.callerID[0].checked = true;
+	}
+}
+
+function submitChanges() 
+{
+	if (document.dialSettingsForm.callerID[1].checked) {
+		ModemSettings.CallerID = true;
+	} else {
+		ModemSettings.CallerID = false;
+	}
+
+	ConnectionManagerSave();
+	history.go(-1);
+}
+</SCRIPT>
+

@@ -1,0 +1,50 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/IPAddress.htc"> <TITLE>Configure Router</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT><BODY> <SCRIPT>OpenSettingsTable( "Settings" , "Configure router" , "" , true );</SCRIPT> <SCRIPT>
+
+function IPtoNum(ipAddr)
+{
+	var numArray = ipAddr.split(".");
+	var ipNum = 0;
+
+	if (numArray.length != 4)
+		return 0;
+
+	for (i = 0; i < 4; i++)
+		ipNum = (ipNum << 8) + (numArray[i] & 0xff);
+
+	return ipNum;
+}
+
+function GotoRouter()
+{
+	var RouterIP = document.all.IP_ADDRESS.intValue;
+
+	if (!RouterIP) {
+		var L_EmptyGateAddress_Text = "Please enter the IP address of your router.";
+		window.alert(L_EmptyGateAddress_Text);
+		return false;
+	}
+
+	//
+	// Hardcode the network mask to something reasonable for home networks so that we
+	// can still work even if it is messed up (e.g. 255.255.255.255).
+	//
+	// var NetMask = IPtoNum(TVShell.ConnectionManager.LANAdapter.NetMask); // Theory
+	//
+	var NetMask = IPtoNum("255.255.0.0");
+	var MyIP = IPtoNum(TVShell.ConnectionManager.LANAdapter.IPAddress);
+
+	// If the Ethernet cable has been unplugged, we will go to the 'No Broadband cable detected' error page
+	if (MyIP && ((MyIP & NetMask) != (RouterIP & NetMask))) {
+		var L_NotOnNet_Text = "That IP address is not in the range of your home network, please check your address.";
+		window.alert(L_NotOnNet_Text)
+		return;
+	}
+
+	onSuccess = "http://"+document.all.IP_ADDRESS.value;
+	GotoLANPage(onSuccess);
+}
+
+</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href='javascript:GotoRouter();' class=buttonBarButton id=Go label="Access Router" /> <msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" /> <script>document.all("default").focus();</script> </DIV><DIV id=nonScrollArea><DIV class=description> <P>Chances are you don't need these advanced configuration pages. However, if your Internet Service Provider requires your router to have a "PPPoE password", you can set it up here.</P> <P>Enter your router's IP address and choose <em>Access Router</em>. You will be asked the user name and password for the router. The router's documentation will tell you what these are.</P> <P><table height=15px width=100% cellspacing=0 cellpadding=0><tr><td></td></tr></table><TABLE class=controlTable> <TR> <TD>IP address: <TD><msntv:IPAddress ID="IP_ADDRESS" VALUE="192.168.1.1" /> </TABLE> </P> <P>After you are done making changes, save your settings. Exit the configuration pages by using <em>Back</em> or <em>Home</em>.</P> </DIV> </DIV> <SCRIPT>
+	if (TVShell.ConnectionManager.LANAdapter && TVShell.ConnectionManager.LANAdapter.Gateway != "")
+		document.all.IP_ADDRESS.value = TVShell.ConnectionManager.LANAdapter.Gateway;
+	</SCRIPT> <SCRIPT>CloseSettingsTable();</SCRIPT> </BODY>

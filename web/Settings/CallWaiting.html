@@ -1,0 +1,191 @@
+<HTML xmlns:msntv>
+	<TITLE>Call waiting settings</TITLE> 
+
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<?import namespace="msntv" implementation="../HTC/DropDownList.htc">
+
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/TVShell.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ServiceList.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+	<LINK REL="StyleSheet" TYPE="text/css" HREF="../CSS/Settings.css">
+		<STYLE> table.controlTable td { padding-top: 7px; }
+
+</STYLE>
+		<SCRIPT>var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;</SCRIPT>
+		<BODY onLoad="onLoadPage();">
+			<FORM name="dialSettingsForm" onsubmit="return false;">
+				<SCRIPT>OpenSettingsTable( "Settings" , "Call waiting settings" , "" );</SCRIPT>
+				<DIV id="ScrollArea">
+					<DIV class="description">
+						<P>
+							If your phone line has call waiting, you can set your
+							<SCRIPT>document.write(ProductShortName);</SCRIPT>
+							to show a notice on-screen each time a call comes in while you're connected to the 
+							<SCRIPT>document.write(ServiceFullName);</SCRIPT>.
+						</P>
+						<P>
+							What do you want to happen when you're connected to the Internet and someone calls you?
+						</P>
+						<TABLE class="options">
+							<TR>
+								<TD><INPUT type="radio" name="callWaiting" onclick="UpdateControls();" checked>
+								<TD>
+							<EM>My phone line doesn't have call waiting</EM>
+							<TR>
+								<TD><INPUT type="radio" name="callWaiting" onclick="UpdateControls();">
+								<TD><EM>Keep me connected and let my caller hear ringing</EM><BR>
+									<SPAN class="description">
+						Select this option to stay connected to <SCRIPT>document.write(ServiceShortName);</SCRIPT>
+						when people call. People who call you will hear your line ring, but the call will not disconnect you.
+						</SPAN>
+								</TD>
+							<TR>
+								<TD><INPUT type="radio" name="callWaiting" onclick="UpdateControls();">
+								<TD><EM>Keep me connected and let my caller hear a busy signal</EM><BR>
+									<SPAN class="description">
+						Select this option to stay connected to <SCRIPT>document.write(ServiceShortName);</SCRIPT>, when people call. 
+						To use this, you will also need to provide the prefix that your phone company uses to block call waiting. Type the prefix 
+						in the box below.
+						</SPAN></TD>
+							<TR>
+								<TD>
+								<TD><INPUT type="text" name="callWaitingPrefix" id="prefix" class="inputText" maxLength="30"
+										size="5"><br>
+									<SPAN class="description">Example: *70
+						</SPAN></TD>
+							</TR>
+							<TR>
+								<TD><INPUT type="radio" name="callWaiting" onclick="UpdateControls();">
+								<TD><EM>Disconnect me from the Internet so that my phone will ring</EM><BR>
+									<SPAN class="description">
+						Select this option to disconnect from <SCRIPT>document.write(ServiceShortName);</SCRIPT>
+						when someone is calling you. You will see an on-screen notice when you get an incoming call; your
+						<SCRIPT>document.write(ProductShortName);</SCRIPT> will disconnect so you can take the call.
+						</SPAN>
+								</TD>
+						</TABLE>
+					</DIV>
+				</DIV>
+				<DIV id="sideBar">
+					<msntv:CustomButton href="javascript:submitChangesandExit()" class="buttonBarButton" id="Done" label="Save Changes" />
+					<msntv:CustomButton href="javascript:setSensitivity();" class="buttonBarButton" id="extra" label="Set Sensitivity" />
+					<msntv:CustomButton href="javascript:history.go(-1)" class="buttonBarButton" id="default" label="Cancel" />
+					<script>document.all("Done").focus();</script>
+				</DIV>
+				<SCRIPT>CloseSettingsTable();</SCRIPT>
+			</FORM>
+			<SCRIPT>
+	function onLoadPage() 
+	{
+	if (ModemSettings.CallWaitingMode == CallWaitingEnabled) {
+		// unblocked call waiting service
+		document.dialSettingsForm.callWaiting[3].checked = true;
+	} else if (ModemSettings.CallWaitingMode == CallWaitingNone) {
+		// no call waiting service
+		document.dialSettingsForm.callWaiting[0].checked = true;
+	} else if (ModemSettings.CallWaitingMode == CallWaitingNone1) {
+		// no call waiting service
+		document.dialSettingsForm.callWaiting[1].checked = true;
+	} else if (ModemSettings.CallWaitingMode == CallWaitingDisabled) {
+		// block call waiting
+		document.dialSettingsForm.callWaiting[2].checked = true;
+	} else {
+		// this is an error but set to call waiting disabled by default
+		document.dialSettingsForm.callWaiting[0].checked = true;
+	}
+	document.dialSettingsForm.callWaitingPrefix.value = ModemSettings.CallWaitingPrefix;
+	UpdateControls();	
+	}
+
+	function UpdateControls()
+	{
+		document.all("prefix").disabled = document.dialSettingsForm.callWaiting[2].checked ? false : true;
+	}
+
+	function ValidPrefix( pr )
+	{
+	var digits = "1234567890*";
+	  
+	if ( pr.length < 1 ) return false;
+
+	for ( var i = 0 ; i < pr.length ; i++ )
+	{
+		if ( digits.indexOf(pr.charAt(i)) == -1 ) return false;
+	}
+	return true;
+	}
+
+	function NavigateBack()
+	{
+		history.go( -1 );
+	}
+
+	function setSensitivity()
+	{
+		if (!document.dialSettingsForm.callWaiting[3].checked) {
+			var msg = "To use this, you need to choose <EM>Disconnect me from the Internet so that my phone will ring</EM>. " +
+			"You change call waiting sensitivity if you are disconnected but no one is actually calling.";
+
+			TVShell.PanelManager.CustomMessageBox(msg,"Choose a different setting","OK",0,"", true);
+		} else if ( submitChanges() ) {
+			document.location = "CallWaitingExtra.html";
+		} else {
+			history.go(0);
+		}
+	}
+
+	function submitChangesandExit()
+	{
+		if ( submitChanges() ) {
+			TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+			NavigateBack();
+		}
+	}
+
+	function submitChanges() 
+	{
+		var lastCWMode = ModemSettings.CallWaitingMode;
+		var lastCWPrefix = ModemSettings.CallWaitingPrefix;
+		
+		
+		if (document.dialSettingsForm.callWaiting[3].checked) {
+			ModemSettings.CallWaitingMode = CallWaitingEnabled;
+		} else if (document.dialSettingsForm.callWaiting[0].checked) {
+			ModemSettings.CallWaitingMode = CallWaitingNone;
+			ModemSettings.CallWaitingSensitivity = 3;	// set to default
+		} else if (document.dialSettingsForm.callWaiting[1].checked) {
+			ModemSettings.CallWaitingMode = CallWaitingNone1;
+			ModemSettings.CallWaitingSensitivity = 3;	// set to default
+		} else if (document.dialSettingsForm.callWaiting[2].checked) {
+			var prefix = document.dialSettingsForm.callWaitingPrefix.value + ModemSettings.DialPrefix;
+			var cwPrefix = document.dialSettingsForm.callWaitingPrefix.value;
+
+			if ( !ValidPrefix(cwPrefix) )
+			{
+			TVShell.PanelManager.CustomMessageBox(
+		  			"Type the prefix your phone company uses to block call waiting (for example, *70).",
+		  						"", "OK", 0, "", false, 0x30, 1 );
+			document.all("prefix").focus();
+			return false;
+			}
+			if(CheckFor911(prefix)) {
+				alert("You entered a prefix to block call waiting that may cause you to dial the emergency services number.  Please enter a new prefix.");
+				return false;
+			}
+			ModemSettings.CallWaitingMode = CallWaitingDisabled;	
+		} else {
+			// this is an error but set to call waiting enabled by default
+			ModemSettings.CallWaitingMode = CallWaitingNone;		
+		}
+
+		ModemSettings.CallWaitingPrefix = document.dialSettingsForm.callWaitingPrefix.value;
+
+		if (lastCWMode != ModemSettings.CallWaitingMode || lastCWPrefix != ModemSettings.CallWaitingPrefix)
+			ConnectionManagerSave();
+		return true;
+	}
+			</SCRIPT>
+		</BODY>
+</HTML>

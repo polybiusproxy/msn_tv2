@@ -1,0 +1,79 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Off-hook detection</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY onLoad="onLoadPage();">
+<FORM name="dialSettingsForm">
+<SCRIPT>OpenSettingsTable( "Settings" , "Off-hook detection" , "" , true );</SCRIPT>
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:submitChanges()" class=buttonBarButton id=Done label="Save Changes" />
+		<msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" />
+		<script>document.all("Done").focus();</script>
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description>
+			<P>
+			Normally, your <SCRIPT>document.write(ProductShortName);</SCRIPT> will disconnect from the <SCRIPT>document.write(ServiceFullName);</SCRIPT>
+			when another phone in your house is picked up.
+			This is called off-hook detection.
+			</P>
+			<P>
+			To have your <SCRIPT>document.write(ProductShortName);</SCRIPT> stay connected when another phone in
+			your house is picked up, select <EM>Don't use off-hook detection</EM>.
+			</P>
+			<TABLE class=controlTable>
+			<TR>
+				<TD><INPUT type=checkbox name=NoOffHookDetect>
+				<TD>Don't use off-hook detection
+			</TR>
+			</TABLE>
+		</DIV>
+	</DIV>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+	
+</FORM>
+</BODY>
+
+<SCRIPT>
+var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+
+function onLoadPage()
+{
+	document.dialSettingsForm.NoOffHookDetect.checked = !ModemSettings.OffHookDetect;
+}
+
+function NavigateBack()
+{
+	history.go(-1);
+}
+
+function submitChanges() 
+{
+	var dirty = false;
+	
+	if (document.dialSettingsForm.NoOffHookDetect.checked != !ModemSettings.OffHookDetect)
+	{
+		ModemSettings.OffHookDetect = !document.dialSettingsForm.NoOffHookDetect.checked;
+		dirty = true;
+	}
+
+	if (dirty) {
+		ConnectionManagerSave();
+	}
+
+	TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+	NavigateBack();
+}
+</SCRIPT>
+

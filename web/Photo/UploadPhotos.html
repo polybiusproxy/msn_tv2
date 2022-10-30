@@ -1,0 +1,249 @@
+<html>
+
+<HEAD>
+<TITLE>Photos Upload</TITLE>
+
+<object id="PicturePusher" classid="CLSID:1D38F646-5E85-47ec-9A2A-5435C02084D7" width="500" height="100" VIEWASTEXT>
+	<param name="ProgressIncrement" value="5">
+</object>
+
+<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+<script src="msntv:/Javascript/Parameters.js"></script>
+<script language="Javascript" src="msntv:/Javascript/ProgressPanel.js"></script>
+<script>
+var MAX_PHOTOS_PER_POST_ON_BROADBAND = 36;
+var MAX_PHOTOS_PER_POST_ON_NARROWBAND = 5;
+var MAX_PHOTOS_PER_POST = 
+    TVShell.ConnectionManager.WANAdapter.RXSpeed >= 100000 ? 
+            MAX_PHOTOS_PER_POST_ON_BROADBAND :
+            MAX_PHOTOS_PER_POST_ON_NARROWBAND;
+
+var PanelManager	= TVShell.PanelManager; 
+var CurrentUser		= TVShell.UserManager.CurrentUser;
+var PicturePusher	= document.all.PicturePusher;
+var PhotoManager    = TVShell.PhotoManager;
+var attachCount		= 0;
+var onlineCount		= 0;
+var response		="";
+
+function Upload()
+{	
+	if(!PicturePusher)
+		return;
+			 
+	PicturePusher.Clear();
+	var writemailService   = CurrentUser.ServiceList("mail::writemail");
+	
+	if(writemailService)
+	{
+		var writemailURL   = writemailService.URL;
+		if(writemailURL)
+		{
+			var dstURL = writemailURL;
+			dstURL+="?action=photo";
+			
+			PicturePusher.PostURL = dstURL;	
+			TVShell.Message("dstURL = " + dstURL);
+		}
+		else
+			return;
+	}
+	else
+		return;
+
+	var imageList = "";
+	var imageCount = 0;
+	var UploadList = "";
+	var token;
+
+	var PhotoParametersFromFile = FindParametersFromFile("\\temp\\photo\\TempPhotoControlData");
+	if(	PhotoParametersFromFile)
+	{
+		UploadList = PhotoParametersFromFile.selectedFileList;
+		token = PhotoParametersFromFile.token;
+	}
+	TVShell.Utilities.RemoveFile("\\temp\\photo\\TempPhotoControlData");
+
+	if(!UploadList)
+		return;
+
+	if(UploadList)
+	{
+		imageList  = UploadList.split('\n');
+		imageCount = Math.floor(imageList.length / 2);
+	}
+	else
+		return;
+
+	if(token)
+		PicturePusher.AddString( "token", token);		
+				
+	var onlinePhotos = new Array();
+	onlineCount = 0;
+	for (i=0; i<imageCount; i++)
+	{
+		var imageName = imageList[2*i];
+		var sz = imageList[2*i+1];
+
+		if(imageName && ( sz == "-1" || sz == "-2"))
+		{
+			onlinePhotos[onlinePhotos.length++] = imageName;
+			onlineCount++;
+		}
+	}
+
+	var onlineList = onlinePhotos.length > 0 ? onlinePhotos.join("\n") : null;
+	if (onlineList!=null)
+		PicturePusher.AddString( "onlinephotos", onlineList );
+
+	var failedCount = 0;
+	for (i=0; i<imageCount; i++)
+	{
+		var imageName = imageList[2*i];
+		var sz = imageList[2*i+1];
+		if(imageName && sz != "-1" && sz != "-2") 
+		{
+			var formElementName = "_Attach_Photo" + attachCount;
+			if ( attachCount > 0
+			     && ( (attachCount-1) % MAX_PHOTOS_PER_POST ) == (MAX_PHOTOS_PER_POST-1) )
+			{
+				TVShell.Message( "PicturePusher.AddSeperator" );
+				//PicturePusher.AddSeperator();//Use separate posts
+			}
+
+			if(PhotoManager.IsInRotatedImageList(imageName))
+				imageName = PhotoManager.GetRotatedImageURL(imageName);
+		
+			if(PicturePusher.AddFile( formElementName, imageName))
+			{
+				attachCount++;
+				TVShell.Message("i=" + i + " count = " + imageCount + " Adding file : " + imageName);
+			}
+			else
+			{
+				TVShell.Message( "FAILED ADDING " + imageName + " to element " + formElementName );
+				failedCount++;
+			}
+		}
+	}
+	TVShell.Message("Posting to mail. numOnlinePhotos=" + onlineCount + " numAttachedPhotos=" + attachCount + " post-url: " + PicturePusher.PostURL);
+
+	if ( failedCount > 0 )
+	{
+		if ( imageCount == 1 )
+			msg = "Failed to upload photo";
+		else if ( failedCount == imageCount )
+			msg = "Failed to upload all photos";
+		else
+			msg = "Failed to upload " + failedCount + " of " + imageCount + " photos";
+		TVShell.Message( msg );
+		alert( msg );
+	}
+
+	PicturePusher.Post();
+}
+
+function OnUnload()
+{
+	RemoveUploadPhotoPanel();
+}
+
+function UpdateProgressPercent(nPercent)
+{
+	ShowProgress();
+	SetProgressPercent(nPercent);
+	TVShell.Message(" here Progress = " + nPercent);			
+}
+
+function CancelPost()
+{
+	PicturePusher.CancelPost();
+	TVShell.Message("CancelPost");	  
+	HideProgress();
+	RemoveUploadPhotoPanel();
+}
+
+var showingProgress = false;
+function ShowProgress()
+{
+	if (!showingProgress) 
+	{
+		try
+		{
+			SetProgressText(PROGRESS_PLEASE_WAIT + "Sending...") 
+			SetProgressStopFunction(CancelPost);	
+		  	ShowProgressPanel();
+		} catch (ex) 
+		{
+			TVShell.Message( "UploadPhotos.html: ShowProgress ex: " +ex + " " + ex.description );
+		}
+	}
+	showingProgress = true;
+}
+
+function HideProgress()
+{
+	showingProgress = false;
+	try 
+	{
+		HideProgressPanel();
+	} catch (ex) 
+	{
+		TVShell.Message( "UploadPhotos.html: HideProgress ex: " +ex + " " + ex.description );
+	}
+}
+
+function UpdateProgressText(iFile)
+{
+	var i = (iFile + onlineCount);
+	TVShell.Message("here FileBegin = " + i);
+
+	ShowProgress();
+	
+	var statusStr=PROGRESS_PLEASE_WAIT + "Sending photo " + (i+1) + " of " + (attachCount+onlineCount) + "..."; 
+	SetProgressText(statusStr);
+}
+
+function PostComplete(hr)
+{
+	TVShell.Message("PostComplete = " + hr);	  
+	HideProgress();
+	
+	var mainPanel = PanelManager.Item("main");
+	var eventObj = mainPanel.Document.createEventObject();
+    eventObj.response = response;
+	mainPanel.Document.body.fireEvent("ondrop", eventObj);
+		
+	RemoveUploadPhotoPanel(); 
+}
+
+function RemoveUploadPhotoPanel()
+{
+	TVShell.Message("removing UploadPhoto panel");
+	PanelManager.Remove("UploadPhotoPanel");
+}
+
+</script>
+</HEAD>
+
+<BODY onLoad="Upload();" onunload="OnUnload();">
+
+	<script language="JavaScript" for="PicturePusher" event="OnProgress(nPercent)">		
+		UpdateProgressPercent(nPercent);	
+	</script>
+
+	<script language="JavaScript" for="PicturePusher" event="OnFileBegin(iFile)">
+		UpdateProgressText(iFile);
+	</script>
+
+	<script language="JavaScript" for="PicturePusher" event="OnPostResponse(strResponse)">
+		TVShell.Message( "OnPostResponse. rsp='" + strResponse + "'" );
+		response = strResponse;
+	</script>
+
+	<script language="JavaScript" for="PicturePusher" event="OnPostComplete(hr)">
+		PostComplete(hr);
+	</script>
+
+</BODY>
+</html>

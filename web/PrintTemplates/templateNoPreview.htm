@@ -1,0 +1,448 @@
+<HTML XMLNS:IE XMLNS:MSNTV>
+<HEAD>
+<?IMPORT NAMESPACE="IE" IMPLEMENTATION="#default">
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<STYLE TYPE="text/css">
+
+.lorstyle
+{
+	width:8in;
+	height:10in;
+	margin:0in;
+}
+
+.pagestyle
+{
+	width:8.5in;
+	height:11in;
+	margin:0in;
+}
+
+.headerstyle
+{
+	position:absolute;
+	margin:0in;
+	left:0.25in;
+	top:0.25in;
+	width:8in;
+}
+
+.footerstyle
+{
+	position:absolute;
+	margin:0in;
+	left:0.25in;
+	bottom:10.75in;
+	width:8in;
+}
+
+</STYLE>
+<SCRIPT LANGUAGE="JScript">
+
+var iNextPageToCreate = 1;
+var oPageStyleClass;
+var oLorStyleClass;
+var oHeaderStyleClass;
+var oFooterStyleClass;
+var aborted=false;
+
+var PrintManager=TVShell.PrintManager;
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var frames;
+var frameSetIndex = 0;
+
+
+// Returns the object corresponding to a named style rule
+function FindStyleRule(styleName)
+{
+	for (i = 0; i < document.styleSheets.length; i++) {
+		for (j = 0; j < document.styleSheets(i).rules.length; j++) {
+			if (document.styleSheets(i).rules(j).selectorText == styleName)
+				return document.styleSheets(i).rules(j);
+		}
+	}
+}
+
+function Init()
+{
+	Sink.AttachEvent(PrintManager, "OnPrintJobCanceled", OnPrintJobCanceled);
+	Sink.AttachEvent(PrintManager, "OnCancelTemplatePrint", OnCancelTemplatePrint);
+
+	var printerSelected = PrintManager.SubKeyName;
+	var Orientation = PrintManager.Orientation;
+
+	oPageStyleClass = FindStyleRule(".pagestyle");
+	oLorStyleClass = FindStyleRule(".lorstyle");
+	oHeaderStyleClass = FindStyleRule(".headerstyle");
+	oFooterStyleClass = FindStyleRule(".footerstyle");
+
+	var printerPageWidth = printer.pageWidth;
+	var printerPageHeight = printer.pageHeight;
+	var printerMarginBottom = printer.marginBottom;
+	var printerMarginTop = printer.marginTop;
+	var printerMarginLeft = printer.marginLeft;
+	var printerMarginRight = printer.marginRight;
+	var printerUnprintableTop = printer.unprintableTop;
+	var printerUnprintableBottom = printer.unprintableBottom;
+	var printerUnprintableRight = printer.unprintableRight;
+
+	if ("B5" == PrintManager.PaperSize) {
+		printerPageWidth = 400;
+		printerPageHeight = 600;
+		printerMarginBottom = 8;
+		printerMarginTop = 8;
+		printerMarginLeft = 26;
+		printerMarginRight = 8;
+		printerUnprintableBottom = 0;
+		printerUnprintableRight = 0;
+	}
+
+	if(Orientation=="Landscape"){
+		oPageStyleClass.style.height = printerPageWidth/100 + "in";
+		oPageStyleClass.style.width = printerPageHeight/100 + "in";
+
+		oLorStyleClass.style.marginLeft = printerMarginLeft/100 + "in"; 
+		oLorStyleClass.style.marginBottom = printerMarginBottom/100 + "in";
+		oLorStyleClass.style.marginTop = printerMarginTop/100 + "in";
+		oLorStyleClass.style.marginRight = printerMarginRight/100 + "in";
+	
+		oLorStyleClass.style.height= (printerPageWidth - (printerMarginTop + printerMarginBottom))/100+"in";
+		oLorStyleClass.style.width = (printerPageHeight - (printerMarginLeft + printerMarginRight))/100 +"in";
+
+		oHeaderStyleClass.style.left = (printerUnprintableBottom+printerMarginLeft)/100 + "in";
+		oHeaderStyleClass.style.top = printerUnprintableRight/100 + 0.25 + "in";
+		oHeaderStyleClass.style.width = (printerPageHeight - (printerMarginLeft + printerMarginRight))/100 +"in";   
+
+		oFooterStyleClass.style.left = (printerUnprintableBottom+printerMarginLeft)/100 + "in";   
+		oFooterStyleClass.style.top = (printerPageWidth-printerMarginTop)/100 + "in";	 
+		oFooterStyleClass.style.bottom = (printerPageWidth-printerMarginBottom)/100+0.25 + "in";
+		oFooterStyleClass.style.width = (printerPageHeight - (printerMarginLeft + printerMarginRight))/100 +"in";    
+	} else {
+		oPageStyleClass.style.width = printerPageWidth/100 + "in";
+		oPageStyleClass.style.height = printerPageHeight/100 + "in";  
+
+		oLorStyleClass.style.marginTop = printerMarginTop/100 + "in"; 
+		oLorStyleClass.style.marginBottom = printerMarginBottom/100 + "in";
+		oLorStyleClass.style.marginLeft = printerMarginLeft/100 + "in";
+		oLorStyleClass.style.marginRight = printerMarginRight/100 + "in";
+
+		oLorStyleClass.style.width = (printerPageWidth- printerMarginLeft-  printerMarginRight-printerUnprintableRight)/100 +"in"; 
+		oLorStyleClass.style.height = (printerPageHeight-printerMarginTop-printerMarginBottom-50)/100 + "in";
+
+
+		oHeaderStyleClass.style.left = printerMarginLeft/100  + "in";
+		oHeaderStyleClass.style.top = printerUnprintableTop/100 + 0.25 + "in";
+		oHeaderStyleClass.style.width = (printerPageWidth- printerMarginLeft- printerMarginRight-printerUnprintableRight)/100+"in"; 
+
+		
+		oFooterStyleClass.style.left = printerMarginLeft/100 + "in"; 
+		oFooterStyleClass.style.top = (printerPageHeight-printerUnprintableBottom-printerMarginBottom-10)/100+"in";	
+		oFooterStyleClass.style.bottom = (printerPageHeight-printerUnprintableBottom-printerMarginBottom-10)/100 +0.25+ "in";
+		oFooterStyleClass.style.width = (printerPageWidth- printerMarginLeft-  printerMarginRight-printerUnprintableRight)/100+"in";
+	}
+
+	var contentSource;
+	
+	frames = dialogArguments.__IE_BrowseDocument.all.tags("frame");
+	if (frames.length) {
+		frameSetIndex = frames.length - 1;  // print all frames in the frameset starting from the last frame
+		contentSource = AbsoluteFramePath(frames(frameSetIndex).src);
+		TVShell.Message("Printing a FrameSet HTML document with " + frames.length + " frames");
+	} else {
+		frameSetIndex = 0;
+		contentSource = "document";
+	}
+	
+	AddFirstPage(contentSource);
+}
+
+function CheckPrint()
+{
+	switch (dialogArguments.__IE_PrintType) {
+		case "NoPrompt":
+			PrintPrep();
+			break;
+		default:
+			break;
+	}
+}
+
+function AbsoluteFramePath(path)
+{
+	if (-1 != path.indexOf("://")) {
+		// the path is an absolute path
+		TVShell.Message("Printing a frame with an absolute frame path = " + path);
+		return path;
+	}
+
+	// path relative to the document path so replace the document with the frame path
+	var splits = dialogArguments.__IE_BrowseDocument.URL.split("/");
+	splits[splits.length-1] = path;
+	var absolutePath = splits.join("/");
+
+	TVShell.Message("Printing a frame with a relative frame path = " + path + " and absolute frame path = " + absolutePath);
+	return absolutePath;
+}
+
+function AddFirstPage(contentSource)
+{
+	PrintManager.FirePrintStatus(0,0,0,0); // start layout
+
+	newHTML  = "<IE:DEVICERECT ID='page1' MEDIA='print' CLASS='pagestyle'>";
+	newHTML += "<IE:LAYOUTRECT ID='layoutrect1' CONTENTSRC='" + contentSource + "' ONLAYOUTCOMPLETE='OnRectComplete()' NEXTRECT='layoutrect2' CLASS='lorstyle'/>";
+	// newHTML += "<IE:LAYOUTRECT ID='layoutrect1' CONTENTSRC='document' ONLAYOUTCOMPLETE='OnRectComplete()' NEXTRECT='layoutrect2' CLASS='lorstyle'/>";
+	newHTML += "</IE:DEVICERECT>";
+
+	pagecontainer.insertAdjacentHTML("afterBegin", newHTML);
+
+	headfoot.textHead = printer.header;
+	headfoot.textFoot = printer.footer;
+	headfoot.url = dialogArguments.__IE_BrowseDocument.URL;
+
+	//If a page uses "title" as ID or name for an element other than HTML title element, 
+	//this will confuse print template. For example:http://www.airstream.com/product_line/motorhomes/interstate_home.html
+	//Desktop printout will have "[object]" as the title.  It is a known bug for IE
+	//In our code, we retrieve title through "TITLE" tag. 
+	try {
+		headfoot.title = dialogArguments.__IE_BrowseDocument.title;
+	} catch(e) {
+		var collection=dialogArguments.__IE_BrowseDocument.all.tags("title");
+		if (collection.length > 0)
+			headfoot.title= collection[0].innerText;
+		else
+			headfoot.title="";
+	}
+
+	headfoot.page = 1;
+	AddHeaderAndFooterToPage(1);
+	iNextPageToCreate = 2;
+}
+
+// AddNextFirstPage() is called for subsequent frames in a frameset
+function AddNextFirstPage(contentSource)
+{
+	newHTML = "<IE:DEVICERECT ID='page" + iNextPageToCreate + "' MEDIA='print' CLASS='pagestyle'>";
+	newHTML += "<IE:LAYOUTRECT ID='layoutrect" + iNextPageToCreate + "' CONTENTSRC='" + contentSource + "' ONLAYOUTCOMPLETE='OnRectComplete()' NEXTRECT='layoutrect" + (iNextPageToCreate + 1) + "' CLASS='lorstyle'/>";
+	newHTML += "</IE:DEVICERECT>";
+
+	pagecontainer.insertAdjacentHTML("BeforeEnd", newHTML);
+
+	headfoot.page = iNextPageToCreate;	// SDK_???
+	AddHeaderAndFooterToPage(iNextPageToCreate);	// SDK_???
+	iNextPageToCreate++;
+}
+
+function OnRectComplete()
+{
+	if (event.contentOverflow == true) {
+		AddNewPage();
+	} else {
+		document.all("layoutrect" + (iNextPageToCreate-1)).onlayoutcomplete = null;
+
+		if (frameSetIndex) {
+			// still more frames to process
+			frameSetIndex--;
+			var contentSource = AbsoluteFramePath(frames(frameSetIndex).src);
+			AddNextFirstPage(contentSource);
+		} else {
+			headfoot.pageTotal = document.all.tags("DEVICERECT").length;
+			AddPageTotalToPages();
+			setTimeout("CheckPrint();", 100);
+		}
+	}
+}
+
+function AddNewPage()
+{
+	document.all("layoutrect" + (iNextPageToCreate - 1)).onlayoutcomplete = null;
+	headfoot.page = iNextPageToCreate;
+
+	newHTML = "<IE:DEVICERECT ID='page" + iNextPageToCreate +  "' MEDIA='print' CLASS='pagestyle'>";
+	newHTML += "<IE:LAYOUTRECT ID='layoutrect" + iNextPageToCreate + "' ONLAYOUTCOMPLETE='OnRectComplete()' NEXTRECT='layoutrect" + (iNextPageToCreate + 1) + "'  CLASS='lorstyle'/>";
+	newHTML += "</IE:DEVICERECT>";
+
+	pagecontainer.insertAdjacentHTML("beforeEnd", newHTML);
+	AddHeaderAndFooterToPage(iNextPageToCreate);
+	iNextPageToCreate++;
+}
+
+function AddHeaderAndFooterToPage(pageNum)
+{
+	if (PrintManager.Header) {
+		newHeader = "<DIV CLASS='headerstyle'><table width=100%><tr><td align=left><DIV width=70% ><span width=100% style='text-overflow:ellipsis;white-space:nowrap;'><NOBR>";
+		
+		if(headfoot.title.length<=50)
+			newHeader += headfoot.title;
+		else
+			newHeader += (headfoot.title.substring(0,49)+"...");
+		
+		newHeader += "</NOBR></span></DIV></td><td align=right><DIV>";
+		newHeader += headfoot.dateShort;
+		newHeader += "</DIV></td></tr></table></DIV>";
+	} else {
+		newHeader = "<DIV CLASS='headerstyle'></DIV>";
+	}
+
+	if (PrintManager.Footer) {
+		newFooter = "<DIV CLASS='footerstyle'><table width=100%><tr><td align=left><DIV width=70% ><span width=100% style='text-overflow:ellipsis;white-space:nowrap;'><NOBR>";
+		
+		if (headfoot.url.length<=50)
+			newFooter += headfoot.url;
+		else
+			newFooter += (headfoot.url.substring(0,49)+"...");
+		
+		newFooter += "</NOBR></span></DIV></td><td align=right><DIV>";
+		newFooter += "Page "+pageNum+"/<span class=hfPageTotal>1</span>";
+		newFooter += "</DIV></td></tr></table></DIV>";
+	} else {
+		newFooter = "<DIV CLASS='footerstyle'></DIV>";
+	}
+
+	document.all("page" + pageNum).insertAdjacentHTML("afterBegin", newHeader); 
+	document.all("page" + pageNum).insertAdjacentHTML("beforeEnd", newFooter);
+}
+
+function AddPageTotalToPages()
+{
+	oSpanCollection = document.all.tags("span");
+	
+	for (i = 0; i < oSpanCollection.length; i++) {
+		if (oSpanCollection[i].className == "hfPageTotal")
+			oSpanCollection[i].innerText = headfoot.pageTotal;
+	}
+}
+
+function PrintPrep()
+{
+	if (layoutrect1.contentDocument.readyState == "complete") {
+		// This block will be called when printing with user prompt
+		// because the Print dialog box gives time for the content
+		// document to complete loading
+		layoutrect1.contentDocument.onreadystatechange = null;
+		TVShell.EnableTVShellWindow();
+		PrintNow();
+	} else {
+		// This block will usually be called when printing w/o user prompt
+		// and sets an event handler that listens for the loading of the content
+		// document before printing. Sometimes, however, the content document
+		// will be loaded in time for the previous block to execute
+		layoutrect1.contentDocument.onreadystatechange = PrintWhenContentDocComplete;
+	}
+}
+
+function PrintWhenContentDocComplete()
+{
+	if (layoutrect1.contentDocument.readyState == "complete") {
+		layoutrect1.contentDocument.onreadystatechange = null;
+		TVShell.EnableTVShellWindow();
+		PrintNow();
+	}
+}
+
+function OnPrintJobCanceled()
+{
+	TVShell.Message("Print canceled!");
+	aborted=true;
+	PrintManager.PrintTemplateClosing();
+	window.close();
+}
+function OnCancelTemplatePrint()
+{
+	printer.updatePageStatus(0);
+	printer.stopDoc();
+	aborted=true;
+	PrintManager.PrintTemplateClosing();
+	window.close();
+}
+
+function PrintNow()
+{
+	try {
+		var startPage;
+		var endPage;
+		var oDeviceRectCollection = document.all.tags("DEVICERECT");
+
+		if (PrintManager.AllPages) {
+			startPage = 1;
+			endPage = oDeviceRectCollection.length;
+		} else {
+			startPage=PrintManager.FromPage;
+			endPage=PrintManager.ToPage;
+			if (startPage>oDeviceRectCollection.length) {
+
+				var totalInfo;
+				
+				if (oDeviceRectCollection.length==1)
+					totalInfo="There is 1 printout page in total.";
+				else
+					totalInfo="There are "+ oDeviceRectCollection.length +" printout pages in total.";
+
+				TVShell.PanelManager.CustomMessageBox(totalInfo+" Please specify correct page range and try again.","Invalid page range", "OK", 0,"");
+				PrintManager.FireTemplatePrintCompleted();
+				PrintManager.PrintTemplateClosing();
+				window.close();	
+				return;
+
+			} else if (endPage>oDeviceRectCollection.length) {
+				endPage = oDeviceRectCollection.length;
+				PrintManager.ToPage=endPage;
+			}
+		}
+
+		printer.startDoc("Printing from templateNoPreview.htm");
+
+		var copyIndex;
+		var copies=printer.copies;
+
+		for (copyIndex=1; copyIndex<=copies; copyIndex++) {
+			if (aborted)
+				break;
+
+			for (i = endPage; i >= startPage; i--) {
+				var length=oDeviceRectCollection.length;
+				PrintManager.FirePrintStatus(copyIndex, i, length,1); //start printing this page
+				printer.printPage(oDeviceRectCollection[i-1]);
+				PrintManager.FirePrintStatus(copyIndex, i, length,2); // this page done
+			}
+			
+			PrintManager.FirePrintStatus(copyIndex,0, 0, 3); // this copy done
+		}
+
+		if (!aborted) {
+			printer.stopDoc();
+			//close hidden print HTMLDialog
+			//this is important, otherwise we wouldn't be able to switch focus to other panels
+			TVShell.Message("Template print completed!");
+			PrintManager.FireTemplatePrintCompleted();
+			PrintManager.PrintTemplateClosing();
+			window.close();
+		}
+	
+	}catch(e) {
+		TVShell.Message("Warning! Print exception: " + e.number + "; description: " + e.description);
+
+// var E_OUTOFMEMORY = 0x80000002;
+// 
+// 		if (E_OUTOFMEMORY == e.number) {
+// 			alert("We've run into problems printing, please turn off your " + ProductShortName + " and turn it on again while holding down the Alt-key on your keyboard.  (This will free up resources that are frozen.)");
+// 		}
+		
+		PrintManager.FireTemplatePrintCompleted();
+		PrintManager.PrintTemplateClosing();
+		window.close();
+	}
+}
+</SCRIPT>
+
+</HEAD>
+<BODY ONLOAD="Init()" style="margin:0px;padding:0px" SCROLL="no">
+
+<IE:TEMPLATEPRINTER ID="printer"/>
+<IE:HEADERFOOTER ID="headfoot"/>
+
+<DIV ID="pagecontainer">
+<!-- Dynamically created pages go here. -->
+</DIV>
+
+</BODY>
+</HTML>

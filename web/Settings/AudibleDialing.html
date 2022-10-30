@@ -1,0 +1,68 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Audible dialing</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY onLoad="onLoadPage();">
+<FORM name="dialSettingsForm">
+<SCRIPT>OpenSettingsTable( "Settings" , "Listen to dialing" , "" , true );</SCRIPT>
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:submitChanges()" class=buttonBarButton id=Continue label="Save Changes" />
+		<msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" />
+		<script>document.all("Continue").focus();</script>
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description>
+			<P>To be able to listen to your <SCRIPT>document.write(ProductShortName);</SCRIPT>
+			dial and connect to the <SCRIPT>document.write(ServiceFullName);</SCRIPT>, 
+			check the box below.</P>
+			<P>Uncheck the box if you would like to connect silently.</P>
+			<TABLE class=controlTable>
+			<TR>
+				<TD><INPUT type=checkbox name=AudibleDialing>
+				<TD>Listen to dialing
+			</TR>
+			</TABLE>
+		</DIV>
+	</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+	
+</FORM>
+</BODY>
+
+<SCRIPT>
+var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+
+function onLoadPage()
+{
+	document.dialSettingsForm.AudibleDialing.checked = ModemSettings.AudibleDialing;
+}
+
+function NavigateBack()
+{
+	history.go(-1);
+}
+
+function submitChanges() 
+{
+	var oldAudible = ModemSettings.AudibleDialing;
+	
+	ModemSettings.AudibleDialing = document.dialSettingsForm.AudibleDialing.checked;
+
+	if (oldAudible != ModemSettings.AudibleDialing) {
+		ConnectionManagerSave();
+	}
+
+	TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+	NavigateBack();
+}
+</SCRIPT>

@@ -1,0 +1,175 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<TITLE>MSGBOX_OK</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<style>
+#buttonBar2
+{
+	position: absolute;
+	right: 11px;
+	bottom: 15px;
+	text-align: right;
+	width:100%;
+}
+
+#buttonBar2 msntv\:CustomButton
+{
+	margin-left:4px;
+	margin-right:4px;
+	margin-top:8px;
+	margin-bottom:0px;
+}
+</style>
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script>
+var PanelManager = TVShell.PanelManager;
+var thisName = window.name;
+
+var SMALL_PANEL_WIDTH	= 340;
+
+function SetContent()
+{
+	var thisPanel=PanelManager.Item(thisName);
+	var boxType=(thisPanel.UserIntData)&0x0F;
+	var defaultButton = (thisPanel.UserIntData >> 8) & 0x03;
+	var bodyText = thisPanel.UserStrData;
+	var iconType = thisPanel.UserIntData & 0xF0;
+
+	switch(iconType)
+	{
+	case MGX_ICON_WARNING:
+		WarningIcon.style.visibility = "visible";
+		TVShell.DeviceControl.PlaySound("Error");
+		break;
+	case MGX_ICON_ERROR:
+		ErrorIcon.style.visibility = "visible";
+		TVShell.DeviceControl.PlaySound("Error");
+		break;
+	case MGX_ICON_INFO:
+		InfoIcon.style.visibility = "visible";
+		TVShell.DeviceControl.PlaySound("task_complete");
+		break;
+	default:
+		WarningIcon.style.visibility = "visible";
+		TVShell.DeviceControl.PlaySound("Error");
+		break;
+	}
+
+	var buttons = "<div id='buttonBar2'>";
+	switch(boxType)
+	{
+	case MB_OK:
+		buttons+="<msntv:CustomButton id='okBtn' label='OK' onClick='PanelManager.CloseMessageBox(thisName,IDOK)'/>";
+		defaultButton="okBtn";
+		break;
+	case MB_OKCANCEL:
+		buttons+="<msntv:CustomButton id='okBtn' label='OK' onClick='PanelManager.CloseMessageBox(thisName,IDOK)'/>";
+		buttons+="<msntv:CustomButton id='cancelBtn' label='Cancel'  onClick='PanelManager.CloseMessageBox(thisName,IDCANCEL)'/>";
+		defaultButton="cancelBtn";
+		break;
+	case MB_ABORTRETRYIGNORE:
+		buttons+="<msntv:CustomButton id='abortBtn' label='Abort' onClick='PanelManager.CloseMessageBox(thisName,IDABORT)'/>";
+		buttons+="<msntv:CustomButton id='retryBtn' label='Retry'  onClick='PanelManager.CloseMessageBox(thisName,IDRETRY)' />";
+		buttons+="<msntv:CustomButton id='ignoreBtn' label='Ignore'  onClick='PanelManager.CloseMessageBox(thisName,IDIGNORE)' />";
+		defaultButton="abortBtn";		
+		break;
+	case MB_YESNOCANCEL:
+		buttons+="<msntv:CustomButton id='yesBtn' label='Yes' onClick='PanelManager.CloseMessageBox(thisName,IDYES)'/>";
+		buttons+="<msntv:CustomButton id='noBtn' label='No'  onClick='PanelManager.CloseMessageBox(thisName,IDNO)' />";
+		buttons+="<msntv:CustomButton id='cancelBtn' label='Cancel'  onClick='PanelManager.CloseMessageBox(thisName,IDCANCEL)' />";
+		defaultButton="cancelBtn";		
+		break;
+	case MB_YESNO:
+		buttons+="<msntv:CustomButton id='yesBtn' label='Yes' onClick='PanelManager.CloseMessageBox(thisName,IDYES)'/>";
+		buttons+="<msntv:CustomButton id='noBtn' label='No'  onClick='PanelManager.CloseMessageBox(thisName,IDNO)' />";
+		defaultButton="noBtn";		
+		break;
+	case MB_RETRYCANCEL:
+		buttons+="<msntv:CustomButton id='retryBtn' label='Retry' onClick='PanelManager.CloseMessageBox(thisName,IDRETRY)'/>";
+		buttons+="<msntv:CustomButton id='cancelBtn' label='Cancel'  onClick='PanelManager.CloseMessageBox(thisName,IDCANCEL)' />";
+		defaultButton="cancelBtn";		
+		break;
+	case MB_SPECIAL:
+	case MB_SPECIAL_SAFE:
+	  	var arguments = bodyText.split("&&");
+		bodyText = arguments[0];
+		arguments[1] = TVShell.Utilities.EscapeHTML(arguments[1]);
+		var buttonArray = arguments[1].split(";");
+		var errorNum = arguments[2];
+		for (var i = 0; i < 4 && i < buttonArray.length; i++)
+		{
+			if (buttonArray[i] != "")
+				buttons += "<msntv:CustomButton label='" + buttonArray[i] + "'  onClick='PanelManager.CloseMessageBox(thisName," + i + ")'/>"
+		}
+
+		if (errorNum)
+		{
+			errorDIV.innerText = "Error: " + errorNum;
+		}
+	  	break;
+    default:
+		buttons+="<msntv:CustomButton id='okBtn' label='OK'  onClick='PanelManager.CloseMessageBox(thisName,IDOK)'/>";
+		defaultButton="okBtn";
+		break;
+	}
+
+	buttons += "</div>";
+	document.write(buttons);
+	var theTags = document.all.tags("CustomButton");
+	if(theTags[defaultButton])
+		theTags[defaultButton].focus();
+
+	if (thisPanel.Width == SMALL_PANEL_WIDTH)
+	{
+		message.style.width = "270px";
+		message.style.height = "120px";
+	}
+
+	if (boxType == MB_SPECIAL)
+		message.innerHTML = bodyText;
+	else if (boxType != MB_OK && boxType != MB_OKCANCEL)
+	{	// allow a few useful HTML tags, but escape all the rest.
+		// none allowed for JScript alert & confirm.
+		bodyText = TVShell.Utilities.EscapeHTML(bodyText);
+		bodyText = bodyText.replace(/&lt;([/]?(EM|B|I|BR|P|SUP))&gt;/gi, "<$1>");
+		bodyText = bodyText.replace(/&amp;#174/gi, "&#174");
+		message.innerHTML = bodyText;
+	}
+	else
+		message.innerText = bodyText;
+	
+	if (thisPanel.Caption && thisPanel.Caption.length) {
+		caption.innerText = thisPanel.Caption;
+		caption.style.visibility = "visible";
+		
+		message.style.top = "55px";
+		if (thisPanel.Width == SMALL_PANEL_WIDTH)
+			message.style.height = "90px";
+		else
+			message.style.height = "150px";
+
+		if (boxType == MB_OK) {
+			// This code allows msnia URL captions to be more visible when the diagnostic POST output is enabled
+			errorDIV.innerText = thisPanel.Caption;
+		}
+	}
+}
+
+function KeyDown()
+{
+	if (event.altKey)
+		errorDIV.style.visibility = "visible";
+}
+</script>
+</HEAD>
+<BODY onkeydown="KeyDown()">
+	<div id="ErrorIcon" style="visibility:hidden; position:absolute; left:15px; top:15px; margin:0; padding:0; width:45px; height:55px; behavior:url(#default#alphaImageLoader); src:url(images/Icon_Error_ErrorPanels.png)"></div>
+	<div id="WarningIcon"  style="visibility:hidden; position:absolute; left:15px; top:15px; margin:0; padding:0; width:45px; height:55px; behavior:url(#default#alphaImageLoader); src:url(images/Icon_Warning_ErrorPanels.png)"></div>
+	<div id="InfoIcon"  style="visibility:hidden; position:absolute; left:15px; top:15px; margin:0; padding:0; width:45px; height:55px; behavior:url(#default#alphaImageLoader); src:url(images/Icon_Info_ErrorPanels.png)"></div>
+	<div id="caption" class="header" style="visibility:hidden; position:absolute; top:25px; left:70px"></div>	
+	<div id="message" class="scroller" style="position:absolute; top:25px; left:70px; width:330px; height:180px; padding-right:15px; word-wrap:break-word"></div>
+	<div id=errorDIV></div>
+	<script>SetContent();</script>
+</body>
+</html>

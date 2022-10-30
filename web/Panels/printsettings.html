@@ -1,0 +1,1107 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/DropDownList.htc">
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<title>Printer Setup Panel</title>
+	<link rel="StyleSheet" type="text/css" href="../CSS/Panel.css">
+	<script language="Javascript" src="../Javascript/TVShell.js"></script>
+	<script language="Javascript" src="../Javascript/PanelImpl.js"></script>
+	<script language="Javascript" SRC="../Javascript/Panels.js"></script>
+	<script language="Javascript" SRC="../Javascript/print.js"></script>
+	<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+	
+	<script>
+	var PhotoPaperSize_4X6 = "B5";
+	
+	var DMPAPER_LETTER   = 1;  /* Letter 8 1/2 x 11 in               */
+	var DMPAPER_LEGAL   = 5;  /* Legal 8 1/2 x 14 in                */
+	var DMPAPER_A4   = 9;  /* A4 210 x 297 mm                    */
+	var DMPAPER_B4   = 12;  /* B4 (JIS) 250 x 354                 */
+	var DMPAPER_B5   = 13;  /* B5 (JIS) 182 x 257 mm              */
+	var PaperSizes= new Array();
+	PaperSizes["Letter"]=DMPAPER_LETTER;
+	PaperSizes["Legal"]=DMPAPER_LEGAL;
+	PaperSizes["A4"]=DMPAPER_A4;
+	PaperSizes[PhotoPaperSize_4X6]=DMPAPER_B5;
+	PaperSizes["B4"]=DMPAPER_B4;
+
+	var PaperSizeNames= new Array();
+	PaperSizeNames[0]="Letter";
+	PaperSizeNames[1]="Legal";
+	PaperSizeNames[2]="A4";
+	PaperSizeNames[3]=PhotoPaperSize_4X6;
+	PaperSizeNames[4]="B4";
+
+
+	var DMCOLOR_MONOCHROME  =1;
+	var DMCOLOR_COLOR       =2;
+	var ColorOptions = new Array();
+	ColorOptions["Monochrome"]=DMCOLOR_MONOCHROME;
+	ColorOptions["Color"]=DMCOLOR_COLOR;
+
+	var DMRES_DRAFT = -1;
+	var DMRES_HIGH = -4;
+	var QualityOptions = new Array();
+	QualityOptions["Draft"]=DMRES_DRAFT;
+	QualityOptions["High"]=DMRES_HIGH;
+
+	var PHOTO_PRINT_ITEM = "Photo (4 x 6 in)";
+
+
+	var g_DocPrintCanceled=false;
+
+	var PEN_COLOR=0x02;
+	var g_setupDiv="basic_div";
+
+	var colorCapable=true;
+	var photoPrintCapable = false;
+	var g_DocViewer;
+
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+	var PrintBtnClicked=false;
+	var PrintScreenBtnClicked=false;
+	var mainpanel=PanelManager.Item("main");
+	var PrintManager=TVShell.PrintManager;
+	PrintManager.CurrCopy=0;
+
+	var landscapeIcon= new Image();
+	landscapeIcon.src="images/PrintLandscape.jpg";
+	var portraitIcon= new Image();
+	portraitIcon.src="images/PrintPortrait.jpg";
+
+	var currDiv="basic_div";
+	var RegSubKey="MSNTV";
+
+	var PrintScreenFileName = "\\Temp\\PrintScreen.jpg";
+	var SavedAllPages;
+	
+	function IsInDocViewer()
+	{
+		var currentURL = mainpanel.URL;	
+		currentURL = currentURL.toLowerCase();	
+		var retVal = (currentURL.indexOf("msntv:/docviewer/docviewer.htm") == 0) ? true : false;
+		return retVal;
+	}
+	
+	function IsInPhotoViewer()
+	{
+		var currentURL = mainpanel.URL;	
+		currentURL = currentURL.toLowerCase();	
+		var retVal = (currentURL.indexOf("msntv:/photo/viewer.html") == 0) ? true : false;
+		return retVal;
+	}
+	
+	function OnBeforeFirstShow(name)
+	{
+		if (name == "printsettings") {
+			PrintManager.SearchPrinters();
+			CheckPrinters();
+		}
+	}
+
+	function GetTitle(docObj)
+	{
+		var title="";
+		var collection = docObj.all.tags("title");
+
+		if (collection && collection.length > 0)
+			title= collection[0].innerText;
+			
+		return title;
+	}
+
+	function OnBeforeShow(name)
+	{
+		if (name == "printsettings") {
+			// Start with display=block so dropdown is properly built.
+			document.all['basic_div'].style.display="block";
+			document.all['advanced_div'].style.display="block";
+
+			if (IsInDocViewer() || IsInPhotoViewer())
+				document.all.url_span.innerText=GetTitle(PanelManager.Item("main").Document);
+			else
+				document.all.url_span.innerText=PanelManager.Item("main").Document.title;
+
+			//document.all.copies.value=1;
+			PrintManager.Copies;
+			document.all.FromPage.value=1;
+			
+			if (IsInDocViewer()) {
+				g_DocViewer=PanelManager.Item("main").Document.all.docvw;
+			} else {
+				document.all.totalPageCount.value=1;
+				PrintManager.ToPage=1;
+			}
+
+			CheckPrinters();
+			LoadPrintSettings();
+
+			g_setupDiv="basic_div";
+			document.all['basic_div'].style.display="none";
+			document.all['advanced_div'].style.display="none";
+			ShowDiv('basic_div');
+			document.all.setupButton.label="Advanced Setup";
+			
+			if (IsInPhotoViewer()) {
+				document.all.setupBttnRow.style.display="none";
+				g_setupDiv="advanced_div";
+				ShowDiv(g_setupDiv);
+			} else {
+				document.all.setupBttnRow.style.display="block";
+			}
+
+			if (IsInPhotoViewer() || IsInDocViewer()) {
+				document.all.HeaderFooterTable.style.display = "none";
+				document.all["printScreenBttnRow"].style.display = "none";
+			} else {
+				document.all.HeaderFooterTable.style.display = "block";
+				document.all["printScreenBttnRow"].style.display = "inline-block";
+			}
+
+			document.all.PrintHeaderFooter.checked = PrintManager.UserPreferencePrintHeaderFooter;
+		}
+	}
+
+	function SaveMarginSettings()
+	{
+		/* var m_left=new Number(document.all.margin_left.value);
+		var m_right=new Number(document.all.margin_right.value);
+		var m_top=new Number(document.all.margin_top.value);
+		var m_bottom=new Number(document.all.margin_bottom.value);
+
+		m_left=Math.round(1000*m_left);
+		m_right=Math.round(1000*m_right);
+		m_top=Math.round(1000*m_top);
+		m_bottom=Math.round(1000*m_bottom);*/
+
+		m_left=750;
+		m_right=750;
+		m_top=750;
+		m_bottom=750;
+
+		PrintManager.MarginLeft=m_left;
+		PrintManager.MarginRight=m_right;
+		PrintManager.MarginTop=m_top;
+		PrintManager.MarginBottom=m_bottom;
+	}
+
+	function VerifyInt(object, defaultVal)
+	{
+		var value=parseInt(object.value);
+		
+		if (isNaN(value) || value<=0)
+			value=defaultVal;
+
+		object.value=value;
+		return value;
+	}
+
+	function VerifyFloat(object, defaultVal)
+	{
+		var value=parseFloat(object.value);
+		
+		if (isNaN(value) || value<0)
+			value=defaultVal;
+			
+		object.value=value;
+		return value;
+	}
+
+	function Print()
+	{
+		if (!PrintManager.AllPages)
+			VerifyPageRange();
+		
+		if (PrintManager.Count==0 && PrintManager.CurrPrintDevice<0)
+			return;
+
+		SaveMarginSettings();
+
+		// no header footer for photo or doc files since doc files will have their own non-html footer and header
+		if (IsInDocViewer() || IsInPhotoViewer() || !PrintManager.UserPreferencePrintHeaderFooter) {
+			PrintManager.Header="";
+			PrintManager.Footer="";
+		} else {
+			// for regular pages ,we add footer
+			// this code has to be before the call to PopulateRegistry()
+			PrintManager.Header="&w";
+			PrintManager.Footer="&u&b&bPage &p of &P";
+		}
+
+		// only set orientation if not in doc view and not in photo viewer
+		if (!IsInDocViewer() && !IsInPhotoViewer()) {
+			PrintManager.Orientation = PrintManager.UserPreferenceOrientation;
+		}
+
+		PrintManager.PopulateRegistry();
+		PrintBtnClicked=true;
+		SetProgressText(PROGRESS_PLEASE_WAIT + "Printing...")
+		
+		if (IsInDocViewer())
+			PrintDoc();
+		else if (IsInPhotoViewer())
+			PrintPhoto();
+		else
+			PrintPage();
+			
+		ShowProgressPanel();
+	}
+
+	function StartPrintScreen()
+	{
+		if (PrintManager.Count==0 && PrintManager.CurrPrintDevice<0)
+			return;
+
+		SaveMarginSettings();
+
+		PrintManager.Header="";
+		PrintManager.Footer="";
+		PrintManager.Orientation = PrintManager.UserPreferenceOrientation;
+
+		SavedAllPages = PrintManager.AllPages;
+		PrintManager.AllPages=true;
+
+		PrintManager.PopulateRegistry();
+		PrintBtnClicked=true;
+
+		// hide this panel
+		PanelManager.Hide("printsettings");
+
+		// capture screen shot
+		// One second delay to allow this panel to be hidden before the screen shot
+		setTimeout("FinishPrintScreen()", 1000);
+	}
+
+	function FinishPrintScreen()
+	{
+		// capture screen shot
+		var mainPanel = PanelManager.Item("main");
+		TVShell.ThumbnailManager.CaptureScreenshot(mainPanel.WebBrowser, PrintScreenFileName);
+
+		// print the screen shot
+		PrintPage();
+		PrintScreenBtnClicked = true;
+
+		CreateHiddenPanelForPrint();
+		setTimeout("StartPrintPhotoOne()",500);
+	}
+
+	function StartPrintPhotoOne()
+	{
+		SetProgressText(PROGRESS_PLEASE_WAIT + "Printing...")
+		ShowProgressPanel();
+	}
+	
+	function CreateHiddenPanelForPrint()
+	{
+		PanelManager.Remove("imageprinthost");
+		var imageprinthost = new Panel("imageprinthost", "msntv:/Photo/ImagePrintPanel.html", 
+			SYSTEM_PANEL_TYPE, STATIC_PANEL_STYLE,100,0,false);
+		imageprinthost.start = new Rectangle(0, 0, TVShell.DeviceControl.ScreenWidth, TVShell.DeviceControl.ScreenHeight);
+		return AddPanel(PanelManager, imageprinthost);
+	}
+
+	function PrintPage()
+	{
+		mainpanel.SetCancelPrintFlag(false);
+		SetProgressStopFunction(CancelPrintPage);
+	}
+
+	function CancelPrintPage()
+	{
+		var mainpanel=PanelManager.Item("main");
+		mainpanel.SetCancelPrintFlag(true);
+	}
+
+	function PrintDoc()
+	{
+		SetProgressStopFunction(CancelPrintDoc);
+	}
+
+	function CancelPrintDoc()
+	{
+		g_DocPrintCanceled=true;
+		g_DocViewer.printabort();
+		PrintBtnClicked=false;
+		HideProgressPanel();
+		g_DocPrintCanceled=false;
+		PrintManager.CurrCopy=0;
+	}
+
+	function PrintPhoto()
+	{
+		SetProgressStopFunction(CancelPrintPhoto);
+	}
+
+	function CancelPrintPhoto()
+	{
+		if(IsInPhotoViewer())
+		{
+			mainPanel.SetCancelPrintFlag(true);
+			mainPanel.Document.parentWindow.printImage.abort = true;
+			PrintManager.CancelPrint();  // This is needed if cancel is pressed before the print template is started
+		}
+
+		HideProgressPanel();
+	}
+
+	function OnAfterProgressShow(name)
+	{
+		if (name == "progress") {
+			g_setupDiv="basic_div";
+			ShowDiv('basic_div');
+			document.all.setupButton.label="Advanced Setup";
+
+			if (PrintBtnClicked == true) {
+				PrintBtnClicked=false;
+				
+				if (IsInDocViewer()) {
+					var currPrinter=PrintManager.Item(PrintManager.CurrPrintDevice);
+					var driver=currPrinter.Driver;
+					var port=currPrinter.Port;
+					var range=PrintManager.FromPage+"-"+PrintManager.ToPage;
+					var paperSize;
+					var colorOption;
+					var copyIndex;
+					var qualityOption;
+
+					if (PaperSizes[PrintManager.PaperSize])
+						paperSize=PaperSizes[PrintManager.PaperSize];
+					else
+						paperSize=DMPAPER_LETTER;
+
+					if (ColorOptions[PrintManager.Color])
+						colorOption=ColorOptions[PrintManager.Color];
+					else
+						colorOption=DMCOLOR_COLOR;
+
+					if (QualityOptions[PrintManager.Quality])
+						qualityOption=QualityOptions[PrintManager.Quality];
+					else
+						qualityOption=DMRES_HIGH;
+
+					if (PrintManager.AllPages)
+						range="";
+
+					// Print(BSTR strPrinter, BSTR strPort, BSTR strRange, unsigned short usPaperSize, unsigned short usQuality, unsigned short usColor);
+					
+					for(copyIndex=0;copyIndex<PrintManager.Copies;copyIndex++) {
+						if (g_DocPrintCanceled==false) {
+							PrintManager.CurrCopy=copyIndex+1;
+							g_DocViewer.print(driver,port,range,paperSize,qualityOption,colorOption);
+						}
+					}
+				} else if (IsInPhotoViewer()) {
+					TVShell.Message("printing photo");
+					var photoViewerPanel = mainPanel;
+
+					try {
+						// at this moment the card reader is removed
+						// the photoViewerPanel will be removed and thus 
+						// after printing is down, error will take place
+						// in this case we put a try-catch statement here to avoid 
+						// js error. 
+						photoViewerPanel.Document.PrintPhotos();
+					} catch(e) {
+						TVShell.Message("Error:"+e);
+					}
+				} else if (PrintScreenBtnClicked) {
+					var printsrcObj = PanelManager.Item("imageprinthost").Document.all.printsrc;
+					printsrcObj.src = "file://" + PrintScreenFileName;
+
+					// resize image to fit page
+					var xRes = GetXResolution();
+					var yRes = GetYResolution();
+
+					var originalImageWidth  = TVShell.ThumbnailManager.GetImageWidth(PrintScreenFileName);
+					var originalImageHeight = TVShell.ThumbnailManager.GetImageHeight(PrintScreenFileName);
+
+					var xScale = xRes/originalImageWidth;
+					var yScale = yRes/originalImageHeight;
+					var scale = Math.min(xScale, yScale);
+					printsrcObj.height = scale * originalImageHeight;
+					
+					PanelManager.Item("imageprinthost").Print("file://\\web\\PrintTemplates\\templateNoPreview.htm","", false, false);
+				} else {
+					// since template doesn't use msntv security mode, we have to use "file:" scheme here
+					mainpanel.Print("file://\\web\\PrintTemplates\\templateNoPreview.htm",PrintManager.PrintFrameID, false, false);
+				}
+			}
+		}
+	}
+
+	function CheckColorCapability()
+	{
+		var currPrinterIndex=PrintManager.CurrPrintDevice;
+
+		if (currPrinterIndex >= 0) {
+			var currPrinter=PrintManager.Item(currPrinterIndex);
+
+			if ((currPrinter.Color & PEN_COLOR)!=0)
+				colorCapable=true;
+			else
+				colorCapable=false;
+		}
+
+		if (colorCapable == true) {
+			document.all.ColorRadioTable.style.display="block";
+
+			if (PrintManager.Color == "Color")
+				document.all.ColorRadio.checked=true;
+			else
+				document.all.MonochromeRadio.checked=true;
+		} else {
+			document.all.ColorRadioTable.style.display="none";
+			document.all.MonochromeRadio.checked=true;
+		}
+	}
+
+	function CheckPhotoPrintCapability()
+	{
+		var currPrinterIndex=PrintManager.CurrPrintDevice;
+		
+		if (currPrinterIndex >= 0) {
+			var currPrinter=PrintManager.Item(currPrinterIndex); 
+
+			if (currPrinter.PhotoPrint) {
+				photoPrintCapable = true;
+			} else {
+				photoPrintCapable = false;
+			}
+		}
+
+		if (document.all.dropDown) {
+			var papersize;
+
+			if (IsInPhotoViewer() && photoPrintCapable) {
+				document.all.dropDown.RemoveItems();
+				document.all.dropDown.size = 4;
+				document.all.dropDown.AppendItem("Letter(8 1/2 × 11 in)");
+				document.all.dropDown.AppendItem("Legal(8 1/2 × 14 in)");
+				document.all.dropDown.AppendItem("A4(210 × 297 mm)");
+				document.all.dropDown.AppendItem(PHOTO_PRINT_ITEM);
+				papersize = PhotoPaperSize_4X6;
+				PrintManager.Quality = "High";
+			} else {
+				document.all.dropDown.RemoveItems();
+				document.all.dropDown.size = 3;
+				document.all.dropDown.AppendItem("Letter(8 1/2 × 11 in)");
+				document.all.dropDown.AppendItem("Legal(8 1/2 × 14 in)");
+				document.all.dropDown.AppendItem("A4(210 × 297 mm)");
+
+				if (PhotoPaperSize_4X6 == PrintManager.PaperSize) {
+					papersize = "Letter";
+				} else {
+					papersize = PrintManager.PaperSize;
+				}
+			}
+
+			SetPaperSizeDropDown(papersize);
+
+			document.all.dropDown.onSelect();
+		}
+	}
+
+	function SetPaperSizeDropDown(papersize)
+	{
+		var count = document.all.dropDown.size;
+		for (var i=0;i<count;i++) {
+			if (PaperSizeNames[i] == papersize) {
+				document.all.dropDown.selectedIndex=i;
+				break;
+			}
+		}
+	}
+
+	function LoadPrintSettings()
+	{
+
+		var m_left=PrintManager.MarginLeft;
+		var m_top=PrintManager.MarginTop;
+		var m_right=PrintManager.MarginRight;
+		var m_bottom=PrintManager.MarginBottom;
+
+		m_left=m_left/1000;
+		m_right=m_right/1000;
+		m_top=m_top/1000;
+		m_bottom=m_bottom/1000;
+
+		/* document.all.margin_left.value=m_left;
+		document.all.margin_right.value=m_right;
+		document.all.margin_top.value=m_top;
+		document.all.margin_bottom.value=m_bottom; */
+
+		RegSubKey=PrintManager.RegKeyName;
+
+		var Orientation=PrintManager.UserPreferenceOrientation;
+
+		if (IsInDocViewer()) {
+			Orientation="Portrait";
+			PrintManager.Orientation=Orientation;
+			// document.all.LandscapeRadio.disabled=true;
+			document.all.LandscapeRow.style.display="none";
+			var total=parseInt(document.all.totalPageCount.value);
+			PrintManager.ToPage=total;
+			document.all.ToPage.value=total;
+		} else {
+			// document.all.LandscapeRadio.disabled=false;
+			document.all.LandscapeRow.style.display="block";
+			PrintManager.ToPage=1;
+			document.all.ToPage.value=1;
+		}
+
+		if (Orientation=="Landscape")
+			document.all.LandscapeRadio.checked=true;
+		else
+			document.all.PortraitRadio.checked=true;
+
+		// set "draft" option display property based on paper size
+		PaperSizeSelected();
+
+		var qualityOption;
+		if (QualityOptions[PrintManager.Quality])
+			qualityOption=QualityOptions[PrintManager.Quality];
+		else
+			qualityOption=DMRES_HIGH;
+
+		if (qualityOption==DMRES_HIGH)
+			document.all.HighQualityRadio.checked=true;
+		else
+			document.all.DraftQualityRadio.checked=true;
+	}
+
+	function  OnPrintDeviceRemove(name)
+	{
+		CheckPrinters();
+	}
+
+	function  OnPrintDeviceAdd(printer)
+	{
+		CheckPrinters();
+	}
+
+	function  OnPrintPageStatus(copy,page,total,type)
+	{
+		var percent;
+		var statusStr;
+
+		if (IsInPhotoViewer()) {
+			var photoViewerPanel = mainPanel;
+			statusStr = photoViewerPanel.Document.UpdatePrintProgressText();
+			percent = photoViewerPanel.Document.UpdatePrintProgressPercentage(type);
+			SetProgressPercent(percent);
+		} else {
+			if (type == 0) {
+				SetProgressPercent(0);
+				statusStr=PROGRESS_PLEASE_WAIT + "Generating page layout...";
+			} else if (type == 3) {
+				SetProgressPercent(100);
+				statusStr="Print completed.";
+			} else {
+				statusStr="page "+page+" of "+total+"...";
+				if (type == 1 && total == 1) {
+					statusStr=PROGRESS_PLEASE_WAIT + "Printing "+statusStr;
+					SetProgressPercent(50);
+				} else if (type == 2 && total == 1) {
+					statusStr=PROGRESS_PLEASE_WAIT + "Finishing "+statusStr;
+					SetProgressPercent(100);
+				} else if (type == 1 && total > 1) {
+					statusStr=PROGRESS_PLEASE_WAIT + "Printing "+statusStr;
+					percent= parseInt((total-page+1)/(total+1)*100);
+					SetProgressPercent(percent);
+				} else if (type == 2 && total > 1) {
+					statusStr=PROGRESS_PLEASE_WAIT + "Finishing "+statusStr;
+					percent= parseInt((total-page+1)/(total+1)*100);
+					SetProgressPercent(percent);
+				}
+			}
+		}
+
+		SetProgressText(statusStr);
+	}
+
+	function CheckPrinters()
+	{
+		var count=PrintManager.Count;
+		var printername_span=document.all.printername_span;
+		
+		if (count==0) {
+			printername_span.innerText="No printer installed!";
+			document.all.printButton.disabled=true;
+			document.all.printScreenButton.disabled = true;
+			document.all.closeButton.focus();
+		}
+		
+		if (count>0) {
+			var device=PrintManager.Item(PrintManager.CurrPrintDevice);
+			var printername=ConditionalizePrinterName(device.Manufacturer, device.Model)
+
+			printername_span.innerText=printername;
+
+			if(device.driver=="unsupported") {
+				document.all.printButton.disabled=true;
+				document.all.printScreenButton.disabled=true;
+			} else {
+				document.all.printButton.disabled=false;
+				document.all.printScreenButton.disabled=false;
+				document.all.printButton.focus();
+			}
+		}
+
+		CheckColorCapability();
+		CheckPhotoPrintCapability();
+	}
+
+	function OnChangePrinter(index)
+	{
+		PrintManager.CurrPrintDevice=index;
+	}
+
+	function OnPrintTemplateClosed()
+	{
+		PrintBtnClicked=false;
+
+		if (PrintScreenBtnClicked) {
+			PrintScreenBtnClicked = false;
+			PrintManager.AllPages = SavedAllPages;
+		}
+
+		PanelManager.Remove("imageprinthost");
+
+		if (!IsInPhotoViewer())
+			HideProgressPanel();
+	}
+
+	function OnLoad()
+	{
+		document.all.url_span.innerText=PanelManager.Item("main").Document.title;
+		Sink.AttachEvent(PanelManager, "OnBeforeFirstShow", OnBeforeFirstShow);
+		Sink.AttachEvent(PanelManager, "OnBeforeShow", OnBeforeShow);
+		Sink.AttachEvent(PanelManager, "OnAfterShow", OnAfterProgressShow);
+		Sink.AttachEvent(PrintManager, "OnPrintDeviceAdd", OnPrintDeviceAdd);
+		Sink.AttachEvent(PrintManager, "OnPrintDeviceRemove", OnPrintDeviceRemove);
+		Sink.AttachEvent(PrintManager, "OnPrintStatus", OnPrintPageStatus);
+		Sink.AttachEvent(PrintManager, "OnPrintTemplateClosed", OnPrintTemplateClosed);
+	}
+
+	function ShowDiv(divToShow)
+	{
+		document.all[currDiv].style.display="none";
+		document.all[divToShow].style.display="block";
+		currDiv=divToShow;
+		
+		if (divToShow == "advanced_div") {
+			SetPaperSizeDropDown(PrintManager.PaperSize);
+		}
+	}
+
+
+	function VerifyPageRange()
+	{
+		var fromPage=VerifyInt(document.all.FromPage, 1);
+		var toPage=VerifyInt(document.all.ToPage, 1);
+		var total=parseInt(document.all.totalPageCount.value);
+		
+		if (IsInDocViewer()) {
+			if (toPage > total)
+				toPage = total;
+				
+			if (fromPage > toPage) {
+				if (toPage == total) {
+					fromPage = toPage;
+				} else if (fromPage >= total) {
+					toPage = fromPage = total;
+				} else {
+					toPage = fromPage;
+				}
+			}
+		} else if (fromPage>toPage)
+			toPage = fromPage;
+
+		document.all.FromPage.value = fromPage;
+		document.all.ToPage.value = toPage;
+
+
+		PrintManager.FromPage = fromPage;
+		PrintManager.ToPage = toPage;
+	}
+
+	function SwitchSetupDiv()
+	{
+		if (g_setupDiv=="basic_div") {
+			g_setupDiv="advanced_div";
+			document.all.setupButton.label="Basic Setup";
+		} else {
+		g_setupDiv="basic_div";
+			document.all.setupButton.label="Advanced Setup";
+		}
+		
+		ShowDiv(g_setupDiv);
+	}
+
+	function PaperSizeSelected()
+	{
+		PrintManager.PaperSize = PaperSizeNames[document.all.dropDown.selectedIndex];
+
+		if (PrintManager.PaperSize == PhotoPaperSize_4X6) {
+			if (!photoPrintCapable){
+				document.all.QualityRadioTable.style.display="block";
+			} else {
+				document.all.QualityRadioTable.style.display="none";
+				document.all.HighQualityRadio.checked=true;
+				PrintManager.Quality = "High";
+			}
+		} else {
+			document.all.QualityRadioTable.style.display="block";
+		}
+	}
+	</script>
+</head>
+
+<body onLoad="OnLoad()" topmargin="0" leftmargin="0"  bottommargin="0" rightmargin="0" style="font-size:18pt;">
+	<table class="contentText" height="100%" width="100%" cellpadding="0" cellspacing="0">
+	<tr height=15 valign=center >
+	  <td width=72% style="color:#ffffff;font-size:21px;font-weight:bold">Print
+	  </td >
+	 
+	</tr>
+	<tr height=30>
+	  <td colspan=2 height=30>
+		  <table cellpadding=0 cellspacing=0 height=100% >
+			<tr height=100%>
+			  <td height=100% margin=0 valign=bottom>
+				<div height=30 style="margin:0px;padding:0px;width:45px;height=32px;behavior:url(#default#alphaImageLoader); src:url(images/PrintIconPrinter.png)"></div>
+			  </td>
+			  <td style="color:#1d1d1d;font-size:18px;"> Printing:&nbsp
+			  </td>
+			  <td style="font-size:18px;color:#1d1d1d">
+	  			  <span id="url_span" style="width:340px;overflow:hidden;text-overflow:ellipsis; white-space:nowrap;">
+				  </span>
+			  </td>
+			</tr>
+		  </table>
+	  </td>
+	</tr>
+	<tr>
+	  <td  class="content" style="margin:0;padding:0;height:160px;">
+	    <div id="basic_div" width=100% >
+		 <table id="basic_table" width=100% height=85% cellpadding="0" cellspacing="0" style="margin-left:10px" >
+		   <tr valign=center width=100% >
+		    <td id="PrinterCell" colspan=2 >
+			   <table width=100% cellpadding="0" cellspacing="0">
+			     <tr>
+				 <td align=left style="font-size:18px;color:#1d1d1d" width=17%> Printer: </td>
+				 <td width=12%>
+				 </td>
+				 <td>
+			      <span id="printername_span" style="width:250px;overflow:hidden;text-overflow:ellipsis; white-space:nowrap;color:#555555">
+			      </span>
+				 </td>
+				</tr>
+			   </table>
+			</td>
+		   </tr>
+      	   <tr>
+		    <td colspan=2 align=left>
+			 <hr color=#438bcd size=2 style="width:90%">
+			</td>
+		   </tr>
+		   <tr>
+		    <td colspan=2>
+			   <table width=90% height=100% cellpadding="0" cellspacing="0"  >
+				<tr>
+				 <td  width=30% style="font-size:18px;color:#1d1d1d"> Orientation:
+				 </td>
+				 <td width=10>&nbsp
+				 </td>
+				 <td width=10>
+				 <input type="radio" id="PortraitRadio" name="orientation" value="portrait" checked onClick="PrintManager.UserPreferenceOrientation='Portrait';">
+				 </td>
+				 <td align=center>
+				   <img id="orientationIcon" src="images/PrintPortrait.jpg">
+				 </td>
+				 <td style="font-size:18px;color:#1d1d1d"> Portrait
+				 </td>
+				</tr>
+				<tr id="LandscapeRow" style="display:block">
+				 <td>&nbsp
+				 </td>
+				 <td width=10>&nbsp
+				 </td>
+				 <td width=10>
+				  <input type="radio"  id="LandscapeRadio" name="orientation" value="landscape" onClick="PrintManager.UserPreferenceOrientation='Landscape';">
+				 </td>
+				 <td align=center>
+				   <img src="images/PrintLandscape.jpg">
+				 </td>
+				 <td style="font-size:18px;color:#1d1d1d"> Landscape 
+				 </td>
+				</tr>
+			   </table>
+			</td>
+		   </tr>
+		   <tr >
+		    <td colspan=2 align=left height=10>
+			 <hr color=#438bcd size=2 style="width:90%">
+			</td>
+		   </tr>
+		   <tr>
+		     <td colspan=2 border=1>
+			   <table width=90%  cellpadding="0" cellspacing="0"  >
+				<tr >
+				 <td  width=30%  style="font-size:18px;color:#1d1d1d"> Pages:
+				 </td>
+				 <td width=10>&nbsp
+				 </td>
+				 <td width=10>
+				 <input type=radio id=AllPages name=PageRange value=all checked onClick="PrintManager.AllPages=true;document.all.FromPage.disabled=true;document.all.ToPage.disabled=true;">
+				 </td>
+				 <td width=8>&nbsp
+				 </td>
+				 <td colspan=7 style="font-size:18px;color:#1d1d1d">All pages
+				 </td>
+				</tr>
+				<tr>
+				 <td colspan=5 height=5>
+				 </td>
+				</tr>
+				<tr >
+				 <td>&nbsp
+				 </td>
+				 <td width=10> &nbsp
+				 </td>
+				 <td>
+				  <input type=radio  id=RangeSpecified name=PageRange value=RangeSpecified onClick="PrintManager.AllPages=false;document.all.FromPage.disabled=false;document.all.ToPage.disabled=false;">
+				 </td>
+				 <td width=8>&nbsp
+				 </td>
+				 <td width=40 style="font-size:18px;color:#1d1d1d">
+				   From
+				 </td>
+				 <td width=8>&nbsp
+				 </td>
+				 <td size=50>
+				  <input type=text id=FromPage class=inputText size=3 disabled onBlur="VerifyPageRange()" onfocus="FromPage.select()" value=1  >
+				 </td>
+				 <td width=8>&nbsp
+				 </td>
+				 <td width=20 style="font-size:18px;color:#1d1d1d">				 
+				  to
+				 </td>
+				 <td width=8>&nbsp
+				 </td>
+				 <td size=50>			
+				  <input type=text id=ToPage class=inputText disabled size=3 onBlur="VerifyPageRange()" onfocus="ToPage.select()" value=1>
+				 </td>
+				</tr>
+			   </table>
+			 </td>
+		   </tr>
+		 </table>
+		</div>
+	    <div id="advanced_div" width=100%>
+		  <table id=advanced_table width=100% height=80% cellpadding="0" cellspacing="0" style="margin-left:10px">
+		    <tr valign=center>
+			   <td height=30 height=40>
+				   <table width=100% height=100% cellpadding="0" cellspacing="0">
+			   		<tr valign=center>
+					   <td width=30% style="font-size:18px;color:#1d1d1d"> 
+							Paper size:
+					   </td>
+					   <td colspan=4 valign=bottom>
+						<script>
+							if (photoPrintCapable) {
+								document.write("<msntv:dropDownList id='dropDown' size=4 style='width:210px;' onSelect='PaperSizeSelected()' />");
+							} else {
+								document.write("<msntv:dropDownList id='dropDown' size=3 style='width:210px;' onSelect='PaperSizeSelected()' />");
+							}
+							
+							document.all.dropDown.AppendItem("Letter(8 1/2 × 11 in)");
+							document.all.dropDown.AppendItem("Legal(8 1/2 × 14 in)");
+							document.all.dropDown.AppendItem("A4(210 × 297 mm)");
+
+							if (photoPrintCapable) {
+								document.all.dropDown.AppendItem(PHOTO_PRINT_ITEM);
+							}
+						</script>
+					   </td>
+					</tr>
+				   </table>
+			    </td>
+			 </tr>
+			 <tr>
+			    <td align=left height=10>
+				  <hr color=#438bcd size=2 style="width:90%">
+			    </td>
+			 </tr>
+			 <tr>
+			  <td >
+				  <table width=100% cellpadding="0" cellspacing="0">
+				   <tr>
+					 <td width=30% style="font-size:18px;color:#1d1d1d"> Print quality:
+					 </td>
+					 <td colspan=3>
+						<table style="display:block" cellpadding=0 cellspacing=0>
+							<tr>
+								<td width=10>
+									<input type="radio" name="Quality" id=HighQualityRadio checked value="High" onClick="PrintManager.Quality='High'">
+								</td>
+								<td width=8>
+								</td>
+								<td align=left style="font-size:18px;color:#1d1d1d" >High
+								</td>
+							</tr>
+						</table>
+					 </td>
+				   </tr>
+
+
+					<tr>
+					 <td colspan=4 height=5>
+					 </td>
+					</tr>
+				   <tr>
+				     <td >&nbsp
+					 </td>
+	 				 <td colspan=3 >
+						 <table id="QualityRadioTable" cellpadding=0 cellspacing=0>
+						 <tr>
+							 <td width=10>
+							  <input type="radio" name="Quality" id=DraftQualityRadio value="Draft" onClick="PrintManager.Quality='Draft'">
+							 </td>
+							 <td width=8>
+							 </td>
+							 <td style="font-size:18px;color:#1d1d1d">Draft
+							 </td>
+						</tr>
+						</table>
+					</td>
+				   </tr>
+				   </table>
+			  </td>
+			</tr>
+			<tr >
+			   <td colspan=2 align=left height=10>
+				 <hr color=#438bcd size=2 style="width:90%">
+			   </td>
+			</tr>
+			<tr>
+			 <td>
+			   <table width=100%   cellpadding="0" cellspacing="0" >
+			   <tr>
+			     <td width=30%  style="font-size:18px;color:#1d1d1d"> Color:
+				 </td>
+				 <td colspan=3 >			
+				 	<table id="ColorRadioTable" cellpadding=0 cellspacing=0>
+					 <tr>
+						<td align=left width=10>
+						  <input type="radio" id="ColorRadio" name="Color" checked value="Color" onClick="PrintManager.Color='Color'" style="display:block">
+						</td>
+						<td width=8>
+						</td>
+					   <td style="font-size:18px;color:#1d1d1d">Color
+					   </td>
+					 </tr>
+					</table>
+				 </td>
+			   </tr>
+			   <tr>
+				 <td colspan=4 height=5>
+				 </td>
+			   </tr>
+			   <tr>
+			     <td>
+				 </td>
+				 <td width=10>
+                   <input type="radio" id="MonochromeRadio" name="Color" value="Monochrome" onClick="PrintManager.Color='Monochrome'">
+				 </td>
+				 <td width=8>
+				 </td>
+				 <td style="font-size:18px;color:#1d1d1d">Black and white
+				 </td>
+			   </tr>
+			   </table>	
+			 </td>
+			</tr>
+
+			<tr>
+			 <td>
+			 </td>
+			</tr>
+			<tr>
+				<td>
+					<table id="HeaderFooterTable" style="display:block">
+
+						<tr>
+							<td height=10>
+								<hr color=#438bcd size=2 style="width:90%">
+							</td>
+						</tr>
+						<tr>
+							<td colspan=3>
+								<table width=415 cellpadding="0" cellspacing="0" >
+									<tr>
+										<td width=415 colspan=3 style="font-size:18px;color:#1d1d1d"> Check this box to include dates and Web page addresses when you print.
+										</td>
+									</tr>
+									<tr>
+										<td width=415 colspan=3 height=5>
+										</td>
+									</tr>
+									<tr>
+										<td style="width:15px"><input type="checkbox" id="PrintHeaderFooter" onClick="PrintManager.UserPreferencePrintHeaderFooter = document.all.PrintHeaderFooter.checked;"></td>
+										<td width=8></td>
+										<td style="font-size:18px;color:#1d1d1d;width:400">Print date and Web page info</td>
+									</tr>
+								</table>	
+							</td>
+						</tr>
+
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td>
+				</td>
+			</tr>
+	</table>
+		</div>
+	  </td>
+	  <td valign=top   rowspan=2  class="sidebar">
+		<table width=100% id=button_table  cellpadding="0" cellspacing="0" margin=0 id=buttonTable>
+		  <tr>
+		   <td align=center height=5>
+		   </td>
+		  </tr>
+		  <tr>
+		   <td align=center height=31>
+		    <msntv:CustomButton id="printButton" label="Print Now" class="sidebarButton" style="display:inline-block;" onclick="Print();" />
+		   </td>
+		  </tr>
+		  <tr id=setupBttnRow>
+		   <td align=center height=31>
+		    <msntv:CustomButton id="setupButton"  label="Advanced Setup" class="sidebarButton" style="display:inline-block;" onclick="SwitchSetupDiv()"  />
+		   </td>
+		  </tr>
+		  <tr id=printScreenBttnRow>
+		   <td align=center height=31>
+		    <msntv:CustomButton id="printScreenButton"  label="Print Screen" class="sidebarButton" style="display:inline-block;" onclick="StartPrintScreen();" />
+		   </td>
+		  </tr>
+		  <tr>
+		   <td align=center height=31>
+		    <msntv:CustomButton id="closeButton"  label="Cancel" class="sidebarButton" style="display:inline-block;" onclick="PanelManager.Hide('printsettings');"  />
+		   </td>
+		  </tr>
+		  <tr>
+		   <td align=center height=120>
+		   </td>
+		  </tr>
+		</table>
+	  </td>
+	</tr>
+	</table>	
+	<input type=hidden id="totalPageCount" value=1>	
+</body>
+</html>

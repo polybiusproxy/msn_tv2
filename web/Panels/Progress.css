@@ -1,0 +1,11 @@
+#progress 
+{
+	width: 100%;
+}
+
+#message
+{
+	font:18px highway;
+	color: #F2F2F2;
+	line-height: 20px;
+}

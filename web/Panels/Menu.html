@@ -1,0 +1,452 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<title>Option Panel</title>
+	<link rel="StyleSheet" type="text/css" href="../CSS/Panel.css">
+	<script language="Javascript" src="../Javascript/TVShell.js"></script>
+	<script language="Javascript" src="../Javascript/ServiceList.js"></script>
+	<script language="Javascript" src="../Javascript/PanelImpl.js"></script>
+	<script language="Javascript" src="../Javascript/ConnectionManager.js"></script>
+	<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+	<script language="Javascript" src="../Javascript/ContentPaneHelp.js"></script>
+	<script>
+	var mainPanel = PanelManager.Item("main");
+	var thisPanel = PanelManager.Item("menupanel");
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+	var currentUser = null;
+	var g_pendingURL = null;
+	var g_pendingReSignIn = false;
+	var lastSuppressedPopupURL = null;
+	var CFAR_URL = null;
+	var PanelState_Showing = 0;
+	var PanelState_Hidden = 3;
+	
+	function IsInDocViewer()
+	{	
+		var currentURL = mainPanel.URL;	
+		currentURL = currentURL.toLowerCase();	
+		var retVal = (currentURL.indexOf("msntv:/docviewer/docviewer.htm") == 0) ? true : false;
+		return retVal;
+	}
+
+    function GetTitle(docObj)
+	{
+	    var title="";
+ 		var collection=docObj.all.tags("title");
+		if(collection && collection.length>0)
+			title= collection[0].innerText;
+		return title;
+	}
+
+	function OnBeforeShow(name)
+	{
+		if (name == "menupanel"){
+			currentUser = TVShell.UserManager.CurrentUser;
+
+			if ( currentUser && currentUser.ServiceList("CFAR::Start") != null )
+				CFAR_URL = currentUser.ServiceList("CFAR::Start").URL;  // customer feedback report URL
+
+			//TVShell.Message("  menuPanel:   CFAR_URL=" + CFAR_URL + "<<<");
+
+		    g_pendingURL = null;
+			g_pendingReSignIn = false;
+
+			// Enable appropriate buttons.
+			if (currentUser && currentUser.IsAuthorized) {
+				addfavorite.style.display = "block";
+				refresh.style.display = "block";
+				home.style.display = "inline-block";
+				goto.style.display = "inline-block";
+				//resignin.label = (TVShell.UserManager.Count > 1) ? "Switch User" : "Sign Out";
+				resignin.label = "Sign Out";
+				if ( CFAR_URL != null )
+				  CFARButton.style.display = "block";
+				else
+				  CFARButton.style.display = "none";				  
+				addfavorite.focus();
+			}
+			else {
+				addfavorite.style.display = "none";
+				refresh.style.display = "none";
+				home.style.display = "none";
+				goto.style.display = "none";
+				resignin.label = "Sign In";
+				CFARButton.style.display = "none";
+				printButton.focus();
+			}
+			find.style.display = IsInDocViewer()? "none" : "block";
+			if (TVShell.ConnectionManager.WANProvider == BYOAEthernetProviderName ||
+				TVShell.ConnectionManager.WANState != ConnectState_Connected) {
+				disconnect.style.display = "none";
+			} else {
+				disconnect.style.display = "inline-block";
+			}
+			if (currentUser && currentUser.ServiceList("mail::writemail") && (IsInDocViewer() || mainPanel.URL.indexOf("msntv:")<0)) {
+				mail.style.display = "block";
+			}
+			else {
+				mail.style.display = "none";
+			}
+
+			// Update content.
+			thumbnail.src = "file://" + TVShell.ThumbnailManager.URL;
+
+			titleText.innerText = "No Title";
+			titleText.style.height = "auto";
+			titleText.style.pixelWidth = titleCell.clientWidth;
+			if (mainPanel.Document.title != "") {
+				titleText.innerText = GetTitle(mainPanel.Document);
+			}
+			if (titleText.clientHeight > 38) {
+				titleText.style.pixelHeight = 38;
+			}
+
+			var url = mainPanel.URL;
+			if (url.toLowerCase().indexOf("msntv:") == 0) {
+				url = ServiceShortName;
+				lastUpdated.style.display = "none";
+			}
+			else {
+				lastUpdated.style.display = "block";
+			}
+			urlText.innerText = " ";
+			expandoText.style.height = "auto";
+			expandoText.style.pixelWidth = expandoCell.clientWidth;
+			if ( url == ServiceShortName )
+				urlText.innerHTML = url;
+			else
+				urlText.innerText = url;
+			if (IsInDocViewer() && thisPanel.UserStrData) {
+				urlText.innerText = thisPanel.UserStrData;
+			}
+			lastUpdatedText.innerText = mainPanel.Document.lastModified;
+			if (expandoText.clientHeight > 76) {
+				expandoText.style.pixelHeight = 51;
+				more.style.display = "block";
+			}
+			else {
+				more.style.display = "none";
+			}
+
+			if (lastSuppressedPopupURL != null) {
+				popupUrlText.innerHTML = "<B>Blocked: </B>" + TVShell.Utilities.EscapeHTML(lastSuppressedPopupURL);
+				popupCell.style.display = "block";
+				
+				var alertPanel = PanelManager.Item("alert");
+				if (alertPanel && alertPanel.State == 0 && alertPanel.UserStrData != null) {
+					var event = alertPanel.UserStrData.substr(0, 1);
+					if (event == "4") {
+						popupAnchor.focus();
+					}
+				}
+			}
+			else {
+				popupCell.style.display = "none";
+			}
+
+			scroller.MyDoScroll("scrollToStart");
+			scroller.tabIndex = -10001;
+		}
+	}
+
+	function OnAfterHide(name)
+	{
+		if (name == "menupanel") {
+			if (g_pendingURL) {
+				var url=g_pendingURL;
+				g_pendingURL = null;
+				mainPanel.GotoURL(url);
+			}
+			else if (g_pendingReSignIn) {
+				g_pendingReSignIn = false;
+				TVShell.ConnectionManager.ServiceState = Service_ReSignIn;
+			}
+		}
+	}
+
+ 	function OnSecurityIconChange(panelName, secureLevel)
+	{
+		if (panelName == "main") {
+			ViewCertificateCell.style.display = (secureLevel >= 2) ? "block" : "none";
+		}
+	}
+
+	function OnPopupBlocked(url)
+	{
+		lastSuppressedPopupURL = url;
+	}
+
+	function OnBeforeNavigate2(name, url, isLocal)
+	{
+		if (name == "main") {
+			lastSuppressedPopupURL = null;
+		}
+	}
+
+	function ShowMore()
+	{
+		more.style.display = "none";
+		expandoText.style.height = "auto";
+
+		if (scroller.scrollHeight > scroller.clientHeight) {
+			scroller.MyDoScroll("scrollToStart");
+			scroller.tabIndex = 0;
+			scroller.focus();
+		}
+		else {
+			done.focus();
+		}
+	}
+
+	function Refresh()
+	{
+	      PanelManager.Show('main')
+          mainPanel.Refresh();
+	}
+
+	function Email()
+	{	
+		var currentURL = mainPanel.URL;
+		if (IsInDocViewer())
+		{
+			currentURL = thisPanel.UserStrData;	
+		}
+				
+		var subject			  = mainPanel.Document.title;
+		if(subject=="" || subject.toLowerCase()=="cannot find server")
+			subject = currentURL;
+	
+		var queryString = "?subject="+escape(subject)+"&ru="+escape(currentURL)+"&action=sendlink" ;
+		
+		var writemailService = currentUser.ServiceList("mail::writemail");
+		
+		if(writemailService)
+		{
+			var writemailURL = writemailService.URL;
+			if(writemailURL)
+			{
+				writemailURL+=queryString;
+				PanelManager.Show('main');
+				g_pendingURL=writemailURL;
+			}
+		}		
+	}
+
+	function Find()
+	{
+		PanelManager.Show('find')
+	}
+
+
+	function ReportProblem()
+	{
+		TVShell.PanelManager.Item('cfarPanel').GotoURL(CFAR_URL);
+		PanelManager.Hide("menupanel");
+		setTimeout(showProgress,1000);
+	}
+
+	function showProgress()
+	{
+		if ( TVShell.PanelManager.Item('cfarPanel').State == PanelState_Hidden)
+		{
+			SetProgressText(PROGRESS_PLEASE_WAIT);
+			SetProgressPercent( 3);
+			ShowProgressPanel();
+			setTimeout("updateProgress(5);",800);
+		}
+	}
+
+	function updateProgress( val )
+	{
+		
+		if ( TVShell.PanelManager.Item('cfarPanel').State == PanelState_Showing)
+		{
+			if ( IsProgressShowing() )
+			{
+					HideProgressPanel();
+			}
+			else
+				return;
+		}
+			
+		SetProgressPercent( val );
+		
+		if ( val < 95 )
+		{
+			val += 5;
+			setTimeout("updateProgress(" + val + ")",1000);
+		}
+		else
+			setTimeout(checkProgressPanel, 3000);
+	}
+
+
+	function checkProgressPanel()
+	{
+		if ( IsProgressShowing() )
+			HideProgressPanel();
+	}
+
+	
+	function GoHome()
+	{
+		var homeService = currentUser.ServiceList("home::home");
+
+		if (homeService && homeService.URL) {
+			PanelManager.Show('main');
+			g_pendingURL=homeService.URL;
+		}
+	}
+
+	function GotoPopup()
+	{
+		if (lastSuppressedPopupURL) {
+			PanelManager.Show('main');
+			g_pendingURL = lastSuppressedPopupURL;
+		}
+	}
+
+	function HangUp()
+	{
+		PanelManager.Show('main');
+		setTimeout("TVShell.ConnectionManager.WANDisconnect();",800)
+	}
+
+
+	function ReSignIn()
+	{
+		g_pendingReSignIn = true;
+		PanelManager.Hide("menupanel");
+	}
+
+	function OnLoad()
+	{
+		Sink.AttachEvent(PanelManager, "OnBeforeShow", OnBeforeShow);
+		Sink.AttachEvent(PanelManager, "OnAfterHide", OnAfterHide);
+		Sink.AttachEvent(PanelManager, "OnSecurityIconChange", OnSecurityIconChange);
+		Sink.AttachEvent(TVShell, "OnPopupBlocked", OnPopupBlocked);
+		Sink.AttachEvent(PanelManager, "OnBeforeNavigate2", OnBeforeNavigate2);
+	}
+
+	function GotoAddFavorites()
+	{
+		var favURL = TVShell.PanelManager.Item('favoritespanel').URL;
+		var addFavURL = favURL.substr(0, (favURL.indexOf("?") > 0)? favURL.indexOf("?") : favURL.length) + "?action=AddFavorite";
+		TVShell.PanelManager.Item('favoritespanel').GotoURL(addFavURL); // set addFavURL to favorits Panel
+		setTimeout("TVShell.PanelManager.Show('favoritespanel');",300);// pop up favorites panel
+	}
+
+    function TryPrint()
+	{
+        PanelManager.Hide("menupanel");
+		setTimeout(GotoPrint,800);
+
+	}
+	</script>
+</head>
+
+<body onload="OnLoad();">
+	<table class="contentText" height="100%" width="100%" cellpadding="0" cellspacing="0">
+		<tr>
+			<td class="heading" style="height:30px;">
+				Menu
+			</td>
+		</tr>
+		<tr>
+			<td class="topGradient" style="height:1px;">
+		</tr>
+		<tr>
+			<td style="height:100%;">
+				<table width=100% height=100% cellspacing=0 cellpadding=0>
+					<tr>
+						<td class="content" style="width:73%; vertical-align:top; padding-top:9px;">
+							<div id="scroller" class="scroller" tabindex="0" style="padding:0px 20px 0px 10px;">
+								<table width=100% cellpadding="0" cellspacing="0">								
+									<tr>
+										<td id=ViewCertificateCell style="display:none; padding-bottom:10px;">
+											<table width="100%" cellpadding=0 cellspacing=0>
+												<tr>
+													<td style="padding-bottom:10px; border-bottom:2px solid #438BCD;">
+														This is a secure page.
+														<div style="width:7px; height:14px; line-height:14px; display:inline; margin:0px 4px 0px 15px; behavior:url(#default#alphaImageLoader); src:url(../Images/BulletCustom.png)"></div>
+														<a onClick="mainPanel.ViewCertificate(mainPanel.URL)">More info</a>
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+									<tr>
+										<td id="titleCell">
+											<span id="titleText" style="overflow:hidden; font-weight:bold; word-wrap:break-word;">No Title</span>
+										</td>
+									</tr>
+									<tr>
+										<td style="padding-top:8px;">
+											<table width="100%" cellpadding=0 cellspacing=0>
+												<tr>
+													<td style="width:103px; vertical-align=top;">
+														<img id="thumbnail" style="width:96px; border:1px solid black;">
+													</td>
+													<td id="expandoCell" style="vertical-align=top;">
+														<div id="expandoText" style="font-size:16px; overflow:hidden;">
+															<span id="urlText" style="display:block; word-break:break-all";></span>
+															<span id="lastUpdated" style="padding-top:8px;">Updated: <span  id="lastUpdatedText" style="word-wrap:break-word;";></span></span>
+														</div>
+														<div id="more" style="padding-top:8px;">
+															<div style="width:7px; height:14px; line-height:14px; margin-right:4px; display:inline; behavior:url(#default#alphaImageLoader); src:url(../Images/BulletCustom.png)"></div>
+															<a onClick="ShowMore();">More</a>
+														</div>
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+									<tr>
+										<td id="popupCell" style="padding-top:20px;">
+											<a id="popupAnchor" onClick="GotoPopup();">
+												<table width="100%" cellpadding=0 cellspacing=0>
+													<tr>
+														<td style="width:45px; vertical-align=top;">
+															<div style="width:45px; height:40px; behavior:url(#default#alphaImageLoader); src:url(Images/AlertsIconPopup.png)"></div>
+														</td>
+														<td style="vertical-align=top;">
+															<span id="popupUrlText" style="height:34px; font-size:16px; color:#14224B; overflow:hidden; display:block; word-break:break-all";></span>
+														</td>
+													</tr>
+												</table>
+											</a>
+										</td>
+									</tr>
+								</table>
+							</div>
+						</td>
+						<td class="sidebar" style="width:27%; vertical-align:top; padding:9px 0px 0px 6px;">
+							<msntv:CustomButton id="addfavorite" class="sidebarButton" label="Save as Favorite" onClick="GotoAddFavorites();" />
+							<msntv:CustomButton id="printButton" class="sidebarButton" label="Print" onClick="TryPrint()" />
+							<msntv:CustomButton id='refresh' class="sidebarButton" label="Refresh" onClick="Refresh();" />
+							<msntv:CustomButton id="mail" class="sidebarButton" label="Send" onClick="Email();" />
+							<msntv:CustomButton id="find" class="sidebarButton" label="Find a Word" onClick="Find();" />
+							<msntv:CustomButton id="CFARButton" class="sidebarButton" label="Report Problem" onClick="ReportProblem();" />
+							<msntv:CustomButton id="done" class="sidebarButton" label="Done" onClick="Cancel();" />
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td style="text-align:right; vertical-align:bottom; padding-top:10px;">
+				<msntv:CustomButton id="home" class="bottombarButton" label="Home" onClick="GoHome();" />
+				<msntv:CustomButton id="WMPBtn" class="bottombarButton" label="Player" onClick="PanelManager.Show('mediapanel');" />
+				<msntv:CustomButton id="goto" class="bottombarButton" label="Type www" onClick="PanelManager.Show('gotopanel');" />
+				<msntv:CustomButton id="resignin" class="bottombarButton" label="Sign In" onClick="ReSignIn();" />
+				<msntv:CustomButton id="disconnect" class="bottombarButton" label="Hang Up" onClick="HangUp();" />
+			</td>
+		</tr>
+		<tr>
+			<td style="height:10px;"></td>
+		</tr>
+
+	</table>		
+</body>
+</html>

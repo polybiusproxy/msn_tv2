@@ -1,0 +1,29 @@
+<HTML xmlns:msntv> <?import namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"><HEAD> <title id="title">Connected Wireless</title><link rel=stylesheet type="text/css" href="../css/Registration.css"> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/ConnectionErrors.js"></SCRIPT> <STYLE> .arrow { width:8px; height:11px; border:0; vertical-align:middle; } #errorDIV { position: absolute; left: 20px; bottom: 48px; font-size: 16px; visibility: hidden; } #buttonBar msntv\:CustomButton { margin-left:15px; margin-right:0px; } </STYLE> <SCRIPT>
+
+		SetErrorMode(WANErrorMode);
+
+		function GotoConnect()
+		{
+			TVShell.PanelManager.Item('main').NoBackToMe = true;
+			LoginToService();
+		}
+						
+		</SCRIPT> </HEAD><BODY><DIV id=title> <SCRIPT>
+				document.write("Connected to wireless network");
+			</SCRIPT> </DIV><DIV id=main> <SCRIPT>
+			var WirelessAdapter = TVShell.ConnectionManager.WirelessAdapter;
+			var WirelessSettings;
+
+			if (WirelessAdapter) {
+				WirelessSettings = WirelessAdapter.Settings;
+			}
+			
+			if ( WirelessSettings == null ) {
+				document.location = "ConnectError.html";
+			} else {
+				var ssid = WirelessSettings.SSID;
+				document.write("Your " + ProductShortName + " is now connected to the wireless network <em>" + ssid + "</em>.<Br><br>Please select <em>Continue</em> to start registration.");
+			}
+			</SCRIPT> </DIV><div id="footer"> <msntv:CustomButton id=default label="Continue" onClick="GotoConnect();" /> <script>
+					document.all["default"].focus();
+				</script> </div> </body> </HTML>

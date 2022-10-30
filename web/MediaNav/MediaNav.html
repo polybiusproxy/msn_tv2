@@ -1,0 +1,940 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/MediaNavHeading.htc">
+<head>
+	<title>Media Navigation</title>
+
+	<link rel=StyleSheet type="text/css" href="../css/Base.css">	
+	<link rel=StyleSheet type="text/css" href="../css/MediaNav.css">
+
+	<script language="Javascript" src="../Javascript/TVShell.js"></script>
+	<script language="Javascript" src="../Javascript/parameters.js"></script>
+	<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/SigninPanel.js"></script>
+	<script language="javascript" src="../Javascript/ServiceList.js"></script>
+	<script language="javascript" src="../Javascript/HomeNetworking.js"></script>
+	<script language="javascript" src="../Javascript/DMRCommon.js"></script>
+	<script language="Javascript" src="../Javascript/DMREnumerate.js"></script>
+	<script language="javascript" src="../Javascript/DMRHome.js"></script>
+	<script language="Javascript" src="../Javascript/ContentPaneHelp.js"></script>
+	<script language="Javascript" src="../Javascript/ConnectionManager.js"></script>
+	<script language="Javascript" SRC="msntv:/Javascript/VKCodes.js"></script>
+	<script language="javascript">	
+
+//	parameter mediaLocation = "usb" or "pc"
+		var mediaLocation	= parameters.mediaLocation.toLowerCase();
+// parameter from application = "video", "music" or "photo"
+		var fromApplication = parameters.fromApplication.toLowerCase();
+
+		var mainPanel = TVShell.PanelManager.Item("main");
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		Sink.AttachEvent(StorageManager, "OnDeviceAdd", OnDeviceAdd);
+		Sink.AttachEvent(StorageManager, "OnDeviceRemove", OnDeviceRemove);
+
+		var bMountingShare = false;
+		var bInitComplete = false;
+		var numDevices = 0;
+		var horizontalPosition = 0;
+		var ComputerWidth = 247;
+		var spaceBetween = 15;
+		var serviceScanCount = 0;
+		var waitForScanComplete = false;
+
+		// locations
+		var ML_PC = "pc";
+		var ML_USB = "usb";
+
+		// from applications
+		var AP_PHOTO = "photo";
+		var AP_MUSIC = "music";
+		var AP_VIDEO = "video";
+		
+// which viewer to navigate to
+		var viewerDestURL = "viewer.html";
+		var headerAppName = "";	
+		if ( fromApplication == AP_MUSIC )
+		{
+			viewerDestURL = "msntv:/music/viewer.html";
+			headerAppName = "Music";
+		}
+		if ( fromApplication == AP_VIDEO )
+		{
+			viewerDestURL = "msntv:/video/viewer.html";
+			headerAppName = "Videos";
+		}
+		if ( fromApplication == AP_PHOTO )
+		{
+			viewerDestURL = "msntv:/photo/viewer.html";
+			headerAppName = "Photos";
+		}
+
+		if ( mediaLocation == ML_USB )
+		{
+			earlyNavigationUSB();
+		}
+
+
+function gotoHomeNetworking()
+{
+	document.location = "msntv:/Settings/Network/HomeNetworking.html";
+}
+
+function ClearAppData()
+{
+	 for ( var i = 0 ; i < HomeNetworkObj.Count ; i++ )
+  	{
+		var hst = HomeNetworkObj.Item(i);
+		hst.ApplicationData = "";
+  	}
+}
+
+function kickOffUpdate()
+{
+	TVShell.Message("kickoff pc update");
+	if ( ( mediaLocation == ML_PC ) && HomeNetworkObj )
+	{
+		if ( HomeNetworkObj.Count > 0 )
+		{
+			Sink.AttachEvent(HomeNetworkObj, "OnHostHandler", MediaNavOnHostHandler);
+		      	Sink.AttachEvent(HomeNetworkObj, "OnServiceHandler", MediaNavOnServiceHandler);
+			ShowProgressPanel();
+			SetProgressPercent(10);
+			SetProgressStopFunction(null);
+			SetProgressText(PROGRESS_PLEASE_WAIT_WHILE_GET + "your page ready...");
+			startSynchronize();
+			return;
+		}
+	}
+
+	// either this is USB or we have no PCs.  Just draw screen immediately
+	setTimeout( 'updateScreen(false);' , 10 );
+	
+}
+
+function startSynchronize()
+{
+	waitForScanComplete = true;
+	serviceScanCount = 0;
+	ClearAppData();
+	SynchronizeShares();
+	// just in case we don't get all of our end service scan events, draw screen
+	setTimeout( 'hostScanTimeout();' , 15000 );
+}
+
+function hostScanTimeout()
+{
+	if ( waitForScanComplete )
+	{
+		waitForScanComplete = false;
+		HideProgressPanel();
+		updateScreen(false);
+	}
+}
+
+function getUSBHelpURL()
+{
+	var helpURL = "";
+	if ( fromApplication == AP_MUSIC )
+		helpURL = "msntv:/Help/MSNTV_PROC_SINGLE_Music_MemoryCard_Offline_v11.htm";
+	if ( fromApplication == AP_PHOTO )
+		helpURL = "msntv:/Help/MSNTV_PROC_SINGLE_Photos_MemoryCard_Offline_v11.htm";
+	if ( fromApplication == AP_VIDEO )
+		helpURL = "msntv:/Help/MSNTV_PROC_SINGLE_Videos_MemoryCard_Offline_v11.htm";
+	return helpURL;
+}
+
+function earlyNavigationUSB()
+{
+	var num = numUSB();
+	if ( num == 0 )
+	{	// go to help
+		var helpURL = getUSBHelpURL();
+		document.location.replace( helpURL );
+		return true;
+	}
+
+	if ( num == 1 )
+	{
+		// navigate immediately
+		for (var i=0; i<StorageManager.Count; i++)
+		{
+			var StorageDevice = StorageManager.Item(i);
+			if (  isUSB ( StorageDevice ) )
+			{
+				var destURL=viewerDestURL;					
+				destURL+="?location=0&StorageDeviceVN=";
+				destURL+=encodeURIComponent(StorageDevice.VolumeName);
+				document.location.replace( destURL );
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function getPCHelpURL()
+{
+	var helpURL = "";
+	if ( fromApplication == AP_MUSIC )
+		helpURL = "msntv:/Help/MSNTV_PROC_SINGLE_Music_HomeNet_Offline_v11.htm";
+	if ( fromApplication == AP_PHOTO )
+		helpURL = "msntv:/Help/MSNTV_PROC_SINGLE_Photos_HomeNet_Offline_v11.htm";
+	if ( fromApplication == AP_VIDEO )
+		helpURL = "msntv:/Help/MSNTV_PROC_SINGLE_Videos_HomeNet_Offline_v11.htm";
+	return helpURL;
+}
+
+function gotoPCHelp()
+{
+	document.location = getPCHelpURL();
+}
+
+
+		// record navigation history and then navigate
+		function MediaNavToURL( replace , URL , vn )
+		{
+			var nm = unescape( vn );
+			nm = Utilities.EscapeHTML( nm );
+			var entry =	TVShell.MediaHistory.Add( fromApplication , nm );
+			entry.URL = URL;
+			TVShell.MediaHistory.Save();
+			if ( replace )
+				document.location.replace( URL );
+			else
+				document.location = URL;
+		}
+		
+		function BuildScrollArea()
+		{
+			var ScrollAreaStr = "";
+			TVShell.Message("Build scroll area: medialocation=" + mediaLocation );
+			if ( mediaLocation == ML_USB )
+			{
+			//build USB Storage Devices	section	
+			ScrollAreaStr = BuildMediaNavUSBList("MSNTV_PROC_SINGLE_Music_MemoryCard_Offline_v11.htm" );
+			}
+
+			if ( mediaLocation == ML_PC )
+			{
+			// build home network Storage Devices section
+			ScrollAreaStr = BuildMediaNavHomeNetworkList("MSNTV_PROC_SINGLE_Music_HomeNet_Offline_v11.htm" );
+			}
+
+			return ScrollAreaStr;
+		}
+		
+		function SetDefaultFocus()
+		{
+			var	anchors = contentFrame.document.all.tags("a")
+			if (anchors.length > 0) {
+				anchors[0].focus();
+			}
+		}
+
+
+		function OnDeviceAdd()
+		{
+			TVShell.Message("onadd");
+			if ( bInitComplete ) updateScreen(false);
+		}
+
+		function OnDeviceRemove()
+		{
+			TVShell.Message("onremove");
+			if ( bInitComplete ) updateScreen(false);
+		}
+
+
+function MNStyle( app )
+{
+	if ( app == "photo" )
+	{
+		this.LURL = "./Assets/PhotosPCLeftCorner.png";
+		this.RURL = "./Assets/PhotosPCRightCorner.png";
+		this.grad = "pcBlockGradPhoto";
+		this.name = "computerNamePhoto";
+		this.share = "shareNamePhoto";
+		this.border = "#BEBDBF";
+		this.pcBlock = "computerBlockPhoto";
+		return;
+	}
+	
+	if ( app == "video" )
+	{
+		this.LURL = "./Assets/VideoPCLeftCorner.png";
+		this.RURL = "./Assets/VideoPCRightCorner.png";
+		this.grad = "pcBlockGradVideo";
+		this.name = "computerNameVideo";
+		this.share = "shareNameVideo";
+		this.border = "#3A1D1C";
+		this.pcBlock = "computerBlockVideo";
+		return;
+	}
+	
+	this.LURL = "./Assets/MusicPCLeftCorner.png";
+	this.RURL = "./Assets/MusicPCRightCorner.png";
+	this.grad = "pcBlockGradMusic";
+	this.name = "computerNameMusic";
+	this.share = "shareNameMusic";
+	this.border = "#BEBDBF";
+	this.pcBlock = "computerBlockMusic";
+}
+
+function BuildMediaNavUSBList(helpURL)
+{
+	var str="";
+	var cnt = 0;
+	ComputerWidth = 252;
+	var ht = mainPanel.Height - 86;
+	horizontalPosition = 0;
+
+	var st = new MNStyle( fromApplication );
+	var posLeft;
+	for (var i=0; i<StorageManager.Count; i++)
+	{
+		var StorageDevice = StorageManager.Item(i);
+
+		if ( isUSB( StorageDevice ) )
+		{
+			posLeft = positionLeft( cnt );
+			cnt++;
+			str += "<span style='position:absolute; top:15px; left:" + posLeft + "px; width:15px; height:15px; behavior:url(#default#alphaImageLoader); src:url(" + st.LURL + ");'></span>";
+			str += "<div id=" + st.pcBlock + " style='position:absolute; top:15px; left:" + (posLeft+ 15) + "px; width:" + ( ComputerWidth - 30 ) + "px; height: 15px;'></div>";
+			str += "<span style='position:absolute; top:15px; left:" + (posLeft + ComputerWidth - 15) + "px; width:15px; height:15px; behavior:url(#default#alphaImageLoader); src:url(" + st.RURL + ");'></span>";
+			str += "<div class=" + st.grad + " style='position:absolute; top:30px; left:" + posLeft + "px; width:"+ComputerWidth + "px; height:" + ht + "px;'>";
+			str += "<table style='width:100%;' cellspacing=0 cellpadding=0>";
+			str += vertSpace( 5 , false );
+			str += "	<TR><TD colspan=4 align=center><span   style='behavior:url(#default#alphaImageLoader); src:url(./Assets/Icon_DMRDevices.png);'></span></TD></TR>";
+			str += vertSpace( 5 , false );
+			var destURL=viewerDestURL;					
+			destURL+="?location=0&StorageDeviceVN=";
+			destURL+=encodeURIComponent(StorageDevice.VolumeName);
+			str += "<TR><TD colspan=4 class=" + st.name + " align=center><a class=ellipsis onclick='parent.GotoURL(\"" + destURL + "\");' width='"+ (ComputerWidth-5) + "px'>" + Utilities.EscapeHTML( ToFriendlyName(StorageDevice, cnt) ) + "</a></TD></TR>";
+			str += vertSpace( 5 , false );
+			str += "</table></div>";
+		}
+	}
+	posLeft = positionLeft( cnt ) - spaceBetween;
+	str += "<div style='position:absolute; top:30px; left:" + posLeft + "px; width:20px; height:80%;'></div>";
+	
+	numDevices = cnt;
+	
+	return str;
+
+}
+
+function doAutoDetect( hname )
+{
+	var he = HomeNetworkObj.Item( hname );
+	if ( he != null )
+	{
+		he.AutoDetect( 0 );
+	}
+}
+
+function Computer(name, upnpHost , uncHost , i )
+{
+	this.name = name;
+	this.upnp= new Array();
+	if ( upnpHost ) this.upnp[0] = upnpHost;
+	this.unc = uncHost;
+	this.uncIndex = i;
+}
+
+function compareComputers( s1 , s2 )
+{
+	var v1 = 0;
+	var v2 = 0;
+	v1 = findComputerInHistory( s1 );
+	v2 = findComputerInHistory( s2 );
+	if ( v1 != v2 ) return v2-v1;
+	var n1 = s1.name.toLowerCase();
+	var n2 = s2.name.toLowerCase();
+	if ( n1 > n2 ) return 1;
+	if ( n2 > n1 ) return -1;
+	return 0;
+}
+
+function findComputerInHistory( pc )
+{
+	var rVal = -1;
+	for( var i = 0 ; i < pc.upnp.length ; i++ )
+	{
+		var v = findInHistory( pc.upnp[i].Name );
+		if ( v > rVal ) rVal = v;
+	}
+	if ( pc.unc )
+	{
+		var he = pc.unc;
+		for( var i = 0 ; i < he.Count ; i++ )
+		{
+			var sdName = "\\\\" + he.Name + "\\" + he.Item(i).Name;
+			var v = findInHistory( sdName );
+			if ( v > rVal ) rVal = v;
+		}
+	}
+	return rVal;
+}
+
+function Share( pcName, name , sdVN , uncIndex )
+{
+	this.name = name;
+	this.sdVN = sdVN;
+	this.uncIndex = uncIndex;
+	this.pcName = pcName;
+}
+
+function compareShares( s1 , s2 )
+{
+	var v1 = 0;
+	var v2 = 0;
+
+	if ( s1.sdVN != null )
+		v1 = findInHistory( s1.name );
+	else
+	{
+		var sdName = "\\\\" + s1.pcName + "\\" + s1.name;
+		v1 = findInHistory( sdName );
+	}
+	if ( s2.sdVN != null )
+		v2 = findInHistory( s2.name );
+	else
+	{
+		var sdName = "\\\\" + s2.pcName + "\\" + s2.name;
+		v2 = findInHistory( sdName );
+	}
+	if ( v1 != v2 ) return v2-v1;
+	var n1 = s1.name.toLowerCase();
+	var n2 = s2.name.toLowerCase();
+	if ( n1 > n2 ) return 1;
+	if ( n2 > n1 ) return -1;
+	return 0;
+}
+
+function findInHistory( sdName )
+{
+	var sdn = sdName.toLowerCase();
+	var cnt = TVShell.MediaHistory.Count( fromApplication );
+	var entry;
+	for ( var i = 0 ; i < cnt ; i++ )
+	{
+		entry = TVShell.MediaHistory.Item( fromApplication , i );
+		if ( entry.Name.toLowerCase() == sdn ) return i;
+	}
+	return -1;
+}
+
+function vertSpace( pixels , withBorder )
+{
+	var borderStr = withBorder ? "style='border-bottom: 2px solid #BEBDBF;'" : "";
+	var str = "<TR><TD colspan=3 width=100% height='" + pixels + "px' " + borderStr + ">&nbsp</TD></TR>";
+	return str;
+}
+
+function SummarizeComputer( pc ,i , st)
+{
+
+	var shList = new Array();
+	var numSh = 0;
+	var online = true;
+	var needsPassword = false;
+	
+	// first create array of shares
+	for ( var j = 0 ; j < pc.upnp.length ; j++ )
+	{
+		shList[numSh++] = new Share( pc.name , pc.upnp[j].Name, pc.upnp[j].VolumeName , 0 );
+	}
+	if ( pc.unc )
+	{
+		var he = pc.unc;
+		online = ( he.state == HOST_STATE_ONLINE ) ? true : false;
+		needsPassword = ( he.ApplicationData == "password" ) ? true : false;
+		for (var j=0; j< he.Count; j++)
+		{
+			var se = he.Item(j);
+			if ( online && !needsPassword && ( HN_RESOURCE_STORAGE == se.Type ) ) shList[numSh++] = new Share( pc.name, se.Name , null , j );
+		}
+
+	}
+
+	// sort them
+	shList.sort( compareShares );
+	
+	var str = "";
+	var	aName = "";
+	var eIndex = 0;
+	var borderStyleTop = 'border-bottom: 2px solid ' + st.border + '; border-top: 2px solid ' + st.border + ';';
+	var borderStyle = 'border-bottom: 2px solid ' + st.border + ';';
+	str = "<TABLE width=100% cellpadding=0 cellspacing=0><TR><TD height=1 width=100%></TD></TR>";
+	while( eIndex < numSh )
+	{
+		var sh = shList[eIndex];
+		if ( sh.sdVN != null )
+		{
+			var destURL=viewerDestURL;	
+			var escapedName = escape( sh.name );
+			destURL+="?location=2&StorageDeviceVN=";
+			destURL+=encodeURIComponent(sh.sdVN);
+			var fnStr = "parent.MediaNavToURL( false , '" + destURL + "' , '" + escapedName + "' );";
+			aName = "a"+i+"-" + eIndex;
+			str +="<TR><TD height='24px' style='" + (( eIndex == 0 ) ? borderStyleTop : borderStyle ) +
+				"'><a name=" + aName + " class=" + st.share + " style='display:inline-block; width:100%' onclick=\"" + fnStr + "\">" + Utilities.EscapeHTML( sh.name ) + "</a></TD></TR>";
+		}
+		else
+		{
+			var he = pc.unc;
+			var se = he.Item(sh.uncIndex);
+			aName = "a"+i+"-"+eIndex;
+			str +="<TR><TD height='24px' style='" + (( eIndex == 0 ) ? borderStyleTop : borderStyle )  + "'><a name=" + aName + " class=" + st.share +" style='display:inline-block; width:100%' onclick=\"parent.MediaMount(" + pc.uncIndex + "," + sh.uncIndex +");\" >" + Utilities.EscapeHTML( sh.name ) + "</a></TD></TR>";
+		}
+		eIndex++;
+	}
+	if ( !online )
+	{
+		aName = "a"+i+"-"+eIndex;
+		str +="<TR><TD style='" + (( eIndex == 0 ) ? borderStyleTop : borderStyle )  + "'><span class=" + st.share + 
+			"><P>This PC is not connected (it may be turned off)</P><UL class=links><LI><a name=" + aName +
+			" onclick='parent.gotoPCHelp();' >Find out more</a></LI></UL></span></TD></TR>";
+		eIndex++;
+	}
+	else
+	{
+		if ( needsPassword )
+		{
+			var he = pc.unc;
+			var hname = he.Name;
+			aName = "a"+i+"-"+eIndex;
+			str +="<TR><TD height='24px' style='" + (( eIndex == 0 ) ? borderStyleTop : borderStyle )  + "'><span class=" + st.share + 
+				" ><P>To access this PC, choose the link below</P><UL class=links><LI><a name=" + aName +
+				" onclick='parent.doAutoDetect( \"" + hname + "\" );' >Enter password</a></LI></UL></span></TD></TR>";
+			eIndex++;
+		}
+	}
+
+	if ( eIndex == 0 )	// no shares, online and does not require credentials
+	{
+		aName = "a"+i+"-"+eIndex;
+		str +="<TR><TD style='" + borderStyleTop  + "'><span class=" + st.share + 
+			"><P>There are no shares on this PC</P><UL class=links><LI><a name=" + aName +
+			" onclick='parent.gotoPCHelp();' >Find out more</a></LI></UL></span></TD></TR>";
+	}
+	str += "</TABLE>";
+	return str;
+}
+
+function positionLeft( i )
+{
+	return 20 + i*(ComputerWidth + spaceBetween);
+}
+
+// search the computer array to see if any pc matches this IpAddress
+// if so, return the pc, otherwise return null
+function findPC( pcArray , ipAddress )
+{
+	if ( ipAddress == null ) return null;
+	if ( ipAddress == "" ) return null;
+	var pc = null;
+	for ( var i = 0 ; i < pcArray.length ; i++ )
+	{
+		pc = pcArray[i];
+		if ( pc.unc )
+		{
+			if ( pc.unc.IPAddress == ipAddress ) return pc;
+		}
+		else
+		{
+			if ( pc.upnp.length > 0 )
+			{
+				if ( pc.upnp[0].IPAddress == ipAddress ) return pc;
+			}
+		}
+	}
+	return null;
+}
+
+function BuildMediaNavHomeNetworkList(helpURL)
+{	
+	var numHomeNetwork = 0;
+	var result = "";
+	var str = "";
+
+	var computerArray = new Array();
+
+	// accumulate upnp devices
+	for (var i = 0; i < StorageManager.Count; i++)
+	{
+		var StorageDevice = StorageManager.Item(i);
+		if ( isUPNP( StorageDevice ) )
+		{
+			// first check if there already is a upnp server on this computer
+			var pc = findPC( computerArray , StorageDevice.IPAddress );
+			if ( pc == null )
+			{	// new computer
+				computerArray[numHomeNetwork] = new Computer( StorageDevice.Name , StorageDevice , null , -1 );
+				numHomeNetwork++;
+			}
+			else
+			{	// same computer but another upnp server
+				pc.upnp[pc.upnp.length] = StorageDevice;
+			}
+		}
+	}
+
+	// accumulate unc hosts
+	for (var i=0; i<HomeNetworkObj.Count; i++)
+	{
+		var he = HomeNetworkObj.Item(i);
+		var pc = findPC( computerArray , he.IPAddress );
+		if ( pc == null )
+		{
+			computerArray[numHomeNetwork] = new Computer( he.Name , null , he , i );
+			numHomeNetwork++;
+		}
+		else
+		{
+			pc.name = he.Name;
+			pc.unc = he;
+			pc.uncIndex = i;
+		}
+	}
+
+	var st = new MNStyle( fromApplication );
+
+	if ( numHomeNetwork <= 0 )
+	{
+		str = "<span class=" + st.share + " >";
+		str += "<P>By connecting your personal computer (PC) and your " + ProductShortName + " to a router, you form a home network.</P>";
+		str += "<P>Once your Internet & Media Player is part of your home network,";
+		str += " you'll be able to use it to view photos, listen to music, and watch videos even if those things are stored on a PC.";
+		str += "  Get started with the link below.</P>";
+		str += "<P><a onclick='parent.gotoHomeNetworking();'>Set up my home network</a></P>";
+		str += "<P>The Setup Guide that came with your " + ProductShortName + " can help you connect to a router and build your home network.</P>";
+		str += "</span>";
+		return str;
+	}
+	computerArray.sort( compareComputers );
+
+	TVShell.Message("Num computers = " + numHomeNetwork );
+	numDevices = numHomeNetwork;
+	horizontalPosition = 0;
+	ComputerWidth = ( numHomeNetwork == 1 ) ? 510 : 252;
+	var ht = mainPanel.Height - 86;
+
+	
+	var posLeft;
+	for ( var i = 0 ; i < numHomeNetwork ; i++ )
+	{
+		posLeft = positionLeft( i );
+		var pc = computerArray[i];
+		
+		str += "<span style='position:absolute; top:15px; left:" + posLeft + "px; width:15px; height:15px; behavior:url(#default#alphaImageLoader); src:url(" + st.LURL + ");'></span>";
+		str += "<div id=" + st.pcBlock + " style='position:absolute; top:15px; left:" + (posLeft+ 15) + "px; width:" + ( ComputerWidth - 30 ) + "px; height: 15px;'></div>";
+		str += "<span style='position:absolute; top:15px; left:" + (posLeft + ComputerWidth - 15) + "px; width:15px; height:15px; behavior:url(#default#alphaImageLoader); src:url(" + st.RURL + ");'></span>";
+		str += "<div class=" + st.grad + " onkeydown='parent.HandleKey( event , " + i + " );' style='position:absolute; top:30px; left:" + posLeft + "px; width:"+ComputerWidth + "px; height:" + ht + "px; padding-left:15px; padding-right:15px;'>";
+		str += "<table style='width:100%;' cellspacing=0 cellpadding=0>";
+		str += "	<TR style=><TD><span width='46px' height='46px' style='behavior:url(#default#alphaImageLoader); src:url(./Assets/Icon_DMRPC.png);'></span></TD><TD width='10px'></TD>";
+		str += "<TD><span style='width:"+ (ComputerWidth-86) + "px;' class=" + st.name + " align=left>" + Utilities.EscapeHTML( pc.name ) + "</span></TD></TR>";
+		str += "<TR><TD colspan=3><DIV id=shareListDiv style='height:" + ( ht - 46 ) + "px;'>";
+		str += SummarizeComputer( pc ,i, st);
+		str += "</div></TD></TR></table></div>";
+	}
+
+	posLeft = positionLeft( numHomeNetwork ) - spaceBetween;
+	str += "<div style='position:absolute; top:30px; left:" + posLeft + "px; width:20px; height:50%;'></div>";
+	return str;
+}
+
+function MediaMount( i , j  )
+{
+	bMountingShare = true;
+	Mount( i , j );
+}
+
+
+// manage screen redraws when there are lost of PCs doing service scan
+var lastUpdate = 0;
+var updateRequest = 0;
+
+function redrawScreen()
+{
+	if ( bMountingShare ) return;
+	TVShell.Message("Redraw screen");
+	scrollReset();
+	lastUpdate = new Date().getTime();
+	contentFrame.document.body.innerHTML = BuildScrollArea();
+	SetDefaultFocus();
+}
+
+function updateScreen( byTimer )
+{
+	if ( !byTimer ) updateRequest++;
+	var ct = new Date().getTime();
+	TVShell.Message("Update screen");
+	if ( updateRequest > 0 )
+	{
+		if ( ( ct - lastUpdate ) > 2000 )
+		{
+			redrawScreen();
+			updateRequest = 0;
+			return;
+		}
+		if ( ( updateRequest == 1 ) || byTimer )
+		{
+			setTimeout("updateScreen(true);", 500);
+		}
+	}
+}
+
+//
+// HomeNetworking - Eventhandler for Host events
+//
+function MediaNavOnHostHandler(hnx, he, evt, status)
+{
+	TVShell.Message("OnHost evt:" + evt + "  stat:" + status );
+	switch( evt )
+	{
+		case HN_EVT_ENDSERVICESCAN:
+			serviceScanCount++;
+			if ( serviceScanCount >= HomeNetworkObj.Count )
+			{
+				TVShell.Message("Completed HN service scan");
+				waitForScanComplete = false;
+				HideProgressPanel();
+			}
+
+			// record end service scan status for later
+			var st = status & 0xFFFF;
+			TVShell.Message("end scan status = " + st );
+			switch( st )
+			{
+				case 0:	// OK
+					he.ApplicationData = "ok";
+					break;
+				case 0x0005:
+				case 0x0056:
+				case 0x4004:
+				case 0x04C7:
+					// possible password related errors
+					he.ApplicationData = "password";
+					break;
+				default:
+					// unknown status
+					he.ApplicationData = "unknown";
+					break;
+			}
+			
+			if ( waitForScanComplete )
+			{
+				var p = HomeNetworkObj.Count;
+				if ( p <= 0 ) p = serviceScanCount;
+				p = 100 * serviceScanCount / p;
+				SetProgressPercent(p);
+			}
+			if ( bInitComplete ) updateScreen(false);
+			break;
+	}
+}
+
+function MediaNavOnServiceHandler(he, se, evt, status)
+{
+	TVShell.Message("OnService evt:" + evt + "  stat:" + status );
+    switch (evt) {
+	case HN_EVT_MOUNTED:
+		HideProgressPanel();
+	    if (status==0) {
+       	var sd = se.NetStorage;
+		var destURL=viewerDestURL;					
+	       destURL+="?location=2&StorageDeviceVN=";
+	       destURL+=encodeURIComponent( sd.VolumeName );
+		MediaNavToURL( false , destURL , escape(sd.VolumeName) );
+       	}
+		else {
+			ShareUnavailableMessageBox(he, se, status, false)
+			history.go(0);
+		}   			
+		break;
+	case HN_EVT_NEWSERVICE:
+		if ( bInitComplete ) updateScreen(false);
+		TVShell.Message("new service");
+		break;
+	}
+}	
+
+function InitializeContentFrame(cframe)
+{
+	var scrollDocument = cframe.document;
+
+	scrollDocument.open();
+	scrollDocument.write("<html><body></body></html>");
+	scrollDocument.close();
+
+	var scrollBody = scrollDocument.body;
+
+	for (var i = 0; i < document.styleSheets.length; i++) {
+		//Import style sheets.
+		var href = document.styleSheets[i].href;
+		scrollDocument.createStyleSheet(href);
+	}
+	scrollBody.style.marginRight = "23px";
+	scrollBody.style.marginLeft = "23px";
+	scrollBody.style.marginBottom = "23px";
+	scrollBody.style.marginTop= "23px";
+	if ( fromApplication == "music" )	scrollBody.style.backgroundColor = "#90C7F2";
+	if ( fromApplication == "photo" )	scrollBody.style.backgroundColor = "#ABABAB";
+	if ( fromApplication == "video" )	scrollBody.style.backgroundColor = "#310202";
+}
+
+function InitialDraw()
+{
+	TVShell.Message("InitialDraw");
+	document.all.HeadCtl.mainTitle = headerAppName;
+	document.all.HeadCtl.subTitle = ( mediaLocation == ML_PC ) ? "PCs" : "Devices";
+	document.all.HeadCtl.helpURL = ( mediaLocation == ML_PC ) ? getPCHelpURL() : getUSBHelpURL();
+	document.all.HeadCtl.app = fromApplication;
+	if ( mediaLocation == ML_PC )
+		document.all.HeadCtl.settingsURL = "msntv:/Settings/Network/HomeNetworking.html";
+	
+	// no, draw media nav page
+	document.all.contentFrame.style.display = "inline";
+	InitializeContentFrame( contentFrame );
+	document.all.contentFrame.height = mainPanel.Height - 55;
+	bInitComplete = true;
+	TVShell.Message("InitialDraw complete");
+
+}
+
+function OnLoad()
+{
+	TVShell.Message("Onload()");
+	InitialDraw();
+	setTimeout( "kickOffUpdate();" , 1 );
+}
+
+var scrollAmount = 0;
+// default to 1/3 whole computer width since smooth scrolling is slow
+var scrollInc = ( positionLeft( 1 ) - positionLeft( 0 ) ) / 3;
+var blockKey = false;
+var selectedElement;
+var nextElement = null;
+
+function scrollReset()
+{
+	selectedElement = null;
+	nextElement = null;
+	blockKey = false;
+	scrollAmount = 0;
+}
+
+function startScroll( delta )
+{
+	scrollAmount += delta;
+	selectedElement = window.frames("contentFrame").document.activeElement;
+	if ( selectedElement ) TVShell.Message("Activeelement");
+	if ( selectedElement )
+	{
+		selectedElement.hideFocus = true;
+		var anchors = window.frames("contentFrame").document.anchors;
+		var nm = selectedElement.name;
+		var col = parseInt( nm.substr( 1 ) );
+		var irow = nm.indexOf( "-" );
+		var row = ( irow >= 0 ) ? parseInt( nm.substr( irow + 1 ) ) : 0;
+		col += ( delta > 0 ) ? 1 : -1;
+		while( row >= 0 )
+		{
+			nm = "a"+col+"-"+row;
+			if ( anchors(nm) )
+			{
+				nextElement = anchors(nm);
+				break;
+			}
+			row--;
+		}
+	}
+	doScrollInc();
+}
+
+function doScrollInc()
+{
+	var inc;
+	blockKey = false;
+	if ( scrollAmount == 0 )
+	{
+		if ( selectedElement ) selectedElement.hideFocus = false;
+		if ( nextElement ) nextElement.focus();
+		scrollReset();
+		return;
+	}
+	blockKey = true;
+	if ( scrollAmount < 0 )
+	{
+		inc = scrollInc;
+		scrollAmount += inc;
+		if ( scrollAmount > 0 )
+		{
+			inc -= scrollAmount;
+			scrollAmount = 0;
+		}
+		contentFrame.scrollBy( -inc , 0 );
+	}
+	else
+	{
+		inc = scrollInc;
+		scrollAmount -= inc;
+		if ( scrollAmount < 0 )
+		{
+			inc += scrollAmount;
+			scrollAmount = 0;
+		}
+		contentFrame.scrollBy( inc , 0 );
+	}
+	setTimeout( 'doScrollInc();' ,1 );
+}
+
+
+function HandleKey(event, i )
+{
+	if ( event.type == 'keydown' )
+	{
+		event.returnValue = blockKey ? false : true;
+		if ( ( numDevices > 2 ) && !blockKey )
+		{
+			var dir = 0;
+			if ( ( event.keyCode == VK_LEFT ) || ( ( event.keyCode == 9 ) && event.shiftKey ) ) dir = -1;
+			if ( ( event.keyCode == VK_RIGHT ) || ( ( event.keyCode == 9 )  && !event.shiftKey ) ) dir = 1;
+			if ( dir != 0 )
+			{
+				var xStep = positionLeft( 1 ) - positionLeft( 0 );		// size of one jump
+				// there are 2 devices in view at any time
+				// if we are on the left one and hit the left key, then scroll right one device
+				if ( ( i == horizontalPosition ) && ( dir == -1 ) && ( i > 0 ) )
+				{
+					horizontalPosition--;
+					if ( horizontalPosition < 0 ) horizontalPosition = 0;
+					startScroll( -xStep );
+					event.returnValue = false;
+					return;
+				}
+				// if we are on the right one and hit the right key, scroll left one device
+				if ( ( i != horizontalPosition ) && ( dir == 1 ) && ( i < ( numDevices - 1 )) )
+				{
+					horizontalPosition++;
+					if ( horizontalPosition >= ( numDevices - 2 ) ) horizontalPosition = numDevices - 2;
+					event.returnValue = false;
+					startScroll( xStep );
+					return;
+				}
+			}
+		}
+	}
+}
+
+
+		
+	</script>
+</head>
+
+<body  onload="OnLoad();">
+		<msntv:MediaNavHeading id="HeadCtl"  />
+
+		<iframe id=contentFrame frameborder="no"  style='display:none;'></iframe>
+</body>
+</html>

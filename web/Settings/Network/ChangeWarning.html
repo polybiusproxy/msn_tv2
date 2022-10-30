@@ -1,0 +1,11 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <TITLE>Change your settings?</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT><BODY> <SCRIPT>
+function ConditionallyAddLANSetup()
+{
+	var parameters = FindParameters(TVShell.PanelManager);
+	
+	if (parameters["LANSetup"])
+		return "DHCP.html?LANSetup=1";
+
+	return "DHCP.html";
+}
+</SCRIPT> <SCRIPT>OpenSettingsTable( "Settings" , "Change your settings?" , "" , true );</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Keep Settings" /> <msntv:CustomButton href='javascript:location.replace(ConditionallyAddLANSetup());' class=buttonBarButton id=Done label="Change Settings" /> <script>document.all("default").focus();</script> </DIV><DIV id=nonScrollArea><DIV class=description> <P> Your current broadband settings are accurate, and your <SCRIPT>document.write(ProductShortName);</SCRIPT> is connected to the <SCRIPT>document.write(ServiceFullName)</SCRIPT>. If you change your settings, you may no longer be able to connect. </P> <P> To keep your current settings, choose <EM>Keep Settings</EM>. </P> <P> To change your current settings, choose <EM>Change Settings</EM>. </P> </DIV> </DIV> <SCRIPT>CloseSettingsTable();</SCRIPT> </BODY>

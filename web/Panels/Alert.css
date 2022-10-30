@@ -1,0 +1,30 @@
+body {
+	background-color: black;
+	margin: 0px;
+}
+
+#icon {
+	position: absolute;
+	z-index: 1;
+	top: 8px;
+	left: 15px;
+	width: 45px;
+	height: 40px;
+	behavior: url(#default#alphaImageLoader);
+	src:url(./Images/AlertsIconOnline.png);
+}
+
+#message {
+	position: absolute;
+	z-index: 1;
+	top: 7px;
+	left: 60px;
+	height: 40px;
+	padding-right: 15px;
+	font-family: highway;
+	font-size: 18px;
+	line-height: 20px;
+	overflow-y: hidden;
+	color: #F2F2F2;
+}
+

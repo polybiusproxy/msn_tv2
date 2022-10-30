@@ -1,0 +1,54 @@
+<html xmlns:msntv>
+<head>
+	<title>Wireless USB Adapter</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Wireless USB adapter" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+
+<p>
+To connect your <script>document.write( ProductShortName );</script> to your wireless home network using 
+a wireless USB adapter (sold separately), follow these steps: 
+</p>
+<ul>
+<li>
+
+Connect the wireless USB adapter to one of the USB ports on the back of the 
+<script>document.write( ProductShortName );</script>.
+</li>
+The <script>document.write( ProductShortName );</script> will detect the adapter and search for an available
+ wireless network. If more than one network is available, or a WEP key is required 
+ for access, you will need to use the <EM>Wireless Settings</EM> page. 
+<UL class=links><LI><a href="msntv:/Settings/Network/Wireless.html">Wireless Settings</a></LI></UL>
+<li>
+Select your wireless network from the list and enter its WEP key (if applicable).
+</li>
+Once you complete these steps, your <script>document.write( ProductShortName );</script> stores your settings. 
+<li>
+You're now ready to connect to both your home network and  your broadband Internet service.
+
+</ul>
+
+
+
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

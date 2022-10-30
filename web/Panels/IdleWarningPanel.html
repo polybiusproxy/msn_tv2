@@ -1,0 +1,36 @@
+<HTML xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE>Automatic Hangup</TITLE>
+	<LINK rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+</HEAD>
+
+<SCRIPT language=Javascript src="../Javascript/TVShell.js"></SCRIPT>
+
+<SCRIPT>
+	function HideMe()
+	{
+		TVShell.PanelManager.Hide("idlewarn");
+	}
+</SCRIPT>
+
+<BODY>
+<TABLE class="contentText" height="100%" width="100%" cellpadding="0" cellspacing="0">
+<TR>
+	<TD class=heading>
+	Automatic Hangup
+<TR>
+	<TD>
+	You will be automatically disconnected in thirty seconds.<BR>
+	To continue playing, select "Stay Connected".
+<TR>
+	<TD>
+
+	<FORM NAME=thisForm ACTION='javascript:HideMe()'>
+		<msntv:CustomButton submitformname=thisForm id="StayConnected" label="Stay Connected" />
+	</FORM>
+
+</TABLE>
+
+</BODY>

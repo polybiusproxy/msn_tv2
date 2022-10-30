@@ -1,0 +1,66 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<head>
+<title>Confirmation</title>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script>
+var PanelManager = TVShell.PanelManager;
+
+var thisName = window.name;
+var thisPanel=PanelManager.Item(thisName);
+
+function SetContent()
+{	
+	var bodyText = thisPanel.UserStrData;
+	var boxType = thisPanel.UserIntData & 0x0F;
+
+	var listArray = bodyText.split("|");
+	var text = listArray[0];
+
+	// allow a few useful HTML tags, but escape all the rest
+	if (boxType != MB_SPECIAL) {
+		text = text.replace(/&gt;/gi, ">");
+		text = text.replace(/&lt;/gi, "<");
+		text = TVShell.Utilities.EscapeHTML(text);
+		text = text.replace(/&lt;([/]?(EM|B|I|BR|P))&gt;/gi, "<$1>");
+	}
+	message.innerHTML = text;
+
+	var icon = listArray[1];
+	if (icon.length > 0)
+		icon = TVShell.Utilities.EscapeHTML(icon);
+	else
+		icon = "msntv:/Panels/Images/Icon_Completed_ErrorPanels.gif";
+	animationImg.src = icon;
+	
+	setTimeout(ShowIcon, 100);
+	
+	var sound = listArray[2];
+	if (sound.length == 0)
+		sound = "task_complete";
+	
+	TVShell.DeviceControl.PlaySound(sound);	
+}
+
+function ClosePanel()
+{
+	PanelManager.Remove(thisName)
+}
+
+function ShowIcon()
+{
+	var timeoutValue = thisPanel.UserIntData >> 4;
+
+	animationIcon.style.visibility = "visible";
+	setTimeout(ClosePanel, timeoutValue);
+}
+
+</script>
+</head>
+<body>
+	<div id="animationIcon" style="visibility:hidden; position:absolute; left:15px; top:15px; margin:0; padding:0"><img id="animationImg" src="msntv:/Images/1x1.gif"></div>
+	<div id="message" class="scroller" style="position:absolute; top:25px; left:70px; width:210px; height:110px; padding-right:15px; word-wrap:break-word"></div>
+	<script>SetContent();</script>
+</body>
+</html>

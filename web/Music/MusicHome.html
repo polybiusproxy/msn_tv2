@@ -1,0 +1,643 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/DMRHeading.htc">
+<?import namespace="msntv" implementation="../HTC/MediaToolbar.htc">
+<?import namespace="msntv" implementation="../HTC/SlideshowPromo.htc">
+<head>
+	<title>Music Home</title>
+	<link rel=StyleSheet type="text/css" href="../css/Base.css">	
+	<link rel=StyleSheet type="text/css" href="../css/Music.css">
+
+	<script language="Javascript" src="../Javascript/TVShell.js"></script>
+	<script language="Javascript" src="../Javascript/parameters.js"></script>
+	<script language="javascript" src="../Javascript/ServiceList.js"></script>
+	<script language="javascript" src="../Javascript/HomeNetworking.js"></script>
+	<script language="javascript" src="../Javascript/DMRCommon.js"></script>
+	<script language="javascript" src="../Javascript/DMRHome.js"></script>
+	<script language="Javascript" src="../Javascript/ContentPaneHelp.js"></script>
+	<script language="Javascript" src="../Javascript/ConnectionManager.js"></script>
+	<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+	<script language="Javascript" src="../Javascript/SigninPanel.js"></script>
+	<script language="Javascript" src="../Javascript/DMREnumerate.js"></script>
+	<script language="Javascript" src="Music.js"></script>
+
+<script language="Javascript">	
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var StationsDoc = null;
+var SubtitleRollInterval = 0;
+
+function SetMode(hnState, upnpState, onlineState)
+{
+	var StationsURL = null;
+	var songlist = TVShell.PlaylistManager.createPlaylist("", songListUrl);
+	var songlistCount = songlist.count;
+	
+	if (hnState == HN_N && onlineState == ST_OFF && songlistCount == 0) {
+		mainTable.style.display = "none";
+		mainPromo.style.display = "block";
+		defaultSignIn.removeAttribute("nextleft");
+		return;
+	}
+	
+	if (onlineState != ST_OFF) {		
+		var	entry = TVShell.ActiveServiceList.Item("home::backendproxy");
+		if (entry && entry.URL) {
+			var promoURL = entry.URL + "?mid=MSNTV&ds=64&guid=&time=00:00&feature=radiohomepage";
+			if (onlineState == ST_ON_NB) {
+				promoURL += "_narrowband";
+			}
+			document.all.Promo1.sourceURL = promoURL;
+		}
+
+		entry = TVShell.ActiveServiceList.Item("home::radioplus");
+		if (entry && entry.URL) {
+			StationsURL = entry.URL + "?page=musicHomeStations";
+		}
+	}
+
+	if (songlistCount > 0) {
+		var description = "Play my Song List from the top";
+		var	artistNames = new Array();
+		
+		// If we can find at least 2 artist names, show them
+		for (var i = 0; i < songlistCount; i++) {
+			var item = songlist.item(i);
+			var artist = item.getItemInfo("Author");
+			
+			if (artist) {
+				var length = artistNames.length;
+				
+				// Avoid duplicates
+				for (var j = 0; j < length; j++) {
+					if (artistNames[j] == artist) {
+						break;
+					}
+				}
+				if (j == length) {
+					artistNames.push(artist);
+					if (artistNames.length >= 4) {
+						break;
+					}
+				}
+			}
+		}
+		if (artistNames.length > 1) {
+			description	= artistNames.join(", ");
+		}
+			
+		AddQuickPlayItem("Play My Song List", description, "PlayAudio(songListUrl, true);");
+	}
+
+	if (upnpState == HN_Y){
+		AddQuickPlayItem("Play a Jumble-Mix", "Play my music at random", "PlaySamples();");
+	}
+	
+	if (StationsURL) {
+		TVShell.Message("StationsURL: " + StationsURL);
+		LoadStationsDoc(StationsURL);
+	}	
+}
+
+function rand(max)
+{
+	return Math.floor(Math.random() * max);
+}
+
+function PlaySamplesCallback(callerData, storageDevice, folderPath, mimeTypes, xmlDoc, error)
+{
+	var playlist = TVShell.PlaylistManager.createPlaylist("Jumble-Mix", null);
+	var URL = NextPlaylistURL();
+	var nodes = null;
+	var numSamples = 12;
+	
+	if (xmlDoc) {
+		nodes = xmlDoc.selectNodes("//a:response[a:propstat/a:prop/a:iscollection = 0]");
+	}
+
+	if (nodes && nodes.length > 0) {
+		var samples = Math.min(nodes.length, numSamples);
+		var picks = new Array(numSamples);
+		
+		for (i = 0; i < samples; ) {
+			var x = rand(nodes.length);
+			for ( j=0; j < i; j++ ) {
+				if ( picks[j] == x )
+					break;
+			}
+			if ( j < i ) {
+				continue;
+			}
+			picks[i] = x;
+			var node = nodes.item(x);
+		    var name = node.selectSingleNode(".//a:displayname").text;
+			var href = node.selectSingleNode(".//a:href").text;
+			var titleNode = node.selectSingleNode(".//a:title");
+			var artistNode = node.selectSingleNode(".//a:artist");
+			var albumNode = node.selectSingleNode(".//a:album");
+			var durationNode = node.selectSingleNode(".//a:duration");
+			
+			if (href) {
+				href = FormatURL(href);
+
+				var entry = TVShell.PlaylistManager.createMediaItem(href);
+
+				entry.setItemInfo("DisplayTitle", name);
+				if (titleNode) {
+					entry.setItemInfo("Title", titleNode.text);
+				}
+				if (artistNode) {
+					entry.setItemInfo("Author", artistNode.text);
+				}
+				if (albumNode) {
+					entry.setItemInfo("Abstract", albumNode.text);
+				}
+				if (durationNode) {
+					entry.setItemInfo("Duration", durationNode.text);
+				}
+				playlist.appendItem(entry);
+			}
+			i++;
+		}
+	}
+	
+	if (playlist.count > 0) {
+		TVShell.Message("playlist.count: " + playlist.count);
+		playlist.setItemInfo("Title", "Jumble-Mix");
+		TVShell.PlaylistManager.savePlaylist(URL, playlist);
+		MountAll();
+		wmp.URL = URL;
+	}
+	else {
+		var msg = "<p>We're currently unable to play a Jumble-Mix.</p>";
+   		TVShell.PanelManager.CustomMessageBox(msg, "", "OK", 0, "", false, MGX_ICON_WARNING , MGX_SIZE_SMALL); 
+	}
+}
+
+function PlaySamples()		
+{
+	var upnpDevices = new Array();
+	var upnpDevice = null;
+	
+	for (var i = 0; i < StorageManager.Count; i++) {
+		var StorageDevice = StorageManager.Item(i);
+		if (isUPNP(StorageDevice)) {
+			upnpDevices.push(StorageDevice);
+		}
+	}
+	if (upnpDevices.length > 0) {
+		upnpDevice = upnpDevices[rand(upnpDevices.length)];
+	}
+	
+	if (upnpDevice) {
+		EnumerateItems(PlaySamplesCallback, null, upnpDevice, "", audioTypes, -1);
+	}
+}
+
+function SetDefaultFocus()
+{
+	try {
+		var anchors = quickPlayTable.all.tags("A");
+		anchors[0].focus();
+	}
+	catch(e){
+		defaultSignIn.focus();
+	}
+}
+
+function play()
+{
+	var panel = PanelManager.Item("mediapanel");
+	if ( panel )
+	{
+		var player = panel.Document.parentWindow;
+		player.play_video();
+	}
+}
+
+function stop()
+{
+	var panel = PanelManager.Item("mediapanel");
+	if ( panel )
+	{
+		var player = panel.Document.parentWindow;
+		player.stop_video();
+		OnNewStream(false);
+	}
+}
+
+function next()
+{
+	var panel = PanelManager.Item("mediapanel");
+	if ( panel )
+	{
+		var player = panel.Document.parentWindow;
+		player.next_video();
+	}
+}
+
+function PlayAudio(URL, isSongList)
+{
+	if (isSongList) {
+		MountAll();
+		wmp.URL = URL;
+		wmp.settings.setMode("loop", IsLoopEnabled());
+		wmp.settings.setMode("shuffle", IsShuffleEnabled());
+	}
+	else {
+		wmp.URL = URL;
+	}
+}
+
+function ShowRadioUpsell()
+{
+	var entry = TVShell.ActiveServiceList.Item("home::radioplus");
+	
+	if (entry && entry.URL) {
+		document.location = entry.URL + "?page=upsell";
+	}
+}
+
+function ShowVideo(guid, topic, category)
+{
+	var	entry = TVShell.ActiveServiceList.Item("home::videoplus");
+	
+	if (entry && entry.URL) {
+		var url = entry.URL + "?i=" + encodeURIComponent(guid);
+
+		if (topic && topic != "" && category && category != "") {
+			url += "&p=" + encodeURIComponent(topic + "_" + category);
+		}
+		GotoURL(url); 
+	}
+}
+
+function OnStationsDocReadyStateChange()
+{
+	if (StationsDoc && StationsDoc.readyState == 4) {
+		var metaData = StationsDoc.selectSingleNode("//metadata");
+		var nodes = StationsDoc.selectNodes("//FeaturedStations/station");
+		var oldRows = quickPlayTable.rows.length;
+		var isPlusUser = metaData && metaData.getAttribute("isPlusUser") == "true";
+		
+		for (var i = 0; i < nodes.length; i++) {
+			var isPlusStation = nodes[i].getAttribute("plus") == "True";
+			var onclick;
+			
+			if (isPlusStation && !isPlusUser) {
+				onclick = "ShowRadioUpsell();";
+			}
+			else {
+				onclick = "PlayAudio('" + nodes[i].getAttribute("url") + "', false);"
+			}
+			
+			AddQuickPlayItem("Tune to " + nodes[i].getAttribute("name"),
+							 nodes[i].getAttribute("description") + "...",
+							 onclick);
+		}
+		
+		// If we added the first QP item, update "Check Out..."
+		if (oldRows < 3 && nodes.length > 0) {
+			OnNewStream(false);
+		}
+	}
+}
+
+function LoadStationsDoc(URL)
+{
+	if (StationsDoc == null) {
+		StationsDoc = TVShell.CreateXmlDocument();
+		if (StationsDoc) {
+			StationsDoc.async = true;
+			StationsDoc.resolveExternals = false;
+			StationsDoc.validateOnParse = false;
+			StationsDoc.onreadystatechange = OnStationsDocReadyStateChange;
+			StationsDoc.ondataavailable = OnStationsDocReadyStateChange;
+			var res = StationsDoc.load(URL);
+		}
+	}
+}
+
+function RollSubtitle()
+{
+	var	filter = quickPlaySubtitleCell.filters[0];
+	var scrollTop = quickPlaySubtitle.scrollTop;
+	
+	filter.apply();
+	
+	if ((quickPlaySubtitle.scrollHeight - scrollTop) > 19) {
+		 scrollTop += 19;
+	}
+	else if (scrollTop > 0) {
+		scrollTop = 0;
+	}
+	quickPlaySubtitle.scrollTop = scrollTop;
+	
+	filter.play();
+}
+
+function SetSubtitle(subtitle)
+{
+	quickPlaySubtitleCell.style.filter="";
+	window.clearInterval(SubtitleRollInterval);
+	SubtitleRollInterval = 0;
+	quickPlaySubtitle.scrollTop = 0;
+	quickPlaySubtitle.innerText = subtitle;
+	if (quickPlaySubtitle.scrollHeight > 19) {
+		quickPlaySubtitleCell.style.filter="progid:DXImageTransform.Microsoft.Fade(Overlap=0.2, Duration=0.5)";
+		SubtitleRollInterval = window.setInterval(RollSubtitle, 2000);
+	}
+}
+
+function ClearSubtitle()
+{
+	quickPlaySubtitleCell.style.filter="";
+	window.clearInterval(SubtitleRollInterval);
+	SubtitleRollInterval = 0;
+	quickPlaySubtitle.innerText="A fast way to get to fresh tracks";
+	quickPlaySubtitle.scrollTop = 0;
+}
+
+function AddQuickPlayItem(title, subtitle,  onclick)
+{
+	if (quickPlayTable.rows.length < 6) {
+		var row = quickPlayTable.insertRow();
+		var cell = row.insertCell();
+		
+		cell.className = "quickPlayLink";
+		cell.innerHTML = "<a onclick=\"" + onclick + "\"" +
+						 " subtitle=\"" + subtitle + "\"" +
+						 " onfocus=\"SetSubtitle(this.subtitle);\"" +
+						 " onblur=\"ClearSubtitle();\">" +
+						 "<span class=\"ellipsis\">" + title + "</a></span>";
+		
+		// Use ellipsis truncation if entry is multiline.
+		if (cell.clientHeight > 28) {
+			cell.all.tags("SPAN")[0].style.pixelWidth = cell.clientWidth - parseInt(cell.currentStyle.paddingLeft) - parseInt(cell.currentStyle.paddingRight);
+		}
+	}
+}
+
+function FilenameFromPath(path)
+{
+	var fileName = path.slice(Math.max(path.lastIndexOf('/')+1, path.lastIndexOf('\\')+1));
+
+	if (fileName) {
+		fileName = fileName.substr(0, fileName.lastIndexOf('.'));
+	}
+
+	return fileName;
+}
+
+function OnNewStream(fromEvent)
+{
+	var player = PanelManager.Item("mediapanel");
+	player = player ? player.Document.parentWindow : null;
+	var videoie = player ? player.videoie : null;
+	if ( videoie == null ) return;
+
+	nowPlayingHeader.innerText = "";
+	nowPlayingArtist.innerText = "";
+	nowPlayingTitle.innerText = "";
+	
+	// No audio playing
+	if (player.HasVideo() || videoie.PlayState == 0 || (videoie.PlayState == 6 && !fromEvent)){
+	}
+	var mpHasMultipleItems	= videoie.HasMultipleItems;
+	var mpPlaylistTitle		= videoie.GetMediaInfoString(1);
+	var mpClipTitle			= videoie.GetMediaInfoString(8);
+	var mpClipAuthor		= videoie.GetMediaInfoString(9);
+
+	if (!mpClipTitle && !videoie.currentPlaylist) {
+		var mpSourceLink = videoie.SourceLink;
+		if (!mpSourceLink) {
+			mpSourceLink = videoie.URL;
+		}
+		if (mpSourceLink) {	
+			mpClipTitle = FilenameFromPath(mpSourceLink);	
+		}
+	}
+	
+	if (player.HasVideo() || (!mpPlaylistTitle && !mpClipTitle)) {
+		nowPlayingTable.style.display = "none";
+		nowPlayingPromo.style.display = "block";
+	}
+	
+	else {
+		nowPlayingTable.style.display = "block";
+		nowPlayingPromo.style.display = "none";
+
+		if (!mpPlaylistTitle) {
+			mpPlaylistTitle = "";
+		}
+		if (!mpClipTitle) {
+			mpClipTitle = "Untitled";
+		}
+		
+		if (videoie.PlayState == 0 || (videoie.PlayState == 6 && !fromEvent)) {
+			nowPlayingHeader.innerText = "Listen to: " + mpPlaylistTitle;
+		}
+		else {
+			nowPlayingHeader.innerText = "Now playing: " + mpPlaylistTitle;
+		}
+		
+		if (!mpHasMultipleItems || videoie.PlayState != 0) {
+			if (mpClipAuthor) {
+				nowPlayingArtist.innerText = mpClipAuthor;
+			}
+			if (mpClipTitle) {
+				nowPlayingTitle.innerText = " \"" + mpClipTitle + "\"";
+			}
+		}
+
+		var entryNum = videoie.GetCurrentEntry();
+		if (entryNum > 0) {
+			var url = videoie.GetMediaParameter(entryNum, "AlbumArt");
+			if (url) {
+				artImage.src = url;
+			}
+			else {
+				artImage.src = "./Images/NoAlbumArt66x66.jpg"
+			}
+		}
+		else {
+			artImage.src = "msntv:/Images/1x1.gif";
+		}
+	}
+}
+
+function handleTransition()
+{
+	var nextSlideHTML  = Promo1.getSlideHTML(Promo1.incrementSlideIndex(event.newValue)); 
+	if(nextSlideHTML)
+	{
+		var pos = nextSlideHTML.indexOf('promoHeadingLabel="');
+		if(pos!=-1)
+		{
+			nextSlideHTML = nextSlideHTML.slice(pos+19);
+			pos=nextSlideHTML.indexOf('"');
+			if(pos!=-1)
+			{
+				var promoHeadingLabel=nextSlideHTML.slice(0,pos);
+				nextPromoText.innerText = promoHeadingLabel;
+			}
+		}
+	}
+}
+
+function OnLoad()
+{
+	// For our purposes, WMC device(s) are required.
+	var upnpState = HN_N;
+	for (var i = 0; i < StorageManager.Count; i++) {
+		var StorageDevice = StorageManager.Item(i);
+		if (isUPNP(StorageDevice)) {
+			upnpState = HN_Y;
+			break;
+		}
+	}
+	
+	SetMode(GetHomeNetworkStatus(), upnpState, GetOnlineState());
+	OnNewStream(false);
+	SetDefaultFocus();
+}
+
+SynchronizeShares();
+
+</script>
+</head>
+
+<body onload="OnLoad();" style="behavior:url(msntv:/HTC/Navigation.htc);">
+	<table style="width:100%;height:100%;" cellspacing=0 cellpadding=0>
+		<tr>
+			<td style="height:56px;">
+				<msntv:DMRHeading mainTitle="Music" subTitle="" helpTopicURL="MSNTV_TRS_TOC_Music" settingsURL = "msntv:/Settings/WMPVisualization.html" imageURL="msntv:/Music/Images/MusicHeader.jpg" showscrolltop="false"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="promoQPCell" style="height:216px;">
+				<table id="mainTable" style="width:100%;height:100%;" cellspacing="0" cellpadding="0">
+					<tr>
+						<td class="promoCell" style="width:240px;">
+							<div id="myStationsDiv" style="width:225px; height:176px; margin:15px 0px 0px 15px;">
+								<msntv:slideShowPromo id="Promo1"
+									autoAdvanceInterval="10"
+									stylesheetURL="PromoSlideshowStyleSheet.xsl"
+									sourceURL=""
+									autoStart="true"
+									filter="progid:DXImageTransform.Microsoft.Fade(Overlap=0.2, Duration=1.0)"
+									sourceUnavailableText="<div style='height:100%;'><div class='promoHeading'>Music News</div><div class='promoText' style='margin:5px 15px 0px 0px;'>Sign in to listen to your favorite radio stations or read the latest headlines.</div></div>"
+									loadingText="<div style='height:100%;'><div class='promoHeading'>Music News</div><div class='promoText' style='margin:5px 15px 0px 0px;'>Loading...</div></div>" />
+									
+								<script>
+									var noSlidesText = "<div style='height:100%;'><div class='promoHeading'>Music News</div><div class='promoText' style='margin:5px 15px 0px 0px;'>";
+									noSlidesText += "<p>To read today's music news, choose this link:<br /><a onclick=\"GotoTarget('msn::musicnews', '', false)\"><em>Music news</em></a></p>";
+									if (GetOnlineState() == ST_ON_BB) {
+										noSlidesText += "To browse the latest music videos, choose this&nbsp;link:<br /><a onclick=\"GotoTarget('home::videoplus', 'm=Movies%20-%20Music&mi=Music:%20Rock', false)\"><em>Music videos</em></a>";
+									}
+									noSlidesText += "</div></div>"
+									Promo1.noSlidesText = noSlidesText;
+								</script>
+							</div>
+							<div style="height:20px; margin:0px 0px 5px 15px;">
+								<script>
+									var str="";
+									var onlineState = GetOnlineState();
+									if(onlineState==ST_OFF)
+									{
+										str='<span id="promoNext" onclick="GotoTarget(\'Music::Home\', \'\', true);">\
+												<span class="promoNextButton"></span><span class="promoNextButtonLabel">Sign In</span>\
+											</span>';
+									}
+									else
+									{
+										str='<span id="promoNext" onclick="Promo1.ssInvoke(\'next\');">\
+												<span class="promoNextButton"></span><span class="promoNextButtonLabel">NEXT</span>\
+												<span id="nextPromoText" class="promoNextButtonLabel" style="font-size: 16px; font-weight: bold;"></span>\
+											</span>';
+									}
+									document.write(str);
+								</script>
+							</div>
+						</td>
+						<td class="quickPlayCell" style="width:320px;">
+							<table id="quickPlayTable" style="width:100%;" cellspacing="0" cellpadding="0">
+								<tr><td class="quickPlayTitle">Quick Spin</td></tr>
+								<tr><td id="quickPlaySubtitleCell" class="quickPlaySubtitle"><span id="quickPlaySubtitle" class="ellipsis" style="height:19px;">A fast way to get to fresh tracks</span></td></tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+				<div id="mainPromo" style="width:100%; height:100%; background-image:url(./Images/MusicSignInPromo.jpg); display:none;">
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td class="nowPlayingCell" style="height:67px;">
+				<table id="nowPlayingTable" style="width:100%; height:100%;" cellspacing=0 cellpadding=0>
+					<tr>
+						<td style="width:100%; padding-left:37px; vertical-align:top;">
+							<span id="nowPlayingHeader"></span><br>
+							<span style="height:38px; overflow:hidden;"><span id="nowPlayingArtist"></span><span id="nowPlayingTitle"></span></span>
+						</td>
+						<td style="width:39px;">
+							<span id="playButton" class="controlButton" style="behavior:url(#default#alphaImageLoader); src:url(./Images/MusicHomePanelPlayerControlPlay.png);">
+								<a id="playAnchor" nextleft="promoNext" onclick="play();">
+									<span class="controlButtonAnchor"></span>
+								</a>
+							</span>
+						</td>
+						<td style="width:39px;">
+							<span id="stopButton" class="controlButton" style="behavior:url(#default#alphaImageLoader); src:url(./Images/MusicHomePanelPlayerControlStop.png);">
+								<a id="stopAnchor" onclick="stop();">
+									<span class="controlButtonAnchor"></span>
+								</a>
+							</span>
+						</td>
+						<td style="width:39px;">
+							<span id="nextButton" class="controlButton" style="behavior:url(#default#alphaImageLoader); src:url(./Images/MusicHomePanelPlayerControlNext.png);">
+								<a id="nextAnchor" onclick="next();">
+									<span class="controlButtonAnchor"></span>
+								</a>
+							</span>
+						</td>
+						<td style="width:76px; padding:0px 0px 0px 9px;"><img id="artImage" style="width:66px; height:66px;" src="msntv:/Images/1x1.gif"></td>
+					</tr>
+				</table>
+				<div id="nowPlayingPromo" style="width:100%; height:100%; text-align:right; padding: 22px 15px 0px 0px; display:none; color:#1D1D1D;">
+					<a id="defaultSignIn" nextleft="promoNext" onclick="GotoTarget('home::radioplus', '', true);">Tune in to scores of <em>Radio</em> stations</a>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<script>
+				if (GetOnlineState() == ST_OFF) {
+					document.write('<td class="toolbarCell" stretchyBackground="msntv:/Music/Images/MusicNavBarOffline.jpg">');
+				}
+				else {
+					document.write('<td class="toolbarCell" stretchyBackground="msntv:/Music/Images/MusicNavBar.jpg">');
+				}
+			</script>
+				<msntv:mediaToolbar toolbarWidth='100%' divWidthPX='580' id="toolbarId" application="music" initialScrollCellIndex=0 itemWidth="50" itemStyle="font-family:Segoe TV; font:18px bold; color:#14224B; padding-left:0px; padding-right:18px;" gutterPX="0" />
+				<script>
+					document.all.toolbarId.addTool( "MSN Radio", "home::radioplus", "" );
+					document.all.toolbarId.addTool( "Song List", "Music::SongList", "" );
+					document.all.toolbarId.addTool( "My Stations", "home::radioplus", "page=myStations" );
+					if (GetWanConnectionType() == CONN_BB) {
+						document.all.toolbarId.addTool( "Music Video", "home::videoplus", "m=Movies%20-%20Music&mi=Music:%20Rock" );
+					}
+					document.all.toolbarId.addTool( "Music News", "msn::musicnews", "" );
+				</script>
+			</td>
+		</tr>
+	</table>
+
+	<div style="position:absolute; top:0px; left:0px; visibility:hidden;">
+		<object id="wmp" classid="CLSID:6BF52A52-394A-11d3-B153-00C04F79FAA6" viewastext></object>
+	</div>
+	<script language=javascript event="NewStream()" for=wmp>
+		OnNewStream(true);
+	</script>
+	<script language=javascript event="PlayStateChange(newState)" for=wmp>
+		OnNewStream(false);
+	</script>
+</body>
+</html>

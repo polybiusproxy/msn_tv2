@@ -1,0 +1,68 @@
+<HTML xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+	<TITLE>Reconnect</TITLE>
+	<LINK rel="StyleSheet" type="text/css" href="../CSS/Panel.css">
+	<LINK rel="StyleSheet" type="text/css" href="Progress.css">
+	<STYLE>
+	#buttonBar
+	{
+		text-align: right;
+		position:absolute;
+		left: 50%;
+		width:50%;
+		bottom:8px;
+	}
+
+	#buttonBar msntv\:CustomButton
+	{
+		margin-left:4px;
+		margin-right:4px;
+	}
+	</STYLE>
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+	<SCRIPT language=Javascript src="../Javascript/ConnectionManager.js"></SCRIPT>
+	<SCRIPT>
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		function Reconnect()
+		{
+			LoginToService("connection::reconnect");
+		}
+		function Signout()
+		{
+			TVShell.ConnectionManager.ServiceState = Service_ReSignIn;
+		}
+	</SCRIPT>
+</HEAD>
+<BODY>
+	<table style="width:100%; height:100%;" cellpadding="0" cellspacing="0">
+		<tr>
+			<SCRIPT>
+				if (TVShell.ServiceList("connection::login") && TVShell.UserManager.Count > 1)
+				{
+					document.write('<td style="width:100%;" id=message>\
+										Choose <EM>Reconnect</EM> to sign in again, or to sign in as a different user, choose <EM>Sign Out</EM>.\
+										<div id="buttonBar" valign="bottom">\
+											<msntv:CustomButton onclick="Reconnect();" id="Reconnect" label="Reconnect" />\
+											<msntv:CustomButton onclick="Signout();" id="Signout" label="Sign Out" />\
+										</div>\
+									</td>');
+					document.all("Reconnect").focus();
+				}
+				else
+				{
+					document.write('<td style="width:100%;" id=message>\
+										Choose <EM>Reconnect</EM> to sign in again, or if you\'re done using the ' +
+										ServiceFullName + ' choose <EM>Sign Out</EM>.\
+										<div id="buttonBar" valign="bottom">\
+										<msntv:CustomButton onclick="Reconnect();" id="Reconnect" label="Reconnect" />\
+										<msntv:CustomButton onclick="Signout();" id="Signout" label="Sign Out" />\
+										</div>\
+									</td>');
+					document.all("Reconnect").focus();
+				} 
+			</SCRIPT>
+		</tr>
+	</table>
+</BODY>
+</HTML>

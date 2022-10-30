@@ -1,0 +1,70 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="../../HTC/CustomButton.htc"> <TITLE>Center the screen</TITLE> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> </HEAD> <SCRIPT>
+var SettingsChanged = false;
+var stepX = 3;		// pixel jump per step horizontal
+var stepY = 2;		// pixel jump per step vertical
+var xMaxAdjust = screen.availWidth / 16;
+var yMaxAdjust = screen.availHeight / 16;
+
+// retain initial values
+var xOffset = TVShell.PanelManager.ScreenXOffset;
+var yOffset = TVShell.PanelManager.ScreenYOffset;
+
+
+function onLoadPage()
+{
+	TVShell.Message("Width="+screen.availWidth+"  Height="+screen.availHeight);
+	TVShell.Message("MaxAdjust X="+xMaxAdjust+"  Y="+yMaxAdjust);
+	TVShell.Message("Offset X="+xOffset + "   Y=" + yOffset );
+}
+
+function restoreOriginalValues()
+{
+  TVShell.PanelManager.ScreenXOffset = xOffset;
+  TVShell.PanelManager.ScreenYOffset = yOffset;
+  history.go(-1);
+}
+
+function submitChanges() 
+{
+	if ( SettingsChanged )
+	{
+		TVShell.PanelManager.Save();
+	}
+
+	history.go(-1);
+}
+
+function Increment( incX , incY )
+{
+	SettingsChanged = true;
+	
+	if ( incX == 0  && incY == 0 )
+	{	// reset values to no offset
+		TVShell.Message("Center!");
+		TVShell.PanelManager.ScreenXOffset = 0;
+		TVShell.PanelManager.ScreenYOffset = 0;
+	}
+	else
+	{
+		TVShell.Message("Inc X = " + incX + "   Y = " + incY );
+		if ( incX != 0 )
+		{
+			var tmpX = TVShell.PanelManager.ScreenXOffset;
+			tmpX += ( ( incX > 0 ) ? stepX : -stepX );
+			if ( tmpX > xMaxAdjust ) tmpX = xMaxAdjust;
+			if ( tmpX < -xMaxAdjust ) tmpX = -xMaxAdjust;
+			TVShell.PanelManager.ScreenXOffset = tmpX;
+		}
+		if ( incY != 0 )
+		{
+			var tmpY = TVShell.PanelManager.ScreenYOffset;
+			tmpY += ( ( incY > 0 ) ? stepY : -stepY );
+			if ( tmpY > yMaxAdjust ) tmpY = yMaxAdjust;
+			if ( tmpY < -yMaxAdjust ) tmpY = -yMaxAdjust;
+			TVShell.PanelManager.ScreenYOffset = tmpY;
+		}
+		
+	}
+}
+
+</SCRIPT><body onLoad="onLoadPage();"> <SCRIPT>OpenSettingsTable( "Settings" , "Center your TV display" , "" , true );</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:submitChanges()" class=buttonBarButton id=Continue label="Save Changes" /> <msntv:CustomButton href="javascript:restoreOriginalValues()" class=buttonBarButton id=Cancel label="Cancel" /> <script>document.all("Cancel").focus();</script> </DIV><DIV id=nonScrollArea><table cellspacing=0 cellpadding=0 height=100% width=100%> <tr><td valign=top><div class=description> <P>Center the display of MSN TV content by using the arrows to the right. For example, if there is black space on the screen above this page, you may want to choose the up arrow to move the whole display up. You may choose the up arrow as many times as is necessary.</P> </div> </td> <td width=20px></td> <td><TABLE> <TR> <TD> <TD align=center><A HREF="javascript:Increment( 0 , -1 );"><IMG src="../Images/MoveUp.gif" BORDER="none"></A> <TD> <TR> <TD align=right><A HREF="javascript:Increment( -1 , 0 );"><IMG src="../Images/MoveLeft.gif" BORDER="none"></A> <TD align=center><A HREF="javascript:Increment( 0 , 0 );" SELECTED><IMG src="../Images/MoveReset.gif" BORDER="none"></A> <TD align=left><A HREF="javascript:Increment( 1 , 0 );"><IMG src="../Images/MoveRight.gif" BORDER="none"></A> <TR> <TD> <TD align=center><A HREF="javascript:Increment( 0 , 1 )"><IMG src="../Images/MoveDown.gif" BORDER="none"></A> <TD> </TABLE> </td></tr> <tr><td colspan=3> <P>Use these controls if your TV image looks off-center. When you are done, choose <em>Save Changes</em>.</P> <P>You can always choose <em>Reset</em> to return the display to where it was before adjustment.</P> </td></tr> </table> </div> <SCRIPT>CloseSettingsTable();</SCRIPT> </body> </html>

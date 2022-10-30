@@ -1,0 +1,146 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/PhotoHeading.htc">
+<head>
+	<title>Photo Save Photos</title>	
+	<link rel=StyleSheet type="text/css" href="../css/Photo.css">
+	<link rel=StyleSheet type="text/css" href="../css/Base.css">
+<style>	
+
+		#overview
+		{
+			padding-top: 10px;
+			padding-bottom: 5px;
+		}
+
+		.item
+		{
+			font-family: Segoe TV;
+			font: 18px bold; 
+			color: #1D1D1D;
+		}	
+		.itemDescription
+		{
+			font-family: Segoe TV;
+			font: 18px bold; 
+			color:#444444;
+		}	
+		
+</style>
+
+	<script LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></script>
+	<script src="msntv:/Javascript/ProgressPanel.js"></script>
+	<script src="msntv:/Javascript/ServiceList.js"></script>
+	<script src="msntv:/Javascript/Parameters.js"></script>
+	<script src="msntv:/Javascript/ContentPaneHelp.js"></script>
+	<script src="msntv:/Javascript/HomeNetworking.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/DMRCommon.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/DMREnumerate.js"></script>
+	<script src="Photos.js"></script>
+	<script src="PhotosNavigate.js"></script>
+	<script src="msntv:/Javascript/DMRHome.js"></script>
+
+<script language="Javascript">
+
+function GetOnlineStorageDevice()
+{
+   var sm=TVShell.StorageManager;
+   var count= sm.Count;
+   
+   for(i=0;i<count;i++)
+   {
+	  var sd=sm.Item(i);
+	  if(sd.Provider.toLowerCase()=="onlinestorage")
+	    return sd;
+   }
+   
+   return null;
+}
+
+var requestParameters = document.location.search;
+
+var destination = null;		
+
+function OnClicked( dest )
+{
+	destination = dest;
+}
+
+function OnContinue()
+{
+	if (destination != null )
+	{   
+        PanelManager.Item("main").NoBackToMe=true;
+		var destURL = "msntv:/Photo/PhotoOrganizer.html?"+requestParameters + "&state=save&storage=" + destination;
+		mainPanel.GotoURL(destURL);
+	}
+}
+
+if ( GetOnlineStorageDevice() == null )
+{
+	PanelManager.Item("main").NoBackToMe=true;
+	var destURL = "msntv:/Photo/PhotoOrganizer.html?"+requestParameters + "&state=save&storage=local";
+	mainPanel.GotoURL(destURL);
+}
+
+function OnCancel()
+{
+	history.go(-1);
+}
+
+function OnLoad()
+{
+
+	var numPhotos = parseInt(parameters.numPhotos);
+	document.all.photoCount.innerHTML = numPhotos != 1 ? "" + numPhotos + " photos " : "1 photo";
+	var loc = parseInt(parameters.location);
+	var where = ( loc == 0 ? "a memory card" : loc == 1 ? "an album" : loc==2? "a network share" : "UNKNOWN ORIGIN" );
+	document.all.where.innerHTML = where;
+	document.all.playerSpan.innerHTML = "Store on your " + ProductShortName;
+}
+
+</script>
+</head>
+<body topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 onload="OnLoad();">
+
+		<msntv:PhotoHeading id=Heading label="Save Photos: Choose Location"/>
+	
+		<DIV id=sideBar>
+			<table cellpadding=0 cellspacing=0 width=100% align=center ID="Table1">
+				<tr id="ContinueRow" style='display:block;'>
+					<td height=30 ><msntv:CustomButton onclick="OnContinue();" class=sideBarButton id="ContinueButton" label="Continue" /></td>
+				</tr>
+				<tr>
+					<td height=30 ><msntv:CustomButton onclick="OnCancel();" class=sideBarButton id="CancelButton" label="Cancel" /></td>
+				</tr>
+			</table>			
+		</DIV>
+		
+		<DIV id=scrollArea>		
+			<DIV class=description id=overview>
+			You have selected <span id='photoCount'></span> from <span id='where'></span>.
+			To save photos, Select a location ...
+			</DIV>
+			<div id="overviewSep" style="display:none; height:2px; line-height:2px; width:100%; margin:0px 6px; background-color:#888888;">&nbsp;</div>
+			<div class=description id=descDiv>		
+				<table cellpadding=0 cellspacing=0>
+				<tr><td>
+				<input type=radio name=radio ID=radioLocal device=Box onclick='OnClicked("local");'/>
+				<span class='item' id='playerSpan'>Store on </span>
+				<p><span class='itemDescription'>
+				Photos saved to your player are saved at a lower quality
+				than your originals for TV display.</p>
+				</span>
+				</td><td width=5px></td></tr>
+
+				<tr><td>
+				<input type=radio name=radio ID=radioLocal device=Box onclick='OnClicked("online");'/>
+				<span class='item'>Save to your online space</span>
+				</td><td width=5px></td></tr>
+
+				</table>
+			</div>
+		</div>
+
+</body>
+</html>

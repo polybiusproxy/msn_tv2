@@ -1,0 +1,213 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<head>
+	<title>Photo Media Help</title>	
+	<link rel=StyleSheet type="text/css" href="../css/Settings.css">
+	
+	<script LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></script>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+	
+	
+	<script>
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		Sink.AttachEvent(TVShell.StorageManager,"OnDeviceAdd" , OnDeviceAdd);
+		
+		var step = 1;
+		var isMediaDetected = false;
+		var yesSelected = false;
+		var mediaDetectionTimeoutID;		
+		
+		function OnDeviceAdd(StorageDevice)
+		{
+			if (StorageDevice && StorageDevice.Removable && StorageDevice.Mounted) {
+				TVShell.Message("Detected Media");
+				isMediaDetected = true;
+				step = 4;
+				Continue(step);
+			}
+		}
+		
+		function CheckForMedia()
+		{
+			TVShell.Message("Checking for media.");
+
+			for (i = 0; i < TVShell.StorageManager.Count; i++) {
+				var StorageDevice = TVShell.StorageManager.Item(i);
+				if (StorageDevice && StorageDevice.Removable && StorageDevice.Mounted) {
+					isMediaDetected = true;
+					step = 4;
+					Continue(step);
+					return;
+				}
+			}
+
+			isMediaDetected = false;
+			step = 4;
+			Continue(step);
+		}
+		
+		function Yes()
+		{
+			yesSelected = true;
+			step = 6;
+			Continue(step);
+		}
+		
+		function No()
+		{
+			yesSelected = false;
+			step = 6;
+			Continue(step);
+		}
+		
+		function Continue(stepInput)
+		{
+			
+			var insertText; 
+			if(document.all.stepInstructionID.innerText)
+				insertText = document.all.stepInstructionID.innerText ;
+				
+			switch (stepInput)
+			{
+				case 0:
+						insertText = "Remove the memory card from the reader.";
+						
+						step = 1;
+						break;
+				case 1:
+						insertText = "Check connection of memory card reader to USB connector in the back of the MSNTV device. (If your reader has a little light, it should now be on.)";												
+						
+						step = 2;
+						break;
+				case 2:
+						insertText = "Insert your memory card into the memory card reader.";
+						
+						step = 3;						
+						break;
+				case 3:
+						document.all.ContinueButton.style.display = "none";
+						document.all.YesButton.style.display = "none";
+						document.all.NoButton.style.display = "none";
+						document.all.CancelButton.style.display = "block";	
+						document.all.CancelButton.focus();
+						
+						insertText = "Looking for pictures on your memory card, please wait.";	
+						clearTimeout(mediaDetectionTimeoutID);
+						mediaDetectionTimeoutID = setTimeout(CheckForMedia, 10000);	
+						
+						step = 4;				
+						break;
+				case 4:
+						document.all.ContinueButton.style.display = "block";
+						document.all.YesButton.style.display = "none";
+						document.all.NoButton.style.display = "none";
+						document.all.CancelButton.style.display = "block";	
+						document.all.ContinueButton.focus();
+						
+						if(isMediaDetected)
+							insertText = "Congratulations! Your memory card is now ready.";	
+						else
+							insertText = "This memory card may not be formatted correctly. Please try using this memory card in your camera."					
+						
+						step = 5;
+						break;
+				case 5:
+						if(isMediaDetected)
+						{
+							history.go(-1);
+							return;
+						}
+						else
+						{
+							document.all.ContinueButton.style.display = "none";
+							document.all.YesButton.style.display = "block";
+							document.all.NoButton.style.display = "block";
+							document.all.CancelButton.style.display = "none";
+							document.all.YesButton.focus();
+							
+							insertText = "Did it work in your camera?"
+						}
+						
+						step = 6;
+						break;
+				case 6:
+						document.all.ContinueButton.style.display = "block";
+						document.all.YesButton.style.display = "none";
+						document.all.NoButton.style.display = "none";
+						document.all.CancelButton.style.display = "block";
+						document.all.ContinueButton.focus();
+							
+						if(yesSelected)
+							insertText = "Contact the manufacturer of the memory card reader for technical support."
+						else
+							insertText = "Consult your camera manual for assistance. You may need to reformat your memory card."
+						
+						step = 7;
+						break;
+				case 7:
+						history.go(-1);
+						return;		
+			}
+			
+			document.all.stepInstructionID.innerText = insertText;
+		}
+		
+		function OnLoad()
+		{
+			clearTimeout(mediaDetectionTimeoutID);
+			document.all.ContinueButton.focus();
+			document.all.ContinueButton.style.display = "block";
+		}
+		
+		function OnUnload()
+		{
+			clearTimeout(mediaDetectionTimeoutID);
+		}
+		
+		function HandleKey()
+		{
+			var key = window.event.keyCode;
+			if(key == 8)
+			{
+				step-=2;
+				if(step>=0)
+				{
+					clearTimeout(mediaDetectionTimeoutID);
+					Continue(step);
+					event.returnValue = false;
+				}
+			}
+		}
+		
+	</script>
+</head>
+<body topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 onload="OnLoad();" onunload="OnUnload();" onKeydown="HandleKey();">
+<SCRIPT>OpenSettingsTable( "Memory card troubleshooting guide" , "" , "" );</SCRIPT>
+	
+		<DIV id=sideBar>
+			<table cellpadding=0 cellspacing=0 width=93% align=center >
+				<tr>
+					<td xheight=30 ><msntv:CustomButton onclick="Continue(step);" class=sideBarButton id="ContinueButton" label="Continue" /></td>
+				</tr>
+				<tr>
+					<td xheight=30 ><msntv:CustomButton style="display:none;" onclick="Yes();" class=sideBarButton id="YesButton" label="Yes" /></td>
+				</tr>
+				<tr>
+					<td xheight=30 ><msntv:CustomButton style="display:none;" onclick="No();" class=sideBarButton id="NoButton" label="No" /></td>
+				</tr>
+				<tr>
+					<td xheight=30 ><msntv:CustomButton onclick="history.go(-1)" class=sideBarButton id="CancelButton" label="Cancel" /></td>
+				</tr>
+			</table>			
+		</DIV>
+
+		<DIV id=scrollArea>		
+			<DIV class=description id=stepInstructionID>
+				Remove the memory card from the reader
+			</DIV>
+		</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+		
+</body>
+</html>

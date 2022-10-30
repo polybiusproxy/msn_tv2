@@ -1,0 +1,59 @@
+<html xmlns:msntv>
+<head>
+	<title>Photos MemCard</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Viewing photos from a memory card" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+With MSN TV Photos, you can view photos you take with your digital camera. To view your photos, you must first attach a compatible USB memory card reader (sold separately) to your <script>document.write( ProductShortName );</script>, and then insert the card that contains the photos.
+<p>
+<p>
+To learn more about attaching a memory card reader, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Photos</b>.
+</p>
+</p>
+You don't have to sign in to the <script>document.write( ServiceFullName )</script> to view the photos that are stored on a memory card. Just turn on your <script>document.write( ProductShortName );</script> and follow these steps:
+<ol>
+<li>Attach a compatible memory card reader to one of the USB ports on the back of your <script>document.write( ProductShortName );</script>.</li>
+<li>Insert a card that contains photos into the card reader.</li>
+<p>
+<p>
+A message tells you that you've inserted a USB storage device.
+</p>
+</p>
+<li>Choose <b>Photos</b>.</li>
+<p>
+<p>
+Small images representing the photos on the card appear on screen.
+</p>
+</p>
+<li>Check the boxes next to the photos you want to work with. Then you can do the following:</li>
+</ol>
+<ul>
+<li>Choose <b>View Slideshow</b> to display each selected photo for a few seconds.</li>
+<li>Choose <b>Send Photos</b> to include the selected photos in an e-mail message. (You must sign in to the <script>document.write( ServiceFullName )</script> to send the e-mail.</li>
+<li>Choose <b>Print Photos</b> to print copies of the selected photos. (You must have a compatible USB printer attached to your <script>document.write( ProductShortName );</script>. (For information about printing, sign in and choose <b>Help</b> and then <b>Printing</b>.)</li>
+<li>Choose <b>Save Photos</b> to save copies of the selected photos in albums on your <script>document.write( ProductShortName );</script>.  (For more information on creating photo albums, choose <b>Photos</b> from the bottom of the Sign-in page, and then choose <b>Help</b> from the Photos Home page.)
+<li>Choose <b>Delete Photos</b> to remove the selected photos from the memory card. (<b>WARNING:</b> Choosing <b>Delete Photos</b> permanently removes the selected photos from the memory card and from your <script>document.write( ProductShortName );</script>.)</li>
+</ul>
+For more information about using Photos, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Photos</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+<HTML xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/Progress.htc">
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+	<TITLE>Progress Bar</TITLE>
+	<LINK rel="StyleSheet" type="text/css" href="../CSS/Panel.css">
+	<LINK rel="StyleSheet" type="text/css" href="Progress.css">
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+	<SCRIPT>
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		var PanelManager = TVShell.PanelManager;
+
+		function OnBeforeShow(name)
+		{
+			if (name == "progress") {
+				document.SetProgressPercent(0);
+			}
+		}
+
+		function OnAfterHide(name)
+		{
+			if (name == "progress") {
+				document.SetStopFunction(null);
+			}
+		}
+
+		function OnKeyDown()
+		{
+			if (TVShell.SystemInfo.Flavor != "release" && TVShell.SystemInfo.Flavor != "ppe" &&
+															event.altKey && event.keyCode == 13) {
+				event.returnValue = false;
+				PanelManager.ShowWithMessage('source', 'service');
+			}
+		}
+
+		function SetStopFunction(newStopFunc)
+		{
+			stop.onclick = newStopFunc;
+			if (newStopFunc == null)
+				stop.style.display = "none";
+			else
+			{
+				stop.style.display = "inline-block";
+				stop.focus();
+			}
+		}
+
+		function OnLoad()
+		{
+			Sink.AttachEvent(PanelManager, "OnBeforeShow", OnBeforeShow);
+			Sink.AttachEvent(PanelManager, "OnAfterHide", OnAfterHide);
+			//Sink.AttachEvent(PanelManager, "OnProgressChange", OnProgressChange);
+
+			// It's necessary to attach the following scripts to the document (rather than the window,
+			// which is the default) because of the "msntv:" scheme, which causes an access
+			// violation when trying to access the window.
+			document.SetProgressText = function (newText) {document.all.message.innerText = newText;};
+			document.SetProgressPercent = function (newPercent) {document.all.progress.percentComplete = newPercent;};
+			document.SetStopFunction = SetStopFunction;
+		}
+
+		function Cancel()
+		{	// Cancel() is called when the user hits Escape or Back.  In this case, we don't want to close; so do nothing.
+		}
+	</SCRIPT>
+</HEAD>
+
+<BODY onload="OnLoad();">
+	<span id="message" class="ellipsis">Connecting...</span>
+
+	<table style="width:100%; height:32px;" cellpadding="0" cellspacing="0">
+		<tr>
+			<td style="width:100%;">
+				<msntv:progressbar id="progress" />
+			</td>
+			<td>
+				<msntv:CustomButton id="stop" class="bottombarButton" label="Cancel" onkeydown="OnKeyDown();" />
+			</td>
+		</tr>
+	</table>
+
+	<script language="javascript">
+		var	bodyStyle = document.body.currentStyle;
+		document.all.message.runtimeStyle.pixelWidth = document.body.clientWidth -parseInt(bodyStyle.marginLeft) - parseInt(bodyStyle.marginRight);document.body.clientWidth - document;
+	</script>
+</BODY>
+</HTML>
+

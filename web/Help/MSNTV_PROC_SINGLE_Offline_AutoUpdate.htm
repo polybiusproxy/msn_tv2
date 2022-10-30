@@ -1,0 +1,36 @@
+<html xmlns:msntv>
+<head>
+	<title>AutoUpdate</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+	
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Automatic updates" showScrollTop="false" />
+
+<div id="nonScrollArea">
+        <span class="description">
+        <script>document.write( ServiceShortName );</script> periodically offers updates. You can set your <script>document.write( ProductShortName );</script> to automatically connect to the <SCRIPT>document.write( ServiceFullName );</SCRIPT> and install updates when you're not likely to be connected to <script>document.write( ServiceShortName );</script> (late at night, for example).
+        <p>
+        <p>
+        To have your <script>document.write( ProductShortName );</script> automatically check for and install updates:
+        </p>
+        </p>
+        <ol>
+                <li>Choose <b>Settings</b> from the top of the Sign-in page or the home page.</li>
+		<li>Choose <b>Set up automatic updates</b> and follow the instructions there.</li>
+        </ol>
+        </span>
+</div>
+
+<div id="buttonBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

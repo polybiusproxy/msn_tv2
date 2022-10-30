@@ -1,0 +1,88 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc">
+<TITLE>Media Player Visualization</TITLE>
+</HEAD>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css">
+<SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../../Javascript/DMRCommon.js"></SCRIPT>
+<SCRIPT>
+	
+	var settingFileFullPath=userDataPath+"\\"+WMPSettingsPath+"\\"+vsFileName
+	var visualization=Utilities.ReadTextFile(settingFileFullPath);
+    var selectedIndex = WMPVisualizationFireworks;
+
+	function onLoadPage()
+	{
+		if (!visualization) {
+			document.all.Fireworks.checked = true;
+			return;
+		}
+		else {
+			if (visualization == WMPVisualizationPhotoScreenSaver)
+				document.all.PhotoSlideShow.checked = true;
+			else if (visualization == WMPVisualizationAlbumArt)
+				document.all.AlbumArt.checked = true;
+			else if (visualization == WMPVisualizationFireworks)
+				document.all.Fireworks.checked = true;
+		}
+	}
+
+	function SetSettings()
+	{
+		if (document.all.PhotoSlideShow.checked)
+			selectedIndex = WMPVisualizationPhotoScreenSaver;
+		else if (document.all.AlbumArt.checked)
+			selectedIndex = WMPVisualizationAlbumArt;
+		else if (document.all.Fireworks.checked)
+			selectedIndex = WMPVisualizationFireworks;
+
+		 Utilities.RemoveFile(settingFileFullPath);
+		 Utilities.EnsureFolderExist(userDataPath+"\\"+WMPSettingsPath);
+		 Utilities.CreateTextFile(settingFileFullPath,selectedIndex+"");
+		 history.go(-1);
+	}
+
+</SCRIPT>
+<BODY onLoad="onLoadPage();">
+<SCRIPT>OpenSettingsTable( "Music" , "Settings" , "" , true );</SCRIPT>
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:SetSettings()" class=buttonBarButton id=Done label="Save Changes" />
+		<msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" />
+		<script>document.all("Done").focus();</script>
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description>
+		<P>
+        The Windows Media Player lets you play and control videos and music on MSN TV.
+		</P>
+		<P>
+		When music is playing, you can show a number of different images alongside the Player control bar. Select what you would like to display from the list below, and then choose <B>Save Changes</B>. (Please note that some radio stations always show album art.)
+		</P>
+		<P>
+		What would you like to see when music plays?
+		</P>
+		<FORM NAME=Settings>
+			<TABLE class=controlTable>
+			<TR>
+				<TD><INPUT TYPE=RADIO ID=AlbumArt VALUE=WMPVisualizationAlbumArt NAME=VisualizationSetting>
+				<TD>Cover art from albums
+			<TR>
+				<TD><INPUT TYPE=RADIO ID=PhotoSlideShow VALUE=WMPVisualizationPhotoScreenSaver NAME=VisualizationSetting>
+				<TD>Photos in your screensaver
+			<TR>
+				<TD><INPUT TYPE=RADIO ID=Fireworks VALUE=WMPVisualizationFireworks NAME=VisualizationSetting>
+				<TD>Virtual fireworks
+			</TABLE>
+		</FORM>
+		</DIV>
+	</DIV>
+
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>

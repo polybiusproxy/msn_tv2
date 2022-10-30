@@ -1,0 +1,29 @@
+<html xmlns:msntv>
+<head>
+	<title>Photos help table of contents</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Videos" showScrollTop />
+
+<div id="scrollArea">
+
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Videos_Intro_Offline_v11.htm');">Videos basics</a><br>
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Videos_MemoryCard_Offline_v11.htm');">Watching videos that are on a memory card</a><br>
+        <a id="viewPhotoID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Videos_HomeNet_Offline_v11.htm');">Watching videos that are on your computer</a><br>
+
+</div>
+
+<div id="sideBar">
+	<!-- Feature menu always returns to the page that called this one: the main table of contents or a feature page -->
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer();" class=sideBarButton id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

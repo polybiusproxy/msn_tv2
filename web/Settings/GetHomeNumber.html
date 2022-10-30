@@ -1,0 +1,174 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Calling Number</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/MSNTVService.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Registration/Pages/MSNTVUIValidation.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY onload="onLoadPage();">
+<FORM name="HomePhoneForm" onsubmit="return false;">
+<SCRIPT>OpenSettingsTable( "Please enter your home phone number" , "" , "" , true );</SCRIPT>
+
+<DIV id=buttonBar>
+	<msntv:CustomButton href="javascript:submitChanges()" class=buttonBarButton id=Done label="Save Changes" />
+	<script>document.all("Done").focus();</script>
+</DIV>
+
+<DIV id=nonScrollArea>
+	<DIV class=description>
+		<P>	Your home phone number is used to determine your <SCRIPT>document.write(ServiceShortName);</SCRIPT>
+		access numbers.  Access numbers are the phone numbers your
+		<SCRIPT>document.write(ProductShortName);</SCRIPT> dials to connect to
+		<SCRIPT>document.write(ServiceShortName);</SCRIPT>.</P>
+
+		<P>Type your area code and the first three digits of your home phone number in the boxes below, then choose <EM>Save Changes</EM>.</P>
+
+		<TABLE cellspacing=0 cellpadding=0 >
+			<TR>
+				<TD>Area Code:</TD>
+				<TD width=5></TD>
+				<TD><INPUT TYPE=TEXT NAME=AreaCd CLASS=inputText SIZE=3 MAXLENGTH=3 ></TD>
+				<TD width=10></TD>
+				<TD>Number:</TD>
+				<TD width=5></TD>
+				<TD><INPUT TYPE=TEXT NAME=Number CLASS=inputText SIZE=3 MAXLENGTH=3></TD>
+				<TD>-XXXX</TD>
+				<TD></TD>
+			</TR>
+		</TABLE>
+	</DIV>
+</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</FORM>
+
+<SCRIPT>
+
+	function InitFocus()
+	{
+		document.forms.HomePhoneForm.AreaCd.focus();
+		document.forms.HomePhoneForm.AreaCd.select();
+	}
+
+	
+	function validateNumber(ac,ex)
+	{
+		if ( ac == null || ac == "" || ex == null || ex == "" )
+		{
+			alert('Please type your area code and the first 3 digits of the phone line connected to your ' + ProductShortName + ' (for example: 212 555-XXXX).');
+			return false;
+		}
+
+		if ( ac.length != 3 || ex.length != 3 )
+		{
+			alert('Please type your area code and the first 3 digits of your phone number like this: 212 555-XXXX. We will use this number to determine the closest MSN Dial-up Internet Access number.');
+			return false;
+		}
+
+		ac = '(' + ac + ') ' + ex + '-1234';
+
+		TVShell.Message("Testing: " + ac );
+		if ( IsTollFree( ac ) )
+		{
+			alert('Type your area code and first 3 digits of the phone line connected to your ' + ProductShortName + '. Do not type a toll-free number.');
+			return false;
+		}
+
+		if ( Is911( ac ) )
+		{
+			alert('Type your area code and first 3 digits of the phone line connected to your ' + ProductShortName + '. Do not type an emergency services number.');
+			return false;
+		}
+
+		if ( IsDirectoryAssistance( ac ) )
+		{
+			alert('Type your area code and the first 3 digits of the phone line connected to your ' + ProductShortName + '. Do not type a directory assistance number.');
+			return false;
+		}
+
+		return true;
+	}
+
+	// remove all characters except digits
+	function justDigits( num )
+	{
+		var digits = "0123456789";
+		var number = "";
+		var digit;
+
+		// remove all characters except digits
+		for ( var i = 0 ; i < num.length ; i++ )
+		{
+			digit = num.charAt( i );
+			if ( digits.indexOf( digit ) != -1 ) number += digit;
+		}
+		return number;
+	}
+	
+	function submitChanges()
+	{
+
+		var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+		var AreaCode = justDigits( document.HomePhoneForm.AreaCd.value );
+		var Exchange = justDigits( document.HomePhoneForm.Number.value );
+
+		TVShell.Message( "AC=" + AreaCode + "   EX=" + Exchange );
+
+		if (!validateNumber(AreaCode , Exchange))
+		{
+			InitFocus();
+			return;
+		}
+
+		var NeedSave = false;
+
+		if (ModemSettings.DialingAreaCode != AreaCode ||
+			ModemSettings.DialingExchange != Exchange) {
+			ModemSettings.DialingAreaCode = AreaCode;
+			ModemSettings.DialingExchange = Exchange;
+			DeleteMSNIAConnector(LocalConnectorName);
+			NeedSave = true;
+		}
+
+		if (ModemSettings.PowerCycled) {
+			ModemSettings.PowerCycled = false;
+			NeedSave = true;
+		}
+
+		if (NeedSave)
+			ConnectionManagerSave();
+
+		if (TVShell.ConnectionManager.WANState != ConnectState_Disconnected) {
+			TVShell.ConnectionManager.WANDisconnect();
+			GotoSignOn();
+		} else if (TVShell.ConnectionManager.WANAdapter.ErrorCode == ConnectError_PowerCycled ||
+		    TVShell.ConnectionManager.WANAdapter.ErrorCode == ConnectError_NoHomeNumber ||
+		    TVShell.ConnectionManager.WANAdapter.ErrorCode == ConnectError_BadHomeNumber) {
+			TVShell.PanelManager.Item('main').NoBackToMe = true;
+			LoginToService();
+		} else
+			history.go(-1);
+	}
+
+	function onLoadPage()
+	{
+		var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+
+		var AreaCode = ModemSettings.DialingAreaCode;
+		var Exchange = ModemSettings.DialingExchange;
+
+		document.HomePhoneForm.Number.value = Exchange;
+		document.HomePhoneForm.AreaCd.value = AreaCode;
+
+		InitFocus();
+	}
+
+</SCRIPT>
+</BODY>

@@ -1,0 +1,51 @@
+<html xmlns:msntv>
+<head>
+	<title>Connection Settings</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Changing the way you connect" showScrollTop="true" />
+
+<div id="ScrollArea">
+	<span class="description">
+        When you set up your <script>document.write( ProductShortName );</script>, you chose a connection option: dial-up or broadband.
+        <p>
+        <p>
+        At some point you might decide to change your connection method. For example, if your <script>document.write( ProductShortName );</script> connects to <script>document.write( ServiceShortName );</script> using a phone line, and you later purchase a home network, you can switch your <script>document.write( ProductShortName );</script> to a broadband connection.
+        <p>
+        <p>
+        (For more information on connecting to a home network, see the Setup Guide that came with your <script>document.write( ProductShortName );</script>, or use your computer to go to www.msntv.com.)
+        </p>
+        </p>
+        </p>
+        </p>
+        </ol>
+        To change the way your <script>document.write( ProductShortName );</script> connects to <script>document.write( ServiceShortName );</script>:
+        <ol>
+         	<li>Choose <b>Settings</b> from the top of the Sign-in page.</li>
+		<li>Choose <b>Connection settings</b>.</li>
+                <li>
+					Choose <b>Change how you connect to MSN TV</b>, and then follow the instructions you see there.</li>
+        </ol>
+		<p>
+                <p>
+                Note: If you change the way you connect, you should call <script>document.write( ServiceShortName );</script> Customer Service at <script>document.write(CustomerCareNumber);</script>, as your billing information may change.
+		</p>
+		</p>
+
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

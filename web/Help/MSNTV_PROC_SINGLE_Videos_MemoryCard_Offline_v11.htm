@@ -1,0 +1,52 @@
+<html xmlns:msntv>
+<head>
+	<title>Videos MemCard</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Viewing videos from a memory card" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+With MSN TV Videos, you can use your <script>document.write( ProductShortName );</script> to play videos that are stored on a memory card. To watch the videos, you must first attach a compatible USB memory card reader (sold separately) to your <script>document.write( ProductShortName );</script>, and then insert the card that contains the clips.
+<p>
+<p>
+To learn more about attaching a memory card reader, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Videos</b>.
+</p>
+</p>
+You don't have to sign in to the <script>document.write( ServiceFullName )</script> to watch the videos that are stored on a memory card. Just turn on your <script>document.write( ProductShortName );</script> and follow these steps:
+<ol>
+<li>Attach a compatible memory card reader to one of the USB ports on the back of your <script>document.write( ProductShortName );</script>.</li>
+<li>Insert a card that contains videos into the card reader.</li>
+<p>
+<p>
+A message tells you that you've inserted a USB storage device.
+</p>
+</p>
+<li>Choose <b>Videos</b>.</li>
+<p>
+<p>
+A list of videos appears on screen. (If any of the files on the memory card are in folders, the folder names are listed as well. Choose a folder to open it.)
+</p>
+</p>
+<li>Check the box next to each video you want to work with. Then you can choose <b>Play</b> to play the selected video(s).</li>
+</ul>
+For more information about using Videos, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Videos</b>.
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,313 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+
+<HEAD>
+<TITLE>New Phone Book</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT language="Javascript" src="../Javascript/ServiceList.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY>
+<SCRIPT>OpenSettingsTable( "Your new " + ServiceShortName + " access numbers" , "" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<!--<A href="javascript:history.go(-1)" class=sideBarButton>Save changes</A>-->
+	<msntv:CustomButton onclick="submitChanges();" label="Reconnect" id="Done" />
+	<msntv:CustomButton onclick="GotoAdvanced()" label="Dialing Options" id="Advanced" />
+	<msntv:CustomButton onclick="CancelChanges()" label="Cancel" id="Cancel" />
+	<script>document.all("Cancel").focus();</script>
+</DIV>
+
+<DIV id=scrollArea>
+	<DIV class=description>
+		<SCRIPT LANGUAGE=Javascript>	
+		function getTollWarning( pbook )
+		{
+			var str = "<P>";
+			if ( SomeLongDistance( pbook ) )
+			{
+				if ( AllLongDistance( pbook ) )
+				{
+					
+					str += "Warning: All of the "+ProductShortName+" access numbers we found for your phone number appear to be toll or long-distance numbers.  ";
+				}
+				else
+				{
+					str +="Warning: Some of the "+ProductShortName+" access numbers we found for your phone number appear to be toll or long-distance numbers.  ";
+				}
+				str += "Please check with your local phone company before choosing a number.  ";
+			}
+			str += "You are responsible for determining whether the access numbers you choose are subject to any long-distance, toll, or additional charges " +
+						"from your phone company, and for paying all of these additional charges.</P>";
+			return str;
+		}
+
+		function getHomeNumber()
+		{
+			var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+			var AreaCode = ModemSettings.DialingAreaCode;
+			var Exchange = ModemSettings.DialingExchange;
+			var str = "";
+			if ( AreaCode && ( AreaCode != "" ) && Exchange && ( Exchange != "" ) )
+			{
+				str = "(" + AreaCode + ")-" + Exchange + "-XXXX";
+			}
+			return str;
+		}
+		
+		function displayHomePhoneLink()
+		{
+			var num = getHomeNumber();
+			var homeNumLink = "<UL class=links><LI><a onClick='GotoHomeNumber();'>Change home phone number</A></LI></UL>";
+			var txt;
+			if ( num != "" )
+				txt = "<P>Your " + ProductShortName + " is dialing from the phone number " + num + ".  To change it, choose <EM>Change home phone number</EM>.</P>";
+			else
+				txt = "<P>Your " + ProductShortName + " requires your home phone number.  To enter it, choose <EM>Change home phone number</EM>.</P>";
+			document.write( txt );
+			document.write( homeNumLink );
+		}
+
+		var Connector = TVShell.ConnectionManager.MSNIAManager.CurrentConnector;
+		var strOutOfDate = "<P>Your internet access numbers are out of date.  The next time you connect you will be supplied with new internet access numbers.</P>";
+
+		if (Connector && (Connector.Name != LocalConnectorName)) {
+			var Connector2 = GetConnectorByName(LocalConnectorName);
+
+			if (Connector2) {
+				Connector = Connector2;
+			}
+		}
+
+		if (Connector && Connector.Name == LocalConnectorName) {
+			var Phonebook = Connector.Phonebook;	
+
+			if (Phonebook.Count == 0) {
+				document.all.Done.style.display = "none";
+				document.all.Advanced.style.display = "none";
+				document.write(strOutOfDate);
+			} else {
+				var ErrorCode = TVShell.ConnectionManager.WANAdapter.ErrorCode;
+				if(ConnectError_Reconnect == ErrorCode || ConnectError_NewPhoneBook == ErrorCode) {
+					for (var i=0; i<Phonebook.Count; i++) {
+						Phonebook.Item(i).DontUseNumber = true;
+					}
+				}
+
+				document.write("<P>There are new access numbers available.  These are the phone numbers your "+ProductShortName+
+								" dials to connect to the "+ServiceFullName+".</P>");
+
+				displayHomePhoneLink();
+
+				document.write( getTollWarning( Phonebook ) );
+				
+				document.write("<P>Check the boxes next to the access numbers you want your " + ProductShortName + " to dial.");
+
+				if (NumberOfLocalPhoneBookEntries(Phonebook) > 1) {
+					document.write("  Please choose at least two access numbers.");
+				}
+				
+				document.write("</P>");
+
+				function selectNumber(i)
+				{
+					if (Phonebook.Count > 1)
+						f = document.all.UseNumberCB[i].checked;
+					else
+						f = document.all.UseNumberCB.checked;
+					
+					if (f)
+					{
+						document.all["num"+i].style.backgroundColor = "#b6f2e7";
+					}
+					else
+					{
+						document.all["num"+i].style.backgroundColor = "";
+					}
+				}
+
+				document.write("<TABLE class=controlTable>");
+
+				for (var i=0; i<Phonebook.Count; i++) {
+					var pbEntry = Phonebook.Item(i);
+					
+					document.write(	"<TR name=num" + i + " id=num" + i + ">");
+					document.write( "<TD style=\"BORDER-TOP: #5981b3 2px solid\" align=\"center\">");
+					document.write( "<INPUT TYPE=\"checkbox\" NAME=\"UseNumberCB\" onClick=\"selectNumber("+i+");\"");
+
+					if (!pbEntry.DontUseNumber && !pbEntry.NotUserVerified) {
+						document.write(" CHECKED ");
+					}
+
+					document.write( ">" );
+
+					document.write( "<TD style=\"BORDER-TOP: #5981b3 2px solid\">&nbsp;");
+					document.write( FormatPhoneByVal(pbEntry.Number) );
+					document.write( "&nbsp;&nbsp;("+pbEntry.Location+")" );
+					document.write(	"</TR>");
+				}
+
+				document.write("</TABLE>");
+
+				for (var i=0; i<Phonebook.Count; i++) {
+					selectNumber(i);
+				}
+			}
+		} else {
+			document.all.Done.style.display = "none";
+			document.all.Advanced.style.display = "none";
+			document.write(strOutOfDate);
+		}
+		</SCRIPT>
+	</DIV>
+</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>
+
+<SCRIPT LANGUAGE=Javascript>
+function NeedMorePhoneBookSelections(Phonebook, Selections)
+{
+	// how many numbers have been selected and how many local numbers are unselected
+	var selectedNumbers = 0;
+	var unselectedLocalNumbers = 0;
+	var unselectedTollNumbers = 0;
+	
+	for (var i = 0; i < Phonebook.Count; i++) {
+		if (Selections.UseNumberCB[i].checked) {
+			selectedNumbers++;
+		} else {
+			if (Phonebook.Item(i).IsLocal) {
+				unselectedLocalNumbers++;
+			} else {
+				unselectedTollNumbers++;
+			}
+		}
+	}
+
+	if (selectedNumbers < 2 && unselectedLocalNumbers > 0) {
+		window.alert("You must choose at least two access numbers so that we can connect you to the MSN TV Service.");
+		return true;
+	} else if (!selectedNumbers && unselectedTollNumbers) {
+		window.alert("You must choose at least one access number so that we can connect you to the MSN TV Service.");
+		return true;
+	}
+
+	return false;
+}
+
+function saveSettings()
+{
+	var dirty = false;
+	
+	if (Connector && (Connector.Name == LocalConnectorName)) {
+		var Phonebook = Connector.Phonebook;	
+
+		if (Phonebook.Count == 0) {
+			return true;
+		} else if (Phonebook.Count == 1) {
+			var pbEntry = Phonebook.Item(0);
+
+			if (!document.all.UseNumberCB.checked && pbEntry.IsLocal) {
+				window.alert("You must choose at least one access number so that we can connect you to the MSN TV Service.");
+				return false;
+			}
+			
+			if (pbEntry.DontUseNumber != !document.all.UseNumberCB.checked) {
+				pbEntry.DontUseNumber = !document.all.UseNumberCB.checked;
+				dirty = true;
+			}
+			
+			if (pbEntry.NotUserVerified != false) {
+				pbEntry.NotUserVerified = false;
+				dirty = true;
+			}
+		} else if (Phonebook.Count > 1) {
+			var chosen = false;
+			var i;
+
+			if (NeedMorePhoneBookSelections(Phonebook, document.all.UseNumberCB)) {
+				return false;
+			}
+		
+			for (i=0; i<Phonebook.Count; i++) {
+				var pbEntry = Phonebook.Item(i);
+
+				if (pbEntry.DontUseNumber != !document.all.UseNumberCB[i].checked) {
+					pbEntry.DontUseNumber = !document.all.UseNumberCB[i].checked;
+					dirty = true;
+				}
+				
+				if (pbEntry.NotUserVerified != false) {
+					pbEntry.NotUserVerified = false;
+					dirty = true;
+				}
+			}
+		}
+	}
+
+	if (TVShell.ConnectionManager.MSNIASettings.PhonebookID != Phonebook.LocationID) {
+		dirty = true;
+		TVShell.ConnectionManager.MSNIASettings.PhonebookID = Phonebook.LocationID;
+	}
+
+	if(dirty) {
+		ClearBootromAccessNumber();
+		ConnectionManagerSave();
+	}
+
+	return true;
+}
+
+function NavigateBack()
+{
+	if (TVShell.ConnectionManager.ServiceState == Service_Authorized) {
+		LoginToService("connection::reconnect");
+		setTimeout( 'GoBackOnceConnected();' , 1000);
+	} else {
+		LoginToService("connection::login");
+	}
+}
+
+function submitChanges()
+{
+	if (!saveSettings())
+		return false;
+
+	TVShell.PanelManager.Item('main').NoBackToMe = true;
+
+	TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+	NavigateBack();
+
+	return true;
+}
+
+function CancelChanges()
+{
+	GotoSignOn();
+}
+
+function GotoAdvanced()
+{
+	if (!saveSettings())
+		return false;
+	
+	TVShell.PanelManager.Item('main').NoBackToMe = false;
+	TVShell.ConnectionManager.WANAdapter.ErrorCode = ConnectError_NoError;
+	document.location = "AdvancedNumbers.html";
+
+	return true;
+}
+
+function GotoHomeNumber()
+{
+	document.location = "GetHomeNumber.html";
+
+	return true;
+}
+</SCRIPT>

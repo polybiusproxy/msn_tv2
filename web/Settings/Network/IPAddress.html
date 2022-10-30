@@ -1,0 +1,148 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/IPAddress.htc"> <TITLE>Enter your broadband settings</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT>
+	var parameters	= FindParameters(TVShell.PanelManager);
+	var EthernetSettings = TVShell.ConnectionManager.EthernetAdapter.Settings;
+
+	function onLoadPage()
+	{
+		if (EthernetSettings.IPAddress != "") {
+			document.all.IP_ADDRESS.value = EthernetSettings.IPAddress;
+			document.all.NET_MASK.value = EthernetSettings.NetMask;
+			document.all.GATEWAY.value = EthernetSettings.Gateway;
+			document.all.PRIMARY_DNS.value = EthernetSettings.PrimaryDNS;
+			document.all.SECONDARY_DNS.value = EthernetSettings.SecondaryDNS;
+		}
+	}
+</SCRIPT> <STYLE> table.controlTable td { padding: 5px 5px 0px 0px; } </STYLE><BODY> <SCRIPT>OpenSettingsTable( "Settings" , "Enter your broadband settings" , "" , true );</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:SetSettings()" class=buttonBarButton id=Done label="Save Changes" /> <msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" /> <script>document.all("Done").focus();</script> </DIV><DIV id=nonScrollArea><DIV class=description> In the boxes below, type the settings for your broadband connection, and then choose <EM>Save Changes</EM>. <table height=15px width=100% cellspacing=0 cellpadding=0><tr><td></td></tr></table><TABLE class=controlTable> <TR> <TD>IP address: <TD><msntv:IPAddress ID="IP_ADDRESS" VALUE="192.168.1.100" /> <TR> <TD>Subnet mask: <TD><msntv:IPAddress ID="NET_MASK" VALUE="255.255.255.254" /> <TR> <TD>Default gateway: <TD><msntv:IPAddress ID="GATEWAY" VALUE="192.168.1.1" /> <TR> <TD>Preferred DNS server: <TD><msntv:IPAddress ID="PRIMARY_DNS" VALUE="0.0.0.0" /> <TR> <TD>Alternate DNS server: <TD><msntv:IPAddress ID="SECONDARY_DNS" /> </TABLE> <P> Note: If you have questions about any of these settings, contact your broadband service provider. <SCRIPT>
+			onLoadPage();
+		</SCRIPT> </DIV> </DIV> <SCRIPT>CloseSettingsTable();</SCRIPT> <SCRIPT>
+
+function IsValidIPNumber(ipnum)
+{
+	return true;
+}
+
+function CheckIPFields()
+{
+	var L_EmptyIPAddress_Text = "Please enter an IP address for your box.";
+	var L_EmptyGateAddress_Text = "Please enter the IP address of your gateway or router.";
+	var L_EmptyDNSAddress_Text = "Please enter the IP address of your Internet Service Provider's recommended DNS server.";
+	var L_BadIPAddress_Text = "Each portion of an IP address must be a number between 0 and 255.";
+	if (document.all.IP_ADDRESS.value == '') {
+		window.alert(L_EmptyIPAddress_Text);
+		document.all.IP_ADDRESS.focus();
+		return false;
+	} else if (!IsValidIPNumber(document.all.IP_ADDRESS.value)) {
+		window.alert(L_BadIPAddress_Text);
+		document.all.IP_ADDRESS.focus();
+		return false;
+	}
+
+	if (document.all.GATEWAY.value == '') {
+		window.alert(L_EmptyGateAddress_Text);
+		document.all.GATEWAY.focus();
+		return false;
+	} else if (!IsValidIPNumber(document.all.GATEWAY.value)) {
+		window.alert(L_BadIPAddress_Text);
+		document.all.GATEWAY.focus();
+		return false;
+	}
+
+	if (document.all.PRIMARY_DNS.value == '') {
+		window.alert(L_EmptyDNSAddress_Text);
+		document.all.PRIMARY_DNS.focus();
+		return false;
+	} else if (!IsValidIPNumber(document.all.PRIMARY_DNS.value)) {
+		window.alert(L_BadIPAddress_Text);
+		document.all.PRIMARY_DNS.focus();
+		return false;
+	}
+
+	if (document.all.SECONDARY_DNS.value != '' &&
+		!IsValidIPNumber(document.all.SECONDARY_DNS.value)) {
+		window.alert(L_BadIPAddress_Text);
+		document.all.SECONDARY_DNS.focus();
+		return false;
+	}
+
+	// Netmask should be of the form: 255.255.x.y, or maybe it should default to 255.255.255.254
+	return true;
+}
+
+function NavigateBack()
+{
+	history.go(-1);
+}
+
+function SaveCompleted()
+{
+	TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.",
+											 "msntv:/Panels/Images/TaskCompleted.gif",
+											 "Task_Complete", 2000);
+
+	NavigateBack();
+}
+
+function SetSettings()
+{
+	if (!CheckIPFields())
+		return;
+
+	var DHCPChanged = false;
+	var IPChanged = false;
+
+	if (EthernetSettings.DHCPEnabled) {
+		EthernetSettings.DHCPEnabled = false;
+		DHCPChanged = true;
+	}
+
+	if (EthernetSettings.IPAddress != document.all.IP_ADDRESS.value) {
+		EthernetSettings.IPAddress = document.all.IP_ADDRESS.value;
+		IPChanged = true;
+	}
+
+	if (EthernetSettings.NetMask != document.all.NET_MASK.value) {
+		EthernetSettings.NetMask = document.all.NET_MASK.value;
+		IPChanged = true;
+	}
+
+	if (EthernetSettings.Gateway != document.all.GATEWAY.value) {
+		EthernetSettings.Gateway = document.all.GATEWAY.value;
+		IPChanged = true;
+	}
+
+	if (EthernetSettings.PrimaryDNS != document.all.PRIMARY_DNS.value) {
+		EthernetSettings.PrimaryDNS = document.all.PRIMARY_DNS.value;
+		IPChanged = true;
+	}
+
+	if (EthernetSettings.SecondaryDNS != document.all.SECONDARY_DNS.value) {
+		EthernetSettings.SecondaryDNS = document.all.SECONDARY_DNS.value;
+		IPChanged = true;
+	}
+
+	if (IPChanged || DHCPChanged) {
+
+		// Save new settings
+		ConnectionManagerSave();
+
+		// Apply new settings
+		TVShell.ConnectionManager.EthernetAdapter.ApplySettings();
+
+		var parameters	= FindParameters(TVShell.PanelManager);
+
+		if (parameters["confirm"]) {
+			if (DHCPChanged)
+				location.replace("../ConfirmAndTryAgain.html?DHCP=1")
+			else
+				location.replace("../ConfirmAndTryAgain.html?IPAddress=1")
+		} else {
+			SaveCompleted();
+			return;
+		}
+	}
+
+	history.go(-1);
+
+	return;
+}
+</SCRIPT> </BODY>

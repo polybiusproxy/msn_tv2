@@ -1,0 +1,365 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/DropDownList.htc">
+<HEAD>
+<TITLE>Nightly Update</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TaskScheduler.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript src="../Javascript/parameters.js"></SCRIPT>
+
+<SCRIPT LANGUAGE=Javascript>
+
+    var service = parameters["Service"];
+	var Caller = parameters["From"];
+	var mailchecktimemapping=new Array();
+	var updatechecktimemapping=new Array();
+    
+	mailchecktimemapping[0]=1
+	mailchecktimemapping[1]=2
+	mailchecktimemapping[2]=3
+	mailchecktimemapping[3]=4
+	mailchecktimemapping[4]=6
+	mailchecktimemapping[5]=8
+	mailchecktimemapping[6]=12
+	mailchecktimemapping[7]=24
+	
+	function GetMailCheckIndex(hour)
+	{
+	   for(i=0;i<8;i++)
+		  if(mailchecktimemapping[i]==hour)
+			return i;
+	   return -1;
+	} 
+
+	var	TaskScheduler = TVShell.TaskScheduler;
+	var	UpdateTask = null;
+	var NightlyEmailCheck = null;
+
+	for (var i = 0; i < TaskScheduler.Count && UpdateTask == null; i++)
+		if (TaskScheduler.Item(i).Caller == UPDATE_TASK_CALLER_NAME)
+			UpdateTask = TaskScheduler.Item(i);
+
+
+	for (var i = 0; i < TaskScheduler.Count && NightlyEmailCheck == null; i++)
+		//since mail check is a recurring task, we need to get the first one that is not marked as once
+		if (TaskScheduler.Item(i).Caller == EMAILCHECK_TASK_CALLER_NAME && TaskScheduler.Item(i).Once==0)
+			NightlyEmailCheck = TaskScheduler.Item(i);
+		
+	if(!NightlyEmailCheck)
+	     RemoveAllOccurrence(EMAILCHECK_TASK_CALLER_NAME, TaskScheduler,true);;						
+
+
+
+	function GetTollWarning()
+	{
+		var WANProvider = TVShell.ConnectionManager.WANProvider;
+		var Connector = TVShell.ConnectionManager.MSNIAManager.CurrentConnector;
+		var outText = "";
+		if ( WANProvider != MSNIAModemProviderName ) return outText;
+		
+		if (Connector && (Connector.Name != LocalConnectorName)) {
+			var Connector2 = GetConnectorByName(LocalConnectorName);
+
+			if (Connector2) {
+				Connector = Connector2;
+			}
+		}
+
+		
+		if (Connector && Connector.Name == LocalConnectorName)
+		{
+			var Phonebook = Connector.Phonebook;	
+
+			if (Phonebook.Count == 0)
+			{
+				outText ="<P>Your internet access numbers are out of date.  The next time you connect you will be supplied with new internet access numbers.</P>";
+			}
+			else
+			{
+				var some = SomeLongDistance(Phonebook);
+				var allnum =AllLongDistance(Phonebook);
+				if ( some )
+				{
+					if ( allnum )
+					{
+						outText = "<P>All of the access numbers we found appear to be toll or long-distance numbers.</P>";  
+					}
+					else
+					{
+						outText = "<P>Some of the access numbers we found appear to be toll or long-distance numbers.</P>";
+					}
+					outText += "<P>Remember, you are responsible for determining and paying any toll or long distance charges.</P>";
+				}
+				else
+					outText += "<P>You are responsible for determining whether your access numbers are subject to any long-distance, toll, or additional charges from your phone company, and for paying all of these additional charges.</P>";
+			}
+		}
+		return outText;
+	}
+
+    function Cancel()
+	{
+		  history.back();
+	}
+
+	function SaveChanges()
+	{
+
+		TVShell.PanelManager.CustomMessageBox( "Tip: New mail checks only work for users who save their passwords. <br><br> Each user who wants mail checked automatically must go to the Sign-in page, enter their password, check <b>Save password so I don't need to retype it</b>, and sign in.",
+					"", "OK",
+					0, "", false, 0x40, 0 )
+		
+		if (autoConnectForUpdate.checked || autoConnectForEmail.checked)
+		{
+		    // no nightly connection requested
+			var txt = GetTollWarning();
+			if ( txt != "" )
+			{
+				var tmp = TVShell.PanelManager.CustomMessageBox( txt,
+					"Toll Charge Warning", "Access Numbers;Save;Cancel",
+					2, "", false, 0x30, 0 );
+
+				if ( tmp == 2 ) return;
+				if ( tmp == 0 )
+				{
+					document.location =  "msntv:/Settings/AccessNumbers.html";
+					return;
+				}
+			}
+			if(autoConnectForUpdate.checked)
+			{
+				if (UpdateTask == null)
+				{
+					UpdateTask = TaskScheduler.Add();
+					UpdateTask.Caller = UPDATE_TASK_CALLER_NAME;
+				}
+				if (UpdateTask != null)
+				{
+					UpdateTask.Hour = updateTime.selectedIndex;
+					var manualMinute;
+					if(document.MinuteInput && (manualMinute=parseInt(MinuteInput.value)) && manualMinute>=0 && manualMinute<=55 )
+						UpdateTask.Minute = manualMinute;
+					else if(document.MinuteInput && manualMinute==0)
+						UpdateTask.Minute = 0;
+					else
+					  UpdateTask.Minute = Math.floor(55*Math.random());
+					UpdateTask.Once = 0;
+					UpdateTask.Active = true;
+				}
+			}
+			else if (UpdateTask != null)
+				TaskScheduler.Remove(UpdateTask.ID);
+
+			//we need to remove all occurences since this is a recurring task
+			RemoveAllOccurrence(EMAILCHECK_TASK_CALLER_NAME,TaskScheduler,true);
+
+            if(autoConnectForEmail.checked)
+			{  
+			                    
+				NightlyEmailCheck=TaskScheduler.Add();
+				NightlyEmailCheck.Caller=EMAILCHECK_TASK_CALLER_NAME;
+
+				if (NightlyEmailCheck != null)
+				{
+					NightlyEmailCheck.Hour = updateTime.selectedIndex;
+					
+					//mail check always happens after update check to make sure no email check will happen while doing update
+					if(UpdateTask)
+					    NightlyEmailCheck.Minute = UpdateTask.Minute; 
+					else
+					{
+					    var manualMinute
+						if(document.MinuteInput && (manualMinute=parseInt(MinuteInput.value)) && manualMinute>=0 && manualMinute<=55 )
+							NightlyEmailCheck.Minute = manualMinute;
+						else if(document.MinuteInput && manualMinute==0)
+							NightlyEmailCheck.Minute = 0;
+						else
+						    NightlyEmailCheck.Minute = Math.floor(55*Math.random());
+					}
+					NightlyEmailCheck.Once = 0;
+					NightlyEmailCheck.Next = mailchecktimemapping[NextEmailCheckIn.selectedIndex]*60;
+					NightlyEmailCheck.AsLateAs = 5;
+					NightlyEmailCheck.Active = true;
+
+					ScheduleAllOccurrence(NightlyEmailCheck,TaskScheduler);
+
+				}
+			}
+
+		}
+		else
+		{
+			if (UpdateTask != null)
+				TaskScheduler.Remove(UpdateTask.ID);
+
+			if(	NightlyEmailCheck!=null)
+				RemoveAllOccurrence(EMAILCHECK_TASK_CALLER_NAME, TaskScheduler,true);;						
+
+		}
+
+					
+		TaskScheduler.Save();
+
+        TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000)
+		history.back();
+		  
+	}
+
+
+</SCRIPT>
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+<script>
+if(service=="true")
+   document.write("<LINK REL=StyleSheet TYPE='text/css' HREF='msntv:/Shared/CSS/SynchMan.css'>");
+</script>
+
+</HEAD>
+
+<SCRIPT>
+
+function onLoadPage()
+{
+
+
+	document.all.updateTime.AppendItem("Midnight");
+	document.all.updateTime.AppendItem("1 am");
+	document.all.updateTime.AppendItem("2 am");
+	document.all.updateTime.AppendItem("3 am");
+	document.all.updateTime.AppendItem("4 am");
+	document.all.updateTime.AppendItem("5 am");
+	document.all.updateTime.AppendItem("6 am");
+	document.all.updateTime.AppendItem("7 am");
+	document.all.updateTime.AppendItem("8 am");
+	document.all.updateTime.AppendItem("9 am");
+	document.all.updateTime.AppendItem("10 am");
+	document.all.updateTime.AppendItem("11 am");
+	document.all.updateTime.AppendItem("Noon");
+	document.all.updateTime.AppendItem("1 pm");
+	document.all.updateTime.AppendItem("2 pm");
+	document.all.updateTime.AppendItem("3 pm");
+	document.all.updateTime.AppendItem("4 pm");
+	document.all.updateTime.AppendItem("5 pm");
+	document.all.updateTime.AppendItem("6 pm");
+	document.all.updateTime.AppendItem("7 pm");
+	document.all.updateTime.AppendItem("8 pm");
+	document.all.updateTime.AppendItem("9 pm");
+	document.all.updateTime.AppendItem("10 pm");
+	document.all.updateTime.AppendItem("11 pm");
+
+	document.all.updateTime.selectedIndex = 0;
+
+
+	document.all.NextEmailCheckIn.AppendItem("1 hour");
+	document.all.NextEmailCheckIn.AppendItem("2 hours");
+	document.all.NextEmailCheckIn.AppendItem("3 hours");
+	document.all.NextEmailCheckIn.AppendItem("4 hours");
+	document.all.NextEmailCheckIn.AppendItem("6 hours");
+	document.all.NextEmailCheckIn.AppendItem("8 hours");
+	document.all.NextEmailCheckIn.AppendItem("12 hours");
+	document.all.NextEmailCheckIn.AppendItem("24 hours");
+
+	document.all.NextEmailCheckIn.selectedIndex = 4;
+
+	if (UpdateTask != null)
+	{
+		autoConnectForUpdate.checked = true;
+		updateTime.selectedIndex = UpdateTask.Hour;
+        if(document.MinuteInput)
+				MinuteInput.value=UpdateTask.Minute;
+
+	}
+	else
+	{
+		autoConnectForUpdate.checked = false;
+	}
+    if(NightlyEmailCheck!=null)
+	{
+	    autoConnectForEmail.checked = true;
+		updateTime.selectedIndex = NightlyEmailCheck.Hour;
+		var indx=GetMailCheckIndex(NightlyEmailCheck.Next/60)
+		NextEmailCheckIn.selectedIndex = (indx>=0?indx:4);
+		OldMailCheckStartTimeIndex = updateTime.selectedIndex;
+        if(document.MinuteInput)
+				MinuteInput.value=NightlyEmailCheck.Minute;
+
+	}
+	else
+	{
+		autoConnectForEmail.checked = false;
+		NextEmailCheckIn.disabled = true;
+	}
+
+	if(!autoConnectForUpdate.checked && !autoConnectForEmail.checked)
+	    updateTime.disabled = true;
+
+	   
+//	DumpTask(UPDATE_TASK_CALLER_NAME,TaskScheduler);
+//	DumpTask(EMAILCHECK_TASK_CALLER_NAME,TaskScheduler);
+
+}
+</SCRIPT>
+
+<BODY onLoad="onLoadPage();">
+<SCRIPT>OpenSettingsTable( "Automatically  check for new mail and updates" , "" , "");</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton onclick="SaveChanges()" class=sideBarButton label="Save Changes" id="Done" />
+	<msntv:CustomButton onclick="Cancel()" class=sideBarButton id="default" label="Cancel" />
+	<script>document.all("Done").focus();</script>
+</DIV>
+
+<DIV id=scrollArea>
+		<table cellpadding=0 cellspacing=0 style="font-family:Segoe;font-size:18px">
+		<tr><td>
+			Your Player can check for new mail and updates while you're signed out. 
+		</td></tr>
+		<tr><td height=20>
+		</td></tr>
+		<tr>
+		  <td><INPUT type=checkbox id=autoConnectForEmail onClick="updateTime.disabled=(!this.checked&&!autoConnectForUpdate.checked);NextEmailCheckIn.disabled=!this.checked;">
+		   <span width=6></span>Check for new mail while I'm signed out</td>
+		</tr>
+		<tr>
+		  <td><table cellpadding=0 cellspacing=0><tr><td>Check for new mail every</td>
+		  <td>
+		  	<span width=6>&nbsp</span><msntv:dropDownList id="NextEmailCheckIn" size="4" selectedIndex=4 openDirection="down" style="width:140px;margin-top:5px"/>
+		   </td>
+		</tr>
+		</table>
+		</tr>
+			<tr>
+			  <td height=20></td>
+			</tr>
+			<tr>
+			   <td> <INPUT type=checkbox id=autoConnectForUpdate onClick="updateTime.disabled=(!this.checked&&!autoConnectForEmail.checked);NextEmailCheckIn.disabled=!autoConnectForEmail.checked;">
+			   <span width=6></span>Automatically check for updates</td>
+			</tr>
+			<tr>
+			   <td><table cellpadding=0 cellspacing=0><tr><td>Check for updates around</td>
+			   <td>
+			   <span width=6>&nbsp</span><msntv:dropDownList id="updateTime" size=6 selectedIndex=0 openDirection="up" style="width:140px;margin-top:5px"/>
+			   </td></tr></table>
+		    </tr>
+			<tr>
+			  <td height=10></td>
+			</tr>
+			<tr>
+			  <td >Note: If you are checking for new mail, the new mail checks will start at this time, too. </td>
+			</tr>
+
+		</table>
+		<script>
+		    if(TVShell.SystemInfo.Flavor == "internal" || TVShell.SystemInfo.Flavor=="debug" )
+			{
+                var htmlstr="Minute: <input type=text id=MinuteInput size=2 > (For debug only)  "
+				document.write(htmlstr);
+			}
+		</script>
+
+</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>

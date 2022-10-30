@@ -1,0 +1,91 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Broadband settings</TITLE>
+</HEAD>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/parameters.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<SCRIPT>
+	var parameters	= FindParameters(TVShell.PanelManager);
+	var EthernetSettings = TVShell.ConnectionManager.EthernetAdapter.Settings;
+	var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+	var changedBBSettings = (parameters["DHCP"] || parameters["Proxy"] || parameters["IPAddress"]);
+
+	function TryAgain()
+	{
+		var mainPanel = TVShell.PanelManager.Item('main');
+		mainPanel.NoBackToMe = true;
+		mainPanel.ClearTravelLog("msntv:/Registration/pages/ConnectError.html");
+		mainPanel.ClearTravelLog("msntv:/Connecting/ConnectError.html");
+		if ( TVShell.ConnectionManager.WANCause == "FullUpdate" ) {
+			document.location = "msntv:/Update/FullUpdate.html";
+		} else {
+			LoginToService();
+		}
+	}
+
+</SCRIPT>
+
+<BODY>
+	<SCRIPT>
+	if (changedBBSettings)
+		OpenSettingsTable( "Broadband settings changed" , "" , "" , true );
+	else
+		OpenSettingsTable( "Phone line settings changed" , "" , "" , true );
+	</SCRIPT>
+	
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:TryAgain()" class=buttonBarButton id=Done label="Try Again" />
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description>
+			<SCRIPT>
+			if (changedBBSettings)
+			{
+				document.write("<P>You have made the following changes to your broadband settings:</P><UL>");
+				if (parameters["DHCP"])
+				{	if (EthernetSettings.DHCPEnabled)
+						document.write("<LI><SPAN class=li>Enabled DHCP</SPAN>");
+					else
+						document.write("<LI><SPAN class=li>Disabled DHCP and entered an IP address and network gateway</SPAN>");
+				}
+				if (parameters["Proxy"])
+				{	if (TVShell.ConnectionManager.HTTPProxy.Enabled)
+						document.write("<LI><SPAN class=li>Enabled a network proxy and entered the IP addresses for your proxy and bypass servers</SPAN>");
+					else
+						document.write("<LI><SPAN class=li>Disabled a network proxy</SPAN>");
+				}
+				if (parameters["IPAddress"])
+					document.write("<LI><SPAN class=li>Changed your manual IP address values</SPAN>");
+			}
+			else
+			{
+				document.write("<P>You have provided the following information on how your phone dials:</P><UL>");
+				if (parameters["Prefix"] != null)
+				{
+					if (parameters["Prefix"] == "")
+						document.write("<LI><SPAN class=li>Your phone does not use a dialing prefix</SPAN>");
+					else
+						document.write("<LI><SPAN class=li>Your phone uses the dialing prefix " + TVShell.Utilities.EscapeHTML(parameters["Prefix"]) + "</SPAN>");
+				}
+				if (parameters["WaitForDialTone"])
+					document.write("<LI><SPAN class=li>Your phone will" + (ModemSettings.WaitForDialTone ? "" : " not") + " wait for a dial tone before trying to dial a number</SPAN>");
+				if (parameters["TonePulse"])
+					document.write("<LI><SPAN class=li>Your phone uses " + (ModemSettings.Pulse ? "pulse " : "tone") + " dialing</SPAN>");
+			}
+			</SCRIPT>
+			</UL>
+			<P>To try connecting to the <SCRIPT>document.write( ServiceFullName );</SCRIPT>, choose <EM>Try Again</EM>.</P>
+		</DIV>
+	</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>

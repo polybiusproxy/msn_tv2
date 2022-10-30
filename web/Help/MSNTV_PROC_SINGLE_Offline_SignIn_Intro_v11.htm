@@ -1,0 +1,42 @@
+<html xmlns:msntv>
+<head>
+	<title>Music Intro</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Sign-in page"  showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+	When you turn on your <script>document.write( ProductShortName );</script>, you'll see the Sign-in page. From the Sign-in page, you can do the following:
+        <ul>
+        <li>Choose a user name and sign in to the <script>document.write( ServiceFullName )</script></li>
+        <li>Enter settings for dial-up or broadband connection</li>
+        <li>Connect your <script>document.write( ProductShortName );</script> to an Ethernet-based or wireless home network and share files that are on your computer</li>
+        <li>Set your <script>document.write( ProductShortName );</script> to automatically check for updates to the <script>document.write( ServiceFullName )</script></li>
+        <li>Adjust your TV's settings for optimal viewing</li>
+        </ul>
+        In addition, you can choose one of the home media features at the bottom of the page to view photos, listen to music, or watch videos without signing in to <script>document.write( ServiceShortName );</script>.
+        <p>
+        <p>
+        To learn more about Photos, Music, and Video, choose <b>Help</b> from the top of the Sign-in page.
+        </p>
+        </p>
+        </span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

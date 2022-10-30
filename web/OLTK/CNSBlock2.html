@@ -1,0 +1,36 @@
+<html xmlns:msntv>
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<title>You are not allowed to view this page</title>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<script language="javascript" src="../Javascript/ServiceList.js"></script>
+<script>
+	function FriendlyErrorTitle()
+	{
+		return "You are not allowed to view this page";
+	}
+
+  	function FriendlyErrorBody()
+	{
+		var errorBody = "<p>This Web page (" + TVShell.PolicyManager.RatedURI + ") may contain adult material. Because of the restrictions on your account, you are not allowed to see Web sites or pages with this kind of material.</p>" +
+						"<p>Only the person who controls your account can change these restrictions.</p>";		
+		return errorBody;
+	}
+    
+</script>
+</head>
+<BODY class=fullPage>
+	<div id="icon"></div>
+	<div id="title" class="header">
+		<SCRIPT>
+			document.write(FriendlyErrorTitle());
+		</SCRIPT>
+	</div>	
+	<div id="description">
+		<SCRIPT>
+		document.write(FriendlyErrorBody());
+		</SCRIPT>
+	</div>
+</body> 
+</html>

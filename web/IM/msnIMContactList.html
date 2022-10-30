@@ -1,0 +1,256 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<head>
+<title>IM Setting - Edit Contact List</title>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+<style>
+.nameContent {
+	font-family:Highway; 
+	font-size:18px; 
+	font-weight:bold;
+	width:300px;
+	color:#07214D;	
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+</style>
+<script language=Javascript src="IMCommon.js"></script>
+<script language=javascript>
+var utilities = TVShell.Utilities;
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var MsgrObj = TVShell.UserManager.CurrentUser.Messenger;
+var contactList 						= null;
+var blockList 							= null;
+var indexArray							= null;
+function cutLongString(s)
+{
+	if (s.length > 18) 
+		return (s.substr(0,15)+'...');
+	else
+		return s;
+}
+function removeTags(plainText)
+{
+   return utilities.EscapeHTML(plainText);
+}
+
+function OnListAddResult(hr, mList, pUser)
+{
+	if(hr==0)
+		DrawListDiv();
+}
+function OnListRemoveResult(hr, mList, pUser)
+{
+	if(hr==0)
+		DrawListDiv();
+}
+function OnUserStateChanged(pUser, mPrevState)
+{	
+//	if(mPrevState!=MSTATE_ONLINE && pUser.State==MSTATE_ONLINE 
+//		|| mPrevState==MSTATE_ONLINE && pUser.State!=MSTATE_ONLINE)
+		DrawListDiv();
+}
+function DrawListDiv()
+{
+	var str;
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	var count = contactList.Count;
+	var blockCount = blockList.Count;
+	if ( count <= 0 )
+	{
+		str = "<P>Your contact list is empty.</P>";
+		ListDiv.innerHTML=str;
+		Continue.style.display = "none";
+		return;
+	}
+	else
+	{
+		str = "<P>To make changes to a contact, choose the contact's name from the list below, and then choose <EM>Continue.</EM></P>";
+		Continue.style.display = "block";
+	}
+	str += "<table>";
+	indexArray = new Array(count);
+	var k_online = 0;
+	var k_away = 0;
+	var k_busy = 0;
+	for (var i = 0; i < count; i++) {
+			switch (contactList.Item(i).State) {
+				case MSTATE_ONLINE:
+					k_online ++;
+					break;
+				case MSTATE_BUSY:
+				case MSTATE_ON_THE_PHONE:
+					k_busy ++;
+					break;
+				case MSTATE_AWAY:
+				case MSTATE_BE_RIGHT_BACK:
+				case MSTATE_IDLE:
+				case MSTATE_OUT_TO_LUNCH:
+					k_away ++;
+					break;
+				case MSTATE_INVISIBLE:
+				case MSTATE_UNKNOWN:
+				case MSTATE_OFFLINE:
+					break;
+			}
+		}
+		var k = 0;
+		var i_online = 0;
+		var i_busy = k_online;
+		var i_away = k_online + k_busy;
+		var i_offline = k_online + k_busy + k_away;
+		while (k < count) {
+			switch (contactList.Item(k).State) {
+				case MSTATE_ONLINE:
+					indexArray[i_online++] = k;
+					break;
+				case MSTATE_BUSY:
+				case MSTATE_ON_THE_PHONE:
+					indexArray[i_busy++] = k;
+					break;
+				case MSTATE_AWAY:
+				case MSTATE_BE_RIGHT_BACK:
+				case MSTATE_IDLE:
+				case MSTATE_OUT_TO_LUNCH:
+					indexArray[i_away++] = k;
+					break;
+				case MSTATE_INVISIBLE:
+				case MSTATE_UNKNOWN:
+				case MSTATE_OFFLINE:
+					indexArray[i_offline++] = k;
+					break;
+			}
+			k++;
+		}
+
+		for (var i=0; i< count; i++)
+		{   	
+			var trueIndex = indexArray[i];
+			var itemState=contactList.Item(trueIndex).State;
+			var itemEmailAddress=contactList.Item(trueIndex).EmailAddress;
+			var itemFriendlyName=contactList.Item(trueIndex).FriendlyName;
+			var blocked = false;
+			for (var j = 0; j < blockCount && !blocked; j++) {
+				if (itemEmailAddress == blockList.Item(j).EmailAddress)
+					blocked = true;
+			}
+			var imgSrcTemp;
+			switch (itemState) {
+				case MSTATE_ONLINE:
+					if(blocked)
+						imgSrcTemp = 'images/IM_icon_block_online.png';
+					else
+						imgSrcTemp = 'images/IM_icon_online.png';
+					break;
+				case MSTATE_BUSY:
+				case MSTATE_ON_THE_PHONE:
+					if(blocked)
+						imgSrcTemp = 'images/IM_icon_block_online.png';
+					else
+						imgSrcTemp = 'images/IM_icon_busy.png';
+					break;
+				case MSTATE_AWAY:
+				case MSTATE_BE_RIGHT_BACK:
+				case MSTATE_IDLE:
+				case MSTATE_OUT_TO_LUNCH:
+					if(blocked)
+						imgSrcTemp = 'images/IM_icon_block_online.png';
+					else
+						imgSrcTemp = 'images/IM_icon_away.png';
+					break;
+				case MSTATE_INVISIBLE:
+				case MSTATE_UNKNOWN:
+				case MSTATE_OFFLINE:
+				default:
+					if (blocked)
+						imgSrcTemp = 'images/IM_icon_block.png';
+					else	
+						imgSrcTemp='images/IM_icon_offline.png';
+					break;
+			}
+			str +="<tr><td><input type=radio name=ListRadio id=radio"+ i;
+			if(i==0)
+				str+=" checked ";
+			str +="		></td>"
+				+ "	   <td><DIV STYLE=\"height:22px; width:19px; behavior: url(#default#alphaImageLoader); src:"+imgSrcTemp+";\" ></DIV></td>"
+				+ "	   <td><font class=nameContent>"+ cutLongString(removeTags(MatchFriendlyName(itemFriendlyName)));
+			switch (itemState) {
+				case MSTATE_ONLINE:
+					str +=" (Online)</font></td>";
+					break;
+				case MSTATE_BUSY:
+				case MSTATE_ON_THE_PHONE:
+					str +=" (Busy)</font></td>";
+					break;
+				case MSTATE_AWAY:
+				case MSTATE_BE_RIGHT_BACK:
+				case MSTATE_IDLE:
+				case MSTATE_OUT_TO_LUNCH:
+					str +=" (Away)</font></td>";
+					break;
+				case MSTATE_INVISIBLE:
+				case MSTATE_UNKNOWN:
+				case MSTATE_OFFLINE:
+				default:
+					str +=" (Offline)</font></td>";
+					break;
+			}
+			str +="</tr>";
+		}
+    str +="</table>";
+	ListDiv.innerHTML=str;
+}
+
+function NextURL()
+{	
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	var count = contactList.Count;
+	var num = -1;
+	if (count == 1 && document.ListSettingsForm.ListRadio.checked == true) 
+		num = 0; 
+	for (var i = 0; i < count && count>1 && num == -1; i++) {
+		if (document.ListSettingsForm.ListRadio[i].checked == true) {
+			num=i;
+		}
+	}	
+	if (num != -1){
+		this.document.location="msnIMManageList.html?index="+indexArray[num]+"&mList=0";
+	}
+}
+Sink.AttachEvent(MsgrObj, "OnListAddResult", OnListAddResult);
+Sink.AttachEvent(MsgrObj, "OnListRemoveResult", OnListRemoveResult);
+Sink.AttachEvent(MsgrObj, "OnUserStateChanged", OnUserStateChanged);
+
+</script>
+</head>
+
+<BODY>
+<FORM name=ListSettingsForm>
+<SCRIPT>OpenSettingsTable( "Messenger" , "Edit your contact list" , "" );</SCRIPT>
+
+	<DIV id=sideBar>
+		<msntv:CustomButton href=# onClick="NextURL()" class=sideBarButton id=Continue label="Continue" />
+		<msntv:CustomButton onClick="history.go(-1);" class=sideBarButton id="default" label="Cancel" />
+		<script>document.all("default").focus();</script>
+	</DIV>
+	
+	<DIV id=scrollArea>
+		<DIV class=description>
+			<DIV id=ListDiv>
+			</DIV>
+		</DIV>
+	</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+	
+</FORM>
+<SCRIPT>
+	DrawListDiv();
+</SCRIPT>
+</BODY>
+</html>

@@ -1,0 +1,525 @@
+<html id=dlgNtfcn >
+<head>
+
+<title>Alert</title>
+
+<link rel=StyleSheet type="text/css" href="../CSS/Base.css">
+<link rel=StyleSheet type="text/css" href="Alert.css">
+
+<style>
+.alertEllipsis
+{
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+</style>
+
+<script language="javascript" src="../Javascript/TVShell.js"></script>
+<script language="javascript" src="../Javascript/Panels.js"></script>
+<script language=Javascript src="../IM/IMCommon.js"></script>
+<script>
+
+	NO_MOVE				  = 0;
+	PanelState_Rising	  = 1;
+	MAX_NAME_SIZE		  = 10;
+	MAX_MAIL_ALERTS		  = 6;
+	QUEUE_SIZE			  = 16;
+	EVENT_BUDDYONLINE	  = 0;
+	EVENT_BUDDYREQUEST	  = 1;
+	EVENT_INVITATION	  = 2;
+	EVENT_FROM			  = 3;
+	EVENT_POPUPBLOCKED    = 4;
+	EVENT_QCOUNT		  = 9999;
+	SHOWTIME_IN_NORMALVIEW = 30000;
+	SHOWTIME_IN_FULLSCREEN = 15000;
+	SHOWTIME_SHORT		  = 10000;
+	TagFrom				  = "From:";
+	TagInboxUnread		  = "Inbox-Unread:";
+	TagMessageDelta		  = "Message-Delta:";
+	TagTypingUser		  = "TypingUser:";
+	TagCrLf				  = "\r\n";
+
+	var myName = window.name;
+	var PanelManager = TVShell.PanelManager;
+	var DeviceControl = TVShell.DeviceControl;
+	var IMPanel = PanelManager.Item("impanel");
+	var thisPanel = PanelManager.Item(myName);
+	var mainPanel = PanelManager.Item("main");
+	var Utilities = TVShell.Utilities;
+	var Messenger = TVShell.UserManager.CurrentUser.Messenger;
+	var StorageManager = TVShell.StorageManager;
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+	var QHead = null;
+	var QTail = null;
+	var closeTimeout = 0;
+	var closeTimeoutStart = 0;
+	var iconImages = new Array();
+	var sounds = new Array();
+	var refreshInboxTimeout;
+
+	iconImages[EVENT_BUDDYONLINE]			= "AlertsIconOnline.png";
+	iconImages[EVENT_BUDDYREQUEST]			= "AlertsIconRequest.png";
+	iconImages[EVENT_INVITATION]			= "AlertsIconNewMessage.png";
+	iconImages[EVENT_FROM]					= "AlertsIconMail.png";
+	iconImages[EVENT_POPUPBLOCKED]			= "AlertsIconPopup.png";
+
+
+	sounds[EVENT_BUDDYONLINE]				= "IM_ContactOnline";
+	sounds[EVENT_BUDDYREQUEST]				= "IM_ContactRequest";
+	sounds[EVENT_INVITATION]				= "IM_ContactIncoming";
+	sounds[EVENT_FROM]						= "Email_Alert";
+	sounds[EVENT_POPUPBLOCKED]				= "Block";
+
+	// Alert constructor
+	function Alert(event, message, email, priority, showTime)
+	{
+		this.event = event;
+		this.message = message;
+		this.email = email;
+		this.priority = priority;
+		this.defaultShowTime = showTime;
+		this.next = this.previous = null;
+	}
+
+	function QPut(alert)
+	{
+		if (QHead == null) {
+			QHead = QTail = alert;
+		}
+		else {
+			var next = QHead;
+
+			// insert before first equal or higher priority
+			while (next && next.priority < alert.priority) {
+				next = next.next;
+			}
+			
+			if (next == null) {
+				alert.previous = QTail;
+				QTail.next = alert;
+				QTail = alert;
+			}
+			else {
+				alert.next = next;
+				if (QHead == next) {
+					QHead = alert;
+				}
+				else {
+					alert.previous = next.previous;
+					alert.previous.next = alert;
+				}
+				next.previous = alert;
+			}
+		}
+	}
+
+	function QGet()
+	{
+		var alert = QTail;
+		if (alert != null) {
+			QTail = alert.previous;
+			if (QHead == alert) {
+				QHead = alert.next;
+			}
+		}
+		return alert;
+	}
+
+	function QRemove(alert)
+	{
+		if (alert == QHead) {
+			QHead = alert.next;
+		}
+		else {
+			alert.previous.next = alert.next;
+		}
+		if (alert == QTail) {
+			QTail = alert.previous;
+		}
+		else {
+			alert.next.previous = alert.previous;
+		}
+	}
+
+	// count the items in the queue that matches a specific event type OR
+	//   count all items in the queue.
+	function QCount( eventType )
+	{
+		var theCount = 0;
+		var next = QHead;
+
+		// count all items with a specific event type in the queue
+		while( next )
+		{
+			if ( next.event == eventType || eventType == EVENT_QCOUNT )
+				theCount++;
+
+			next = next.next;
+		}
+
+
+		return theCount;
+	}
+
+	function IsMainPanelOnPhotoSlideShow()
+	{
+		var mainPanel = PanelManager.Item("main");
+		if (mainPanel) {
+			var url = mainPanel.URL.toLowerCase();	
+			if (url.indexOf("msntv:/photo/slideshow.html") == 0)
+				return true;
+		}
+		return false;
+	}
+	
+	function IsFocusedMediaPanelOnFullScreen()
+	{
+		var mediapanel = PanelManager.Item("mediapanel");
+		if (mediapanel && mediapanel.State == PanelState_Showing) {
+			var parentWindow = mediapanel.Document.parentWindow;
+			if (parentWindow.globalScreenState == parentWindow.MpFullScreen)
+				return true;
+		}
+		return false;
+	}
+	
+	function ShowAlertInFullScreen()
+	{
+		if (IsMainPanelOnPhotoSlideShow() || IsFocusedMediaPanelOnFullScreen())
+			return true;
+		return false;
+	}
+	
+	function SupressAlertsWhenInFullScreen()
+	{
+		if (Messenger.AlertLevel(MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN) && ShowAlertInFullScreen())
+			return true;
+		return false;	
+	}
+	
+	function ShowAlert(alert)
+	{
+		if (thisPanel.State > PanelState_Rising) {
+			ShowAlertNow(alert);
+		}
+		else {
+			// If the Queue is empty, limit current alert to SHOWTIME_SHORT
+			if (QHead == null && closeTimeout != 0) {
+				date = new Date();
+				clearTimeout(closeTimeout);
+				closeTimeout = setTimeout(Close, Math.max(1, SHOWTIME_SHORT - (date.getTime() - closeTimeoutStart)));
+				closeTimeoutStart = date.getTime();
+			}
+			// restrict the number of mail message alerts in the queue to MAX_MAIL_ALERTS (6)
+			if ( alert.event == EVENT_FROM )
+			{
+				if (QCount ( EVENT_FROM ) < MAX_MAIL_ALERTS && !IsMainPanelInListMail())
+					QPut(alert);
+			}
+			else
+			{
+				QPut(alert);
+			}
+		}
+	}
+
+	function ShowAlertNow(alert)
+	{
+		var message = null;
+
+		switch (alert.event) {
+			case EVENT_BUDDYONLINE:
+				message = alert.message;
+				if (IMPanel && IMPanel.State > PanelState_Rising) {
+					message += " Press <b>Msgr</b> on your keyboard to send an instant message.";
+				}
+				break;
+			case EVENT_BUDDYREQUEST:
+			case EVENT_INVITATION:
+				if (IMPanel && IMPanel.State > PanelState_Rising) {
+					message = alert.message;
+				}
+				break;
+
+			case EVENT_FROM:
+			case EVENT_POPUPBLOCKED:
+				message = alert.message;
+				break;
+		}
+
+		if (message != null) {
+			if (alert.event == EVENT_FROM && IsMainPanelInListMail()) {
+				// Refresh Inbox page if new email coming in and inbox page is on main panel
+				message = "A new email has arrived for you.";
+				clearTimeout(refreshInboxTimeout);
+				refreshInboxTimeout = setTimeout("mainPanel.Refresh();", 1000);
+			}
+			
+			var all = document.all;
+
+			all.message.innerHTML = message;	
+			all.icon.style.src = "./Images/" + iconImages[alert.event];			
+
+			// Make current event state available to IM panel if not open.
+			var userData = "";
+			if (IMPanel && IMPanel.State > PanelState_Rising) {
+				userData = alert.event + ";";
+				if (alert.email != null) {
+					userData += alert.email;
+				}
+			}
+			thisPanel.UserStrData = userData;
+
+			DeviceControl.PlaySound(sounds[alert.event]);
+
+			PanelManager.Show(myName);
+			closeTimeout = setTimeout(Close, QHead != null ? SHOWTIME_SHORT : alert.defaultShowTime);
+			var date = new Date();
+			closeTimeoutStart = date.getTime();
+		}
+		else {
+			Close();
+		}
+	}
+
+	function Close()
+	{
+		if (thisPanel.State <= PanelState_Rising) {
+			PanelManager.Hide(myName);
+		}
+		closeTimeout = 0;
+	}
+
+	function NextAlert()
+	{
+		var alert = QGet();
+		if (alert != null) {
+			ShowAlertNow(alert);
+		}
+	}
+
+	function OnServiceListKeyDown(entry)
+	{
+		if (thisPanel.State <= PanelState_Rising) {
+			var userData = thisPanel.UserStrData;
+			if (userData != null) {
+				var event = userData.substr(0, 1);
+				if ((entry.name == "browser::showpopup" || entry.name == "panel::menupanel") && event == EVENT_POPUPBLOCKED) {
+					Close();
+				}
+				
+			}
+		}
+	}
+
+	function OnBeforeShow(name)
+	{
+		if (name == myName) {
+			document.all.bgImg.src = "./Images/AlertsBG.jpg";
+		}
+	}
+
+	function OnAfterHide(name)
+	{
+		if (name == myName) {
+			document.all.bgImg.src = "../Images/1x1.gif";
+			clearTimeout(closeTimeout);
+			closeTimeout = 0;
+			NextAlert();
+		}
+	}
+
+	function OnNavigateComplete2(name, url, isLocal)
+	{
+		if (name == "main" && TVShell.UserManager.CurrentUser && 
+		    TVShell.UserManager.CurrentUser.ServiceList) {
+		    
+			var inboxEntry = TVShell.UserManager.CurrentUser.ServiceList("mail::listmail");
+
+			// Mail page displayed. Remove any pending mail alerts.
+			if (inboxEntry != null && inboxEntry.URL == url) {
+				var next = QHead;
+				while (next) {
+					if (next.event == EVENT_FROM) {
+						QRemove(next);
+					}
+					next = next.next;
+				}
+
+				// If the current alert is a mail alert, close now.
+				if (thisPanel.State <= PanelState_Rising) {
+					var userData = thisPanel.UserStrData;
+					if (userData != null) {
+						var event = userData.substr(0, 1);
+						if (event == EVENT_FROM) {
+							Close();
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	function OnTextReceived(pSession, pUser, bstrMsgHeader, bstrMsgText)
+	{		
+		var	index1;
+		var index2;
+		var message;
+			
+		if ((index1 = bstrMsgText.indexOf(TagFrom)) != -1 ) {
+			index1 += TagFrom.length;
+			if ((index2 = bstrMsgText.indexOf(TagCrLf, index1)) != -1) {
+				var sender = Utilities.EscapeHTML(bstrMsgText.substr(index1, index2 - index1));
+
+				// Remove '\' characters.
+				// I had a regular expression, "/\\?([\\|.])/", that worked inline, but does not seem to work from events.
+				index1 = 0;
+				while ((index1 = sender.indexOf("\\", index1)) != -1) {
+					sender = sender.substr(0, index1) + sender.substr(++index1);
+				}
+
+				message = "You've received an e-mail from" +
+						   sender +
+						   ". Press <b>Mail</b> on your keyboard to read the message.";
+						   
+				if (!SupressAlertsWhenInFullScreen() && Messenger.AlertLevel(MALERT_NEWMESSAGE) &&
+					TVShell.UserManager.CurrentUser.ServiceList("mail::writemail")) {
+					ShowAlert(new Alert(EVENT_FROM, message, pUser.EmailAddress, 0, ShowAlertInFullScreen() ? SHOWTIME_IN_FULLSCREEN : SHOWTIME_IN_NORMALVIEW));
+				}
+			}
+		}
+		else if (bstrMsgText.indexOf(TagInboxUnread) != -1) {
+		}
+		else if (bstrMsgText.indexOf(TagMessageDelta) != -1) {
+		}
+		else if (bstrMsgHeader.indexOf(TagTypingUser) != -1) {
+		}
+		else if (pSession != null && Messenger.AlertLevel(MALERT_INVITATION)) {
+			pSession.FirstMessage = false;
+
+			if (!SupressAlertsWhenInFullScreen() && IMPanel && IMPanel.State > PanelState_Rising) {
+				message = pUser.FriendlyName;
+				if (message.length > MAX_NAME_SIZE) {
+					message = message.substr(0, MAX_NAME_SIZE) + "..";
+				}
+
+				message += " says: \"";
+				message += bstrMsgText;
+				message = Utilities.EscapeHTML(message);
+
+				message = "<div style='width:" + document.body.clientWidth +"px' class=alertEllipsis>" +
+							message + "\".</div>";
+				message += "Press <b>Msgr</b> on your keyboard to reply.";
+				
+				ShowAlert(new Alert(EVENT_INVITATION, message, pUser.EmailAddress, 1, ShowAlertInFullScreen() ? SHOWTIME_IN_FULLSCREEN : SHOWTIME_IN_NORMALVIEW));
+			}
+		}
+	}
+
+	function OnUserStateChanged(pUser, mPrevState)
+	{
+		var prevOffline = (
+			( mPrevState == MSTATE_OFFLINE ) ||
+			( mPrevState == MSTATE_INVISIBLE )
+			);
+		var curOffline = (
+			( pUser.State == MSTATE_OFFLINE ) ||
+			( pUser.State == MSTATE_UNKNOWN ) ||
+			( pUser.State == MSTATE_INVISIBLE )
+			);
+		if (prevOffline && !curOffline &&
+			Messenger.AlertLevel(MALERT_BUDDYONLINE) && !SupressAlertsWhenInFullScreen()) {
+
+			var message = Utilities.EscapeHTML(pUser.FriendlyName);
+			if (message.length > MAX_NAME_SIZE)
+			{
+				message = message.substr(0, MAX_NAME_SIZE) + "..";
+			}
+			
+			message += " has just signed in.";
+			ShowAlert(new Alert(EVENT_BUDDYONLINE, message, pUser.EmailAddress, 0, ShowAlertInFullScreen() ? SHOWTIME_IN_FULLSCREEN : SHOWTIME_IN_NORMALVIEW));
+		}
+	}
+
+	function OnListAddResult(hr, mList, pUser)
+	{
+		if (mList == MLIST_REVERSE && Messenger.AlertLevel(MALERT_BUDDYREQUEST) && !SupressAlertsWhenInFullScreen()) {
+			var blockList = Messenger.GetList(MLIST_BLOCK);
+			var allowList = Messenger.GetList(MLIST_ALLOW);
+			var count = blockList.Count;
+			var inAllowBlockList = false;
+
+			for (var i = 0; i < count && !inAllowBlockList; i++) {
+				if (blockList.Item(i).EmailAddress==pUser.EmailAddress) {
+					inAllowBlockList=true;
+				}
+			}
+			count = allowList.Count;
+			for (var i = 0; i < count && !inAllowBlockList; i++) {
+				if (allowList.Item(i).EmailAddress==pUser.EmailAddress) {
+					inAllowBlockList=true;
+				}
+			}
+			if (!inAllowBlockList) {
+				var message = Utilities.EscapeHTML(pUser.FriendlyName);
+				if (message.length > MAX_NAME_SIZE)
+				{
+					message = message.substr(0, MAX_NAME_SIZE) + "..";
+				}
+
+				message +=  " has added you to his/her Contact list. Press <b>Msgr</b> on your keyboard to respond.";
+
+				if (IMPanel && IMPanel.State > PanelState_Rising) {
+					ShowAlert(new Alert(EVENT_BUDDYREQUEST, message, pUser.EmailAddress, 0, ShowAlertInFullScreen() ? SHOWTIME_IN_FULLSCREEN : SHOWTIME_IN_NORMALVIEW));
+				}
+			}
+		}
+	}
+
+	function OnPopupBlocked()
+	{	
+		var message = "A pop-up was just blocked. To see the pop-up, press <EM>Menu</EM> on your keyboard."
+		var alert = new Alert(EVENT_POPUPBLOCKED, message, null, 2, SHOWTIME_SHORT);
+		ShowAlert(alert);
+	}
+
+	function OnLoad() {
+		Sink.AttachEvent(TVShell,		"OnServiceListKeyDown" , OnServiceListKeyDown);
+		Sink.AttachEvent(TVShell,		"OnPopupBlocked"	   , OnPopupBlocked);
+		Sink.AttachEvent(PanelManager,	"OnBeforeShow"		   , OnBeforeShow);
+		Sink.AttachEvent(PanelManager,	"OnAfterHide"		   , OnAfterHide);
+		Sink.AttachEvent(PanelManager,	"OnNavigateComplete2"  , OnNavigateComplete2);
+		Sink.AttachEvent(Messenger,		"OnTextReceived"       , OnTextReceived);
+		Sink.AttachEvent(Messenger,		"OnUserStateChanged"   , OnUserStateChanged);
+		Sink.AttachEvent(Messenger,		"OnListAddResult"      , OnListAddResult);
+	}
+</script>
+
+</head>
+
+<body onload="OnLoad();">
+
+<table style="width:100%; height:100%;" cellpadding=0 cellspacing=0>
+	<tr>
+		<td style="width:15px; height:15px;"><img src="./Images/AlertsPanelTopLeftCorner.jpg"></td>
+		<td style="background-image:url(./Images/AlertsPanelTopStretch.jpg);"></td>
+		<td style="width:15px; height:15px;"><img src="./Images/AlertsPanelTopRightCorner.jpg"></td>
+	</tr>
+	<tr>
+		<td style="width:15px; background-image:url(./Images/AlertsPanelLeftStretch.jpg);">&nbsp;</td>
+		<td style="text-align:center; vertical-align:center; background-color:#88BEF7;"><img id="bgImg" src="../Images/1x1.gif"></td>
+		<td style="width:15px; background-image:url(./Images/AlertsPanelRightStretch.jpg);">&nbsp;</td>
+	</tr>
+	<tr>
+		<td style="width:15px; height:15px;"><img src="./Images/AlertsPanelBottomLeftCorner.jpg"></td>
+		<td style="background-image:url(./Images/AlertsPanelBottomStretch.jpg);"></td>
+		<td style="width:15px; height:15px;"><img src="./Images/AlertsPanelBottomRightCorner.jpg"></td>
+	</tr>
+</table>
+
+<div id="icon"></div>
+<div id="message"></div>
+
+</body>
+</html>

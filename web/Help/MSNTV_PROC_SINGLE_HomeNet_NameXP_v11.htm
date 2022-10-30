@@ -1,0 +1,34 @@
+<html xmlns:msntv>
+<head>
+	<title>CompNameXP</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Windows XP"  showScrollTop="false" />
+
+<div id="nonScrollArea">
+	<span class="description">
+To find your computer's name in Windows XP, follow these steps:
+<ol>
+	<li>Right-click <b>My Computer</b>, and then choose </b>Properties</b>.</li>
+	<li>Click the <b>Computer Name</b> tab in the System Properties window that appears.</li>
+</ol>
+<b>Important:</b> You need to use the information in the <b>Full computer name</b>, not the <b>Computer description</b>. If the full computer name contains domain information (for example, MyLaptop.mydomain.mycompany.com), disregard everything after the first period. In this example, the computer name is MyLaptop.
+
+
+
+	</span>
+</div>
+
+<div id="buttonBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

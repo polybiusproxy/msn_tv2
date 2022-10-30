@@ -1,0 +1,136 @@
+<HTML xmlns:msntv>
+<TITLE>Call waiting sensitivity adjustment</TITLE> 
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<?import namespace="msntv" implementation="../HTC/DropDownList.htc">
+<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/parameters.js"></SCRIPT>
+
+<LINK REL="StyleSheet" TYPE="text/css" HREF="../CSS/Settings.css">
+<STYLE> table.controlTable td { padding-top: 7px; }</STYLE>
+<SCRIPT>var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;</SCRIPT>
+<BODY onLoad="onLoadPage();">
+	
+	
+	
+<SCRIPT>
+	var parameters = FindParameters(TVShell.PanelManager);
+
+	document.write("<FORM name=dialSettingsForm onsubmit='return false;'>");
+	
+	OpenSettingsTable( "Settings" , "Call waiting sensitivity" , "" );
+	
+	if ( ModemSettings.CallWaitingMode == CallWaitingNone ) {
+		document.write("<DIV id='ScrollArea'><p>This setting is only available if call waiting is enabled.</p><br></DIV>");
+		document.write("<DIV id=sideBar>");
+		document.write("<msntv:CustomButton href='javascript:history.go(-1)' class=buttonBarButton id=default label='Cancel' />");
+		document.write("</DIV>");
+	} else {
+		var outputText = "<DIV id=ScrollArea><DIV class=description>";
+
+		if (parameters["reconnect"] == "true") {
+			outputText += "<P>Check the box below if you don't want callers to interrupt you. Or keep reading to make call waiting work better.</P>"
+				+ "<P><INPUT type='checkbox' name='keepConnected'> Keep me connected when someone calls</P>";
+		}
+
+		outputText += "<P>Sometimes line noise will trigger call waiting when no one is actually calling. You can change "
+			+ "call waiting sensitivity to make sure you are only disconnected when someone is calling, but "
+			+ "that you don't miss any calls, either.</P>"
+
+			+ "<P>If your " + ProductShortName + " disconnects too often "
+			+ "when no calls are present, select a less sensitive setting.</P></DIV>";
+		document.write(outputText);
+
+		document.write( "<TABLE class=options>");
+		document.write( "<TR>	<TD><INPUT type='radio' name='sense' checked></TD><TD>Normal</TD></TR>" );
+		document.write( "<TR>	<TD><INPUT type='radio' name='sense' checked></TD><TD>Less Sensitive</TD></TR>" );
+		document.write( "<TR>	<TD><INPUT type='radio' name='sense' checked></TD><TD>Even Less Sensitive</TD></TR>" );
+		document.write( "<TR>	<TD><INPUT type='radio' name='sense' checked></TD><TD>Least Sensitive</TD></TR>" );
+		document.write("</TABLE></DIV>");
+
+		document.write("<DIV id=sideBar>");
+		document.write("<msntv:CustomButton href='javascript:submitChanges()' class=buttonBarButton id=Done label='Save Changes' />");
+		document.write("<msntv:CustomButton href='javascript:navigateBack()' class=buttonBarButton id=default label='Cancel' />");
+		document.all("Done").focus();
+		document.write("</DIV>");
+	}
+
+	CloseSettingsTable();
+	document.write("</FORM>");
+	
+	function onLoadPage() 
+	{
+		if (ModemSettings.CallWaitingMode != CallWaitingNone) {
+			if (ModemSettings.CallWaitingSensitivity > 3) {
+				ModemSettings.CallWaitingSensitivity = 3;
+			}
+			
+			document.dialSettingsForm.sense[3 - ModemSettings.CallWaitingSensitivity].checked = true;
+		}
+	}
+
+	function navigateBack()
+	{
+		if (parameters["reconnect"] == "true") {
+			var Errortxt = "<P>Choose <EM>Reconnect</EM> to go back online.</P>" +
+				"<P>Choose <EM>Sign Out</EM> if you are done using the " +
+				ServiceFullName + " or if someone else would like to sign in.</P>";
+			var ButtonChoice = TVShell.PanelManager.CustomMessageBox(Errortxt, "",
+								"Reconnect;Sign Out", 0, "", false,
+								MGX_ICON_WARNING, MGX_SIZE_LARGE );
+			if (ButtonChoice == 0) {
+				setTimeout( 'LoginToService("connection::reconnect");' , 10 );
+				GoBackOnceConnected();
+			} else {
+				LogOff();
+			}
+		} else {
+			// got here from settings
+			history.go(-1);
+		}
+	}
+	
+	function submitChanges()
+	{
+		if (parameters["reconnect"] == "true" && document.dialSettingsForm.keepConnected.checked) {
+			ModemSettings.CallWaitingMode = CallWaitingNone1;
+			ConnectionManagerSave();
+		} else if (ModemSettings.CallWaitingMode != CallWaitingNone) {
+			var lastCWSensitivity = ModemSettings.CallWaitingSensitivity;
+
+			for ( var i = 0 ; i < 4 ; i++ ) {
+				if ( document.dialSettingsForm.sense[i].checked ) {
+					ModemSettings.CallWaitingSensitivity = 3 - i;
+					break;
+				}
+			}
+
+			if (lastCWSensitivity != ModemSettings.CallWaitingSensitivity ) {
+				ConnectionManagerSave();
+			}
+		}
+
+		TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+		navigateBack();
+	}
+
+	function LogOff()
+	{
+		// If we log off while there is a currently authorized user, then assume that we
+		// may want to select a new user.
+		if (TVShell.UserManager.CurrentUser && TVShell.UserManager.CurrentUser.IsAuthorized)
+			TVShell.UserManager.ClearCurrentUser();
+
+		GotoSignOn();
+
+		// If we are disconnected and back on the sign in page, then reset the
+		// service state to logged off
+		if (TVShell.ConnectionManager.WANState == ConnectState_Disconnected)
+			TVShell.ConnectionManager.ServiceState = Service_LoggedOff;
+	}
+</SCRIPT>
+</BODY>
+</HTML>

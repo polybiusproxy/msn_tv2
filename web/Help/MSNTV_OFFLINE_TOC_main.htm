@@ -1,0 +1,62 @@
+<html xmlns:msntv>
+<head>
+	<title>Main help table of contents</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Index" showScrollTop />
+
+<div id="scrollArea">
+
+	<!-- Connecting -->
+	<div class="topic">Connecting to the <script>document.write( ServiceFullName )</script></div>
+
+	<a id="connectSettingsID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_ConnectionSettings.htm">Viewing and changing connection settings</a><br>
+        <a id="connectSettingsID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_ConnectionMethod.htm">Changing the way you connect</a><br>
+	<a id="connectSettingsID" class="topicLink" href="MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm">Home networking basics</a><br>
+	<a id="connectSettingsID" class="topicLink" href="MSNTV_PROC_SINGLE_Wireless_Intro_Offline.htm">Wireless networking basics</a><br>
+
+        <!-- Offline features -->
+        <hr>
+	<div class="topic">Using the Sign-in page</div>
+
+        <a id="savePasswordID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_SignIn_Intro_v11.htm">Sign-in page basics</a><br>
+	<a id="savePasswordID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_SavePassword.htm">Saving your password</a><br>
+        <a id="switchUserID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_SwitchUser.htm">Switching users</a><br>
+
+	<!-- Home media -->
+        <hr>
+	<div class="topic">Home media</div>
+
+	<a id="autoUpdateID" class="topicLink" href="MSNTV_PROC_SINGLE_Photos_Intro_Offline_v11.htm">Photos</a><br>
+        <a id="autoUpdateID" class="topicLink" href="MSNTV_PROC_SINGLE_Music_Intro_Offline_v11.htm">Music</a><br>
+        <a id="autoUpdateID" class="topicLink" href="MSNTV_PROC_SINGLE_Videos_Intro_Offline_v11.htm">Videos</a><br>
+
+	<!-- More -->
+        <hr>
+	<div class="topic">Additional information</div>
+
+	<a id="autoUpdateID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_MessageLight.htm">Using the blue Messages light</a><br>
+	<a id="autoUpdateID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_AutoUpdate.htm">Automatic updates</a><br>
+	<a id="custServiceID" class="topicLink" href="MSNTV_PROC_SINGLE_Offline_CustService.htm">Contacting Customer Service</a><br>
+        <a id="custServiceID" class="topicLink" href="msntv:/Settings/System/System.html">View your system information</a>
+        <P> </P>
+
+</div>
+
+<div id="sideBar">
+	<!-- Main menu always returns to the service feature that called it -->
+	<msntv:CustomButton onclick="history.go(-1)" class="sideBarButton" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>
+
+

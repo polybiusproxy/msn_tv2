@@ -1,0 +1,720 @@
+<html xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="msntv:/HTC/PhotoHeading.htc">
+<?import namespace="msntv" implementation="msntv:/HTC/MediaToolbar.htc">
+<?IMPORT namespace="msntv" implementation="msntv:/HTC/SlideShow.htc">
+
+<head>
+	<title>Photo Home</title>
+	<link rel=StyleSheet type="text/css" href="msntv:/css/Base.css">	
+	<link rel=StyleSheet type="text/css" href="msntv:/css/Photo.css">
+
+	<style>
+		
+		.stretchyBackground
+		{
+			behavior: url(msntv:/htc/StretchyBackground.htc);
+			margin: 0px;
+			border-width: 0px;
+		}
+		
+		.photoCell
+		{
+			height:90px; 
+			width:120px; 
+			background-color:#6E6E6F; 
+			color:#838483;
+			margin-right:15px; 
+			overflow:hidden;
+			border: 1px solid #DEDEDE;
+			filter: progid:DXImageTransform.Microsoft.Alpha(opacity=60);
+		}
+		
+		.textCell
+		{
+			height:90px; 
+			width:120px; 
+			margin-right:16px; 
+			overflow:hidden;
+			text-align:center; 
+			color:#838483; 
+			padding-top:25px;
+			background-color:#6E6E6F; 
+			border: 1px solid #DEDEDE;
+		}
+		
+	</style>
+	
+	<script LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/ContentPaneHelp.js"></script>
+	<script src="msntv:/Javascript/Parameters.js"></script>
+	<script src="msntv:/Javascript/ProgressPanel.js"></script>
+	<script src="msntv:/Javascript/SigninPanel.js"></script>
+	<script src="msntv:/Javascript/ServiceList.js"></script>
+	<script src="msntv:/Javascript/ConnectionManager.js"></script>
+	<script language="javascript" src="msntv:/Javascript/DMRHome.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/DMRCommon.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/DMREnumerate.js"></script>
+	<script src="msntv:/Javascript/HomeNetworking.js"></script>
+	<script src="Photos.js"></script>
+
+	<script language="Javascript">
+
+		var kMinViewThreshold = 4;
+		var kMaxNumOfCells = 8;
+		var kMaxPhotosToDisplay = 5;
+		var kMaxSearchCount = 200;
+		var contentCellCount=0;
+		var lastIndex=0;
+		var AttachmentXMLDoc;
+		var AttachmentCellIndex;
+		var HostArray = new Array();
+		
+		var emptyStr = '\
+			<table cellpadding=0 cellspacing=0 style="width:100%; height:100%;">\
+				<tr>\
+					<td align=center width=100% style="color:#DDDDDD;">\
+						Loading ...\
+					</td>\
+				</tr>\
+			</table>';
+			
+		var noContentStr = '\
+			<table cellpadding=0 cellspacing=0 style="width:100%; height:100%;">\
+				<tr>\
+					<td valign=top width=100%>\
+						<span class=photoCell style="filter:null;"><img src="msntv:/Photo/Assets/PhotosHomeBirthdayParty.jpg"> </span>\
+						<span class=textCell style="background-color:#D1A76A; color:white;"> Birthday party </span>\
+						<span style="font:17.5px; height:90px; width:254px; color:#FDFCFA; overflow:hidden;"> As you look at photos, this page will begin to fill in. </span>\
+					</td>\
+				</tr>\
+				<tr>\
+					<td valign=bottom width=100%>\
+						<span class=textCell style="background-color:#D1A76A; color:white; padding-top:30px;"> Baby </span>\
+						<span class=photoCell style="filter:null;"><img src="msntv:/Photo/Assets/PhotosHomeBaby.jpg"> </span>\
+						<span style="font:17.5px; height:90px; width:254px; color:#1D1D1D; overflow:hidden;">Even if your photos are stored on a PC, you can show them on your TV!<br> <a href="msntv:/Settings/Network/HomeNetworking.html" style="color:#0A0862;font:18px;"> Set up my home network </a></span>\
+					</td>\
+				</tr>\
+			</table>';	
+		
+		var minContentStr = '\
+			<table cellpadding=0 cellspacing=0 style="width:100%; height:100%;">\
+				<tr>\
+					<td valign=top width=100%>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+						<span style="font:17.5px; height:90px; width:254px; color:#FDFCFA; overflow:hidden;"> As you look at photos, this page will begin to fill in. </span>\
+					</td>\
+				</tr>\
+				<tr>\
+					<td valign=bottom width=100%>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+						<span style="font:17.5px; height:90px; width:254px; color:#1D1D1D; overflow:hidden;"></span>\
+					</td>\
+				</tr>\
+			</table>';	
+		
+		var maxContentStr = '\
+			<table cellpadding=0 cellspacing=0 style="width:100%; height:100%;">\
+				<tr>\
+					<td valign=top width=100%>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+						<span class=photoCell id=cell style="margin:0px;"><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" /> </span>\
+					</td>\
+				</tr>\
+				<tr>\
+					<td valign=bottom width=100%>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" />  </span>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" />  </span>\
+						<span class=photoCell id=cell><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" />  </span>\
+						<span class=photoCell id=cell style="margin:0px;"><msntv:slideShow id="SlideShow" initialLoadingText="" noImagesErrorText="No Images Found" viewWidth="120" viewHeight="90" autoStart="false" autoAdvanceInterval="2" />  </span>\
+					</td>\
+				</tr>\
+			</table>';
+
+		// start playing the active element "
+		function PlayActive()
+		{
+			var activeElement = document.activeElement;
+			if(activeElement)
+			{
+				var index = activeElement.index;
+				
+				if(SlideShow[index] && SlideShow[index].isOpened && SlideShow[index].state!="playing")
+					SlideShow[index].play();
+			}	
+		}
+		
+		function OnBlur()
+		{
+			albumTitle.innerHTML =  "";
+			TVShell.Message( "PhotoHome: OnBlur. lastFocusIndex="+lastFocusIndex);
+			if ( lastFocusIndex != null && SlideShow[lastFocusIndex].isOpened)
+				SlideShow[lastFocusIndex].pause();
+			lastFocusIndex = null;
+		}
+		
+		function OnFocus()
+		{
+			var element = event.srcElement;
+			SetFocus( element.index, element.title );
+		}
+
+		var lastFocusIndex = null;
+		function SetFocus(index,title)
+		{
+			TVShell.Message("PhotoHome: SetFocus(" + index +")");
+			if ( ( lastFocusIndex != null ) && SlideShow[lastFocusIndex].isOpened )
+				SlideShow[lastFocusIndex].pause();
+
+			if (SlideShow && SlideShow.length && SlideShow.length >index)
+			{
+				albumTitle.innerHTML =  title;				
+				lastFocusIndex = index;
+				
+				if(SlideShow[lastFocusIndex].isOpened)
+					SlideShow[index].play();
+			}
+		}
+		
+		function OnClick()
+		{
+			var destURL = null;
+			
+			for (var e = event.srcElement; e  != null && destURL == null; e = e.parentElement ) 
+			{
+				if ( e["destURL"]!=null )
+					destURL = e["destURL"];
+			}
+			
+			if(destURL)
+				GotoURL(destURL);
+		}
+		
+		function WarnNoPhotosToDisplay()
+		{
+			TVShell.PanelManager.CustomMessageBox("The device is no longer available.", "No Images Found", "OK", 0, "", false, MGX_ICON_WARNING , MGX_SIZE_SMALL );
+		}
+		
+		function OnNoPhotosToDisplay()
+		{
+			//TVShell.Message("OnNoPhotosToDisplay " + event.id);
+			var cell = document.all[event.id].parentElement.onclick = WarnNoPhotosToDisplay;	
+		}
+		
+		function OnUnload()
+		{
+			for(var i=0; i<lastIndex; i++)
+				SlideShow[i].close();
+			
+			PhotoManager.ClearThumbnailRequestQueue();	
+		}
+		
+		function CountCellWithContent()
+		{
+			// count removable storage devices						
+			for (var j=0; j<StorageManager.Count && contentCellCount < kMinViewThreshold ; j++) 
+			{
+				var StorageDevice = StorageManager.Item(j);
+				if (StorageDevice.Removable && 
+					!StorageDevice.IsNetwork && 
+					StorageDevice.Mounted) 
+				{
+					contentCellCount++;
+				}
+			}
+			
+			if(contentCellCount >= kMinViewThreshold)
+				return;
+								
+			// count recently visited photos locations (email, albums and home network) 			
+			for(var i=MediaHistory.Count(PhotoViewerMediaHistoryList) - 1; i >= 0 && (contentCellCount < kMinViewThreshold); i--)
+			{
+				var entry = MediaHistory.Item(PhotoViewerMediaHistoryList, i);
+				var URL = entry.URL;
+				var StorageDeviceVN = ExtractParameter("StorageDeviceVN",URL);
+				
+				if(StorageDeviceVN!=null && StorageDeviceVN!="")
+				{
+					var Path = ExtractParameter("path",URL);
+					var Location = ExtractParameter("location",URL);
+					var StorageDeviceName = ExtractParameter("StorageDeviceName",URL);
+					var Provider = ExtractParameter("Provider",URL);
+					
+					// skip allocating a slot for albums that have been deleted
+					if(Location==1 && (Path==null || !TVShell.Utilities.FFolderExists(Path)))
+						continue;
+					
+					contentCellCount++;						
+				}
+				else if(IsSignedIn())
+				{
+					var UserEmail = ExtractParameter("UserEmail",URL);
+					if(UserEmail && UserEmail==CurrentUser.Email)
+					{
+						contentCellCount++;	
+					}
+				}
+			}
+			return; 			
+		}
+		
+		function WriteContent()
+		{
+			// first count the number of cells with content to decide on the layout
+			CountCellWithContent();
+			
+			if (contentCellCount<=0)
+			{
+				photoTableTD.innerHTML = noContentStr;
+				albumTitle.innerText = "";
+				toolbarId.focus();	
+			}
+			else 
+			{
+				instructionText.style.paddingBottom=10;
+				albumTitleTD.style.height=33;
+				instructionText.innerText="For fast access to photos you’ve recently viewed, choose a photo below.";
+				photoTableTD.innerHTML = (contentCellCount < kMinViewThreshold) ? minContentStr : maxContentStr;
+				BuildTable();
+				cell[0].focus();
+				PlayActive();					
+			}
+
+			// update unc online state and shares
+			SynchronizeShares();
+		}
+		
+		function OnLoad()
+		{
+			toolbarId.focus();
+			PhotoManager.ClearThumbnailRequestQueue();	
+			setTimeout(WriteContent,1);
+		}
+				
+		function OnDeviceChange(storageDevice)
+		{
+			// refresh the page if a USB device becomes available
+			if (storageDevice && storageDevice.Removable && !storageDevice.IsNetwork)
+			{
+				document.location.reload();
+			}
+		}
+		
+		//
+		// HomeNetworking - Eventhandler for Host events
+		//
+		function OnHostHandler(hnx, he, evt, status)
+		{
+			//TVShell.Message("OnHost evt:" + evt + "  stat:" + status );
+			switch( evt )
+			{
+				case HN_EVT_BRINGONLINE:
+				case HN_EVT_ENDSERVICESCAN:
+
+					// if bringOnLine has failed, then go ahead and start slideshow HTCs
+					// so they reflect the status sooner
+					if ( evt == HN_EVT_BRINGONLINE )
+					{
+						if ( status == 0 )
+						{ // if the host is online, then wait for end service scan
+							return;
+						}
+						else
+						{
+							// offline, unmount shares?
+							for ( var i = 0 ; i < he.Count ; i++ )
+							{
+								se = he.Item(i);
+								if ( se ) se.UnMount();
+							}
+						}
+					}
+					// record that servicescan has finished for this host
+					HostArray.push(he.Name);
+					
+					for (var j=0; j<he.Count; j++) 
+					{
+						var se = he.Item(j);
+						if (se ) 
+						{
+							var UNCStorageDeviceVN = "\\\\" + he.Name + "\\" + se.Name;
+							//TVShell.Message(" to match = " + UNCStorageDeviceVN);
+							
+							for(var i=0; i<lastIndex; i++)
+							{
+								if( SlideShow[i].imageFolderVolumeName &&
+									SlideShow[i].imageFolderVolumeName.toLowerCase() == UNCStorageDeviceVN.toLowerCase() &&
+								   !SlideShow[i].isOpened)
+								{
+									var el = document.activeElement;
+									var activeIndex = 0;
+									if ( el ) activeIndex = el.index;
+									//TVShell.Message("matched = " + UNCStorageDeviceVN + "  index = " + activeIndex );
+									if ( i == activeIndex )	// open and start play if this one has the focus
+										SlideShow[i].play();
+									else
+									{
+										SlideShow[i].open();
+										PlayActive();
+									}
+								}
+							}
+						}
+					}
+				
+					break;
+			}
+		}
+		
+		function ExtractParameter(param, url)
+		{
+            var result=null;
+			if(!url)
+			  return result
+			var pos = url.indexOf(param+"=");
+			if(pos!=-1)
+			{
+				result = url.slice(pos+(param.length+1));
+				pos = result.indexOf("&");
+				if(pos!=-1)
+					result = result.slice(0,pos);
+			}
+			if(result)
+			  return decodeURIComponent(result);
+			else
+			  return result; 
+		}
+
+		
+		function HostScanFinished(imageFolderVolumeName)
+		{
+			var hostName = ToUNCHostName(imageFolderVolumeName);			
+			if(hostName)
+			{
+				for (var i=0; i<HostArray.length; i++)
+				{
+					if(hostName.toLowerCase() == HostArray[i].toLowerCase())
+					{
+						//TVShell.Message("found host " + hostName);
+						return true;
+					}	
+				}
+			}
+			return false;
+		}
+		
+		function BuildCell(title, destURL, resizeImages, imageFolderVolumeName, imageFolderPath)
+		{
+			var currentIndex = lastIndex;
+				
+			cell[currentIndex].style.filter = null;
+			cell[currentIndex].index = currentIndex;
+			cell[currentIndex].title = title;
+			cell[currentIndex].onfocus = OnFocus;
+			if (UNDER_NT)	
+				cell[currentIndex].onmouseover = function() { SetFocus(currentIndex, title);};
+			cell[currentIndex].onblur  = OnBlur;	
+			cell[currentIndex].onclick = OnClick;
+			cell[currentIndex].destURL = destURL;
+						
+			SlideShow[currentIndex].initialLoadingText="Loading Image";	
+			SlideShow[currentIndex].resizeImages = resizeImages;
+			
+			if(imageFolderVolumeName)
+			{
+				SlideShow[currentIndex].imageFolderVolumeName = imageFolderVolumeName;
+				SlideShow[currentIndex].imageFolderPath=imageFolderPath ? imageFolderPath : "";	
+				SlideShow[currentIndex].onNoPhotosToDisplay=OnNoPhotosToDisplay;
+				SlideShow[currentIndex].maxPhotosToDisplay = kMaxPhotosToDisplay;
+				SlideShow[currentIndex].maxSearchCount = kMaxSearchCount;
+
+				var openSlideshow = false;
+				var sd = FindStorageDevice(imageFolderVolumeName);
+				if ( sd ) 
+				{
+					openSlideshow = true;
+					if ( sd.Provider == "UNC" )
+					{
+						openSlideshow = false;
+						if ( HostScanFinished(imageFolderVolumeName) ) openSlideshow = true;
+					}
+				}
+				
+				if( openSlideshow && !SlideShow[currentIndex].isOpened)
+				{
+					// we can only be here if we are USB device or local album
+					// or UNC device that has completed its mount
+					// we do not get here if this is mail attachment photos
+					// For USB and Album and UNC, this is only called through onLoad, so if
+					// this is the first tile, start play immediately
+					if ( currentIndex == 0 )
+					{
+						SlideShow[currentIndex].play();
+					}
+					else
+					{
+						SlideShow[currentIndex].open();
+						PlayActive();
+					}
+				}
+			}
+						
+			lastIndex++;
+		}
+				
+		function BuildUSBCells()
+		{
+			// Fill slots with available USB devices
+					
+			var numUsb = 0;
+			for (var j=0; j<StorageManager.Count && (lastIndex < kMaxNumOfCells); j++) 
+			{
+				var StorageDevice = StorageManager.Item(j);
+				if (StorageDevice.Removable && 
+					!StorageDevice.IsNetwork && 
+					StorageDevice.Mounted) 
+				{
+					numUsb++;
+					var currentIndex = lastIndex;
+					var StorageDeviceVN = StorageDevice.VolumeName;
+					var destURL="msntv:/photo/Viewer.html?location=0&StorageDeviceVN=" + encodeURIComponent(StorageDeviceVN);
+					SlideShow[currentIndex].flatten = 'true';
+					BuildCell( "Photos on your " + ToFriendlyName(StorageDevice,numUsb), destURL, true, StorageDeviceVN, "");
+				}
+			}	  
+		}
+				
+		function BuildRecentCells()
+		{
+			// Fill slots with recently visited folders (albums and home network)
+			
+			for(var i=MediaHistory.Count(PhotoViewerMediaHistoryList) - 1; i >= 0 && (lastIndex < kMaxNumOfCells); i--)
+			{
+				var entry = MediaHistory.Item(PhotoViewerMediaHistoryList, i);
+				var URL = entry.URL;
+				TVShell.Message("i = " + URL);
+				var StorageDeviceVN = ExtractParameter("StorageDeviceVN",URL);
+				
+				if(StorageDeviceVN!=null && StorageDeviceVN!="")
+				{
+					var Path = ExtractParameter("path",URL);
+					var Location = ExtractParameter("location",URL);
+					
+					// skip allocating a slot for albums that have been deleted
+					if(Location==1 && (Path==null || !TVShell.Utilities.FFolderExists(Path)))
+						continue;
+						
+					var Folder = StorageDeviceVN;
+					
+					var parentFolderName=ExtractParameter("parentFolderName",URL)
+                    if(parentFolderName)
+					    Folder=parentFolderName;
+					else
+					{
+						var sd = FindStorageDevice(StorageDeviceVN);
+						if (sd)
+						{
+							Folder = sd.Name;
+							if ( !isUSB( sd ) && !isUPNP( sd ) && ( sd.Provider.toLowerCase() != "onlinestorage" ) )
+							{
+								//unc share, show share name
+								var slashPos = StorageDeviceVN.lastIndexOf("\\");
+								if( slashPos!=-1 ) Folder = StorageDeviceVN.slice(slashPos+1);
+							}
+						}
+					}
+					    					
+					var titleText = (Location==1) ? "Photos in your <b>" + Folder + "</b> album" : "Photos in <b>" + Folder + "</b>";
+							
+					BuildCell( titleText, entry.URL, (Location!=1), StorageDeviceVN, Path);
+				}
+				else if(IsSignedIn())
+				{
+					var UserEmail = ExtractParameter("UserEmail",URL);
+					if(UserEmail && UserEmail==CurrentUser.Email)
+					{
+						BuildEmailCell();
+					}
+				}
+			} 
+		}
+						
+		
+		function LoadAttachments()
+		{
+			TVShell.Message("LoadAttachments");
+			
+			var RootNode = AttachmentXMLDoc.selectSingleNode("//Root");
+			if(RootNode)
+			{
+				TVShell.Message("found Root");
+				
+				var rootURLNode = AttachmentXMLDoc.selectSingleNode("//RootURL");
+				var EmailRootURL = rootURLNode ? rootURLNode.text : "";	
+				var nodes = AttachmentXMLDoc.selectNodes("//Photo");
+				
+				if (nodes && nodes.length > 0) 
+				{
+					TVShell.Message("nodes.length = " + nodes.length);
+					
+					var AttachmentFileNames = new Array();
+					var length = nodes.length;
+					for (var i = 0; i < length && i < kMaxPhotosToDisplay; i++) 
+					{
+						var node = nodes.item(i);
+						
+						var url = node.selectSingleNode(".//Thumbnail//URL").text;
+						var	webUrl = node.selectSingleNode(".//WebReady//URL").text;
+						if ( EmailRootURL != "" )
+						{
+							if(url != null && url != "" && url.toLowerCase().indexOf('http://')==-1)
+								url = EmailRootURL+url;
+							if(webUrl != null && webUrl != "" && webUrl.toLowerCase().indexOf('http://')==-1)
+								webUrl = EmailRootURL+webUrl;
+						}
+
+						if (url==null||url==""||IsInRotatedImageList(webUrl))
+							url = webUrl;
+						
+						AttachmentFileNames[i] = url;
+					}
+					SlideShow[AttachmentCellIndex].imageFilenames = AttachmentFileNames;
+					SlideShow[AttachmentCellIndex].open();
+					PlayActive();
+				}
+			}
+			else
+			{
+				var ErrorNode = AttachmentXMLDoc.selectSingleNode("//Error");
+				if(ErrorNode)
+				{
+					TVShell.Message(" ErrorNode : " + ErrorNode.text);
+					SlideShow[AttachmentCellIndex].setText(ErrorNode.text);
+				}
+				else
+				{
+					var RetryNode = AttachmentXMLDoc.selectSingleNode("//Retry");
+					if(RetryNode)
+					{
+						TVShell.Message(" RetryNode : " + RetryNode.text);
+						setTimeout(GetAttachmentXML, parseInt(RetryNode.text));
+					}
+					else
+					{
+						TVShell.Message(" service error case ");
+						SlideShow[AttachmentCellIndex].setText("MSN TV ran into a technical problem");
+					}
+				}
+			}
+		}
+		
+		function OnAttachmentXMLAvailable()
+		{
+			if (AttachmentXMLDoc && AttachmentXMLDoc.readyState == 4)
+			{
+				TVShell.Message("reached end");
+				LoadAttachments();
+			}
+		}
+		
+		function GetAttachmentXML()
+		{
+			TVShell.Message("AttachmentXMLFileURL " + AttachmentXMLFileURL);	
+			AttachmentXMLDoc = TVShell.CreateXmlDocument();
+			AttachmentXMLDoc.async = true;
+			AttachmentXMLDoc.resolveExternals = false;
+			AttachmentXMLDoc.validateOnParse = false;
+			AttachmentXMLDoc.onreadystatechange=OnAttachmentXMLAvailable;
+			AttachmentXMLDoc.ondataavailable=OnAttachmentXMLAvailable;
+			AttachmentXMLDoc.load(AttachmentXMLFileURL);			
+		}
+		
+		function BuildEmailCell()
+		{
+			if(!IsSignedIn() || (lastIndex >= kMaxNumOfCells))
+				return;
+			
+			var entry = TVShell.ActiveServiceList.Item("mail::photoattachments");
+			if (entry && entry.URL) 
+			{
+				AttachmentXMLFileURL = entry.URL;
+				AttachmentCellIndex = lastIndex;
+
+				BuildCell( "Photos in e-mail attachments", "msntv:/Photo/Viewer.html?AttachmentViewer=true", false);
+				GetAttachmentXML();				
+			}
+		}
+		
+		function BuildTable()
+		{
+			BuildUSBCells();
+			BuildRecentCells();
+		}
+		
+		function GotoAttachmentViewer()
+		{
+			GotoTarget("Photo::AttachmentViewer", "", true);	
+		}
+
+		function AddToolbarItems()
+		{
+			toolbarId.addToolWithScript( "Photos in Mail", 'GotoAttachmentViewer()');
+			if(IsOnlineStorageAvailable())
+				toolbarId.addTool( "Online storage", 'Photo::OnlineStorage', "" );
+			toolbarId.addTool( "Albums", 'Photo::Albums', "" );
+			toolbarId.addTool( "Featured articles", 'home::PhotosFeaturedArticles', "" );
+		}
+	
+		Sink.AttachEvent(StorageManager	, "OnDeviceAdd"   , OnDeviceChange);	
+		Sink.AttachEvent(StorageManager	, "OnDeviceRemove", OnDeviceChange);	
+		Sink.AttachEvent(HomeNetworkObj , "OnHostHandler" , OnHostHandler);
+						
+	</script>
+	
+</head>
+<body topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 onload="OnLoad();" onunload="OnUnload();" style="background-color:#CDCCCC;">	
+	<table style="width:100%; height:100%;" cellspacing=0 cellpadding=0>
+		<tr>
+			<td style="height:56px; width:100%;">
+				<msntv:PhotoHeading label="Home" helpDest="MSNTV_TRS_TOC_Photos"/>
+			</td>
+		</tr>
+		<tr>
+			<td style="height:283px; width:100%; padding:10px 15px 0px 15px; background-image:url(msntv:/Photo/Assets/PhotosHomeBG.jpg);">
+				<div style="width:100%; height:100%;">
+					<table cellpadding=0 cellspacing=0 style="width:100%; height:100%;">
+						<tr>
+							<td>
+								<span id="instructionText" style="width:530px; color:#DDDDDD;"></span>
+							</td>
+						</tr>
+						<tr>
+							<td id=photoTableTD style="height:192px;">
+								<script>
+									document.write(emptyStr);
+								</script>
+							</td>
+						</tr>
+						<tr>
+							<td id="albumTitleTD">
+								<span id=albumTitle class="ellipsis" style="width:530px; color:#1D1D1D;"></span>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</td>
+		</tr>	
+		<tr>
+			<td style="height:100%; width:100%;" class=stretchyBackground stretchyBackground="msntv:/Photo/Assets/PhotosNavBG.jpg" colspan=2>
+				<msntv:mediaToolbar id="toolbarId" toolbarWidth='100%' divWidthPX='580' application="photo" initialScrollCellIndex=0 itemWidth='70' itemStyle="font-family:Segoe TV; font:18px bold; color:#C2DBF4; padding-left:12px; padding-right:12px;" />
+			</td>
+		</tr>
+	</table>
+	<script>
+		AddToolbarItems();
+	</script>
+</body>
+</html>

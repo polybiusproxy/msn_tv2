@@ -1,0 +1,145 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Basic Dialing</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/parameters.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<SCRIPT>
+	var parameters	= FindParameters(TVShell.PanelManager);
+	var ModemSettings = TVShell.ConnectionManager.ModemAdapter.Settings;
+</SCRIPT>
+<SCRIPT>
+function onLoadPage()
+{
+	document.dialSettingsForm.dialPrefixInput.value = ModemSettings.DialPrefix;
+	
+	if (ModemSettings.Pulse) {
+		document.dialSettingsForm.TonePulse[1].checked = true;
+	} else {
+		document.dialSettingsForm.TonePulse[0].checked = true;
+	}
+
+	document.dialSettingsForm.DontWaitForDialTone.checked = !ModemSettings.WaitForDialTone;
+}
+
+var dirty;
+var args;
+
+function NavigateBack()
+{
+	if (dirty && parameters["confirm"])
+		location.replace("ConfirmAndTryAgain.html" + args)
+	else
+		history.go(-1);
+}
+
+function submitChanges() 
+{
+	dirty = false;
+	var prefix = "";
+
+	if(ModemSettings.CallWaitingMode == CallWaitingDisabled) {
+		prefix = ModemSettings.CallWaitingPrefix + document.dialSettingsForm.dialPrefixInput.value;
+	} else {
+		prefix = document.dialSettingsForm.dialPrefixInput.value;
+	}
+
+	if (CheckFor911(prefix))	{
+		alert("You entered a prefix to block call waiting that may cause you to dial the emergency services number.  Please enter a new prefix.");
+	} else {
+		args = "?";
+		if (document.dialSettingsForm.dialPrefixInput.value != ModemSettings.DialPrefix)
+		{
+			ModemSettings.DialPrefix = document.dialSettingsForm.dialPrefixInput.value;
+			dirty = true;
+			args += "Prefix=" + TVShell.Utilities.EscapeHTML(document.dialSettingsForm.dialPrefixInput.value) + "&";
+		}
+	
+		if (document.dialSettingsForm.TonePulse[1].checked != ModemSettings.Pulse) 
+		{
+			ModemSettings.Pulse = document.dialSettingsForm.TonePulse[1].checked;
+			dirty = true;
+			args += "TonePulse=1&";
+		}
+
+		if (document.dialSettingsForm.DontWaitForDialTone.checked != !ModemSettings.WaitForDialTone)
+		{
+			ModemSettings.WaitForDialTone = !document.dialSettingsForm.DontWaitForDialTone.checked;
+			dirty = true;
+			args += "WaitForDialTone=1&";
+		}
+		
+		if (dirty) {
+			ConnectionManagerSave();
+		}
+
+		TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+		NavigateBack();
+	}
+}
+</SCRIPT>
+
+<BODY onLoad="onLoadPage();">
+<FORM name="dialSettingsForm" action="javascript:submitChanges()">
+
+<SCRIPT>OpenSettingsTable( "Settings" , "Other dialing options" , "" );</SCRIPT>
+
+	<DIV id=sideBar>
+		<msntv:CustomButton onclick="submitChanges()" label="Save Changes" id=Done />
+		<msntv:CustomButton onclick="history.go(-1)" label="Cancel" id="default" />
+		<script>document.all("Done").focus();</script>
+	</DIV>
+
+	<DIV id=scrollArea>
+		<DIV class=description>
+			<P>To connect to the <SCRIPT>document.write(ServiceFullName);</SCRIPT>, your <SCRIPT>document.write(ProductShortName);</SCRIPT>
+			must place an outside telephone call. If your phone line requires a prefix to make outside calls, type the prefix in this box.</P>
+			<TABLE class=controlTable>
+			<TR>
+				<TD>Prefix:</TD>
+				<TD><INPUT type=text name="dialPrefixInput" class=inputText id="prefix" maxLength=5 size=5></TD>
+				<TD>Example: 9</TD>
+			</TABLE>
+			<P>
+			If your phone uses pulse dialing rather than tone
+			dialing, choose <EM>My phone uses pulse dialing</EM>.
+			</P>
+			<TABLE class=controlTable>
+			<TR>
+				<TD><INPUT type=radio name="TonePulse" checked>
+				<TD>My phone uses tone dialing
+			</TR>
+			<TR>
+				<TD><INPUT type=radio name="TonePulse">
+				<TD>My phone uses pulse dialing
+			</TR>
+			</TABLE>
+			<P>
+			Normally, your <SCRIPT>document.write(ProductShortName);</SCRIPT> will not try to connect to
+			the <SCRIPT>document.write(ServiceFullName);</SCRIPT> until it detects a dial tone on your phone line.
+			</P>
+			<P>
+			If you have a voice mail service on your phone line, check the box below.
+			</P>
+			<TABLE class=controlTable>
+			<TR>
+				<TD><INPUT type=checkbox name=DontWaitForDialTone>
+				<TD>Don't wait for a dial tone before connecting
+			</TR>
+			</TABLE>
+
+		</DIV>
+	</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</FORM>
+
+</BODY>
+

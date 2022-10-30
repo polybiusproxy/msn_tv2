@@ -1,0 +1,27 @@
+<html xmlns:msntv>
+<head>
+	<title>Games help table of contents</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Games" showScrollTop />
+
+<div id="scrollArea">
+
+	If for some reason the arrow keys do not work or stop working, pressing [TAB] will enable them.
+
+</div>
+
+<div id="sideBar">
+	<!-- Feature menu always returns to the page that called this one: the main table of contents or a feature page -->
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer();" class=sideBarButton id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

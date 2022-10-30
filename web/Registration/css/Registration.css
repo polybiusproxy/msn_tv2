@@ -1,0 +1,127 @@
+@import url(msntv:/Shared/CSS/Base.css);
+
+/* treatment of hyperlinks */
+A:link {text-decoration: none; color:#003471} 
+A:visited {text-decoration: none; color:#003471} 
+A:hover {text-decoration: underline; color:#003471} 
+A:active {text-decoration: none; color:#003471} 
+
+/* body */
+body
+{
+	background-repeat: no-repeat;
+	margin: 0;
+	background-image: url(msntv:/Registration/images/bgimage.jpg);
+	overflow: hidden;
+}
+
+p.example 
+{	margin-top: 4px;	
+	margin-bottom: 0px;
+}
+
+td, body
+{
+	font-family: highway;
+	font-size: 18px;
+	color: #003471;
+	font-weight: normal;
+	/*line-height: 1.0;*/
+	font-style: normal;
+}
+
+table.review td
+{	
+	padding-bottom: 5;
+	padding-top: 5;
+	padding-right:5;	 
+}
+
+/* for tables using fields */
+table.fields td
+{ padding: 15px 5px 0px 0px;}
+
+/* for tables using radio buttons */
+table.choices td
+{ padding: 5px 8px 0px 0px;}
+
+/* text at the top right of the page */
+#header
+{
+	position: absolute;
+	top: 6.6%;
+	padding-bottom: 2%;
+	right: 10px;
+	color: #184A77;
+	font-size: 30px;
+}
+
+/* text at the top left of the page */
+#title
+{
+	position: absolute;
+	top: 5.0%;
+	left: 5%;
+	padding-bottom: 2%;
+	color: #006cb1; 
+	font-size: 21px;
+	font-weight: bold;
+	white-space: nowrap;	
+}
+
+/* body of the page */
+#main
+{
+	position: relative;
+	height: 85%;
+	width: 100%;
+	top: 13%;
+	padding-left: 5%;
+	padding-right: 6.6%;
+	padding-top: 10px;
+	overflow-y: auto;
+	padding-bottom: 2%;
+}
+
+/* button */
+#footer
+{
+	position: absolute;
+	bottom: 4%;
+	right: 5%;	
+	width:320px;
+	text-align:right;
+}
+
+/* used for the congratulations screen */
+#centerTitle
+{
+	position: absolute;
+	color: #183142; 
+	font-size: 26px;
+	font-weight: bold;
+	top: 25%;
+	left: 15%;
+	right: 15%;
+	padding-bottom: 2%;	
+}
+
+#center
+{
+	position: absolute;
+	top: 35%;
+	left: 15%;
+	right: 15%;
+	padding-bottom: 2%;
+}
+
+nobr
+{
+	overflow: hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    padding-bottom:3px;
+    padding-top:3px;
+    cursor:hand;	
+}
+

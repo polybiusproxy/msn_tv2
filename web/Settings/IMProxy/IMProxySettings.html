@@ -1,0 +1,59 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <TITLE>Messenger proxy settings</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT>
+	var ProxySettings = TVShell.ConnectionManager.IMProxy;
+
+	function onLoadPage()
+	{
+			document.forms.Proxy.Enabled.checked = ProxySettings.Enabled;
+			if (ProxySettings.Type == 1)
+				document.forms.Proxy.Type.options[0].selected = true;
+			else if (ProxySettings.Type == 2)
+				document.forms.Proxy.Type.options[1].selected = true;
+			else if (ProxySettings.Type == 4)
+				document.forms.Proxy.Type.options[2].selected = true;
+
+			document.forms.Proxy.Server.value = ProxySettings.Server;	
+			document.forms.Proxy.Port.value = ProxySettings.Port;
+			PROXY_Adjust();
+	}
+
+	function PROXY_Adjust()
+	{
+		if (!document.forms.Proxy.Enabled.checked) {
+			document.forms.Proxy.Type.disabled = true;	
+			document.forms.Proxy.Server.disabled = true;	
+			document.forms.Proxy.Port.disabled = true;	
+			var disableMes = document.all.disableMe;
+			for (var i = 0; i < disableMes.length; i++)
+				disableMes[i].disabled = true;
+		} else {
+			document.forms.Proxy.Type.disabled = false;	
+			document.forms.Proxy.Server.disabled = false;	
+			document.forms.Proxy.Port.disabled = false;	
+			var disableMes = document.all.disableMe;
+			for (var i = 0; i < disableMes.length; i++)
+				disableMes[i].disabled = false;
+		}
+	}
+
+</SCRIPT><BODY onLoad="onLoadPage();"> <SCRIPT>OpenSettingsTable( "Settings", "Messenger proxy server settings" , "" , true);</SCRIPT><DIV id=buttonBar> <msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" /> <msntv:CustomButton href="javascript:SetSettings()" class=buttonBarButton id=Done label="Save Changes" /> <script>document.all("Done").focus();</script> </DIV><DIV id=nonScrollArea><DIV class=description> <P> A Messenger proxy server allows you to use MSN Messenger in a place that restricts instant messaging. It is unlikely that you need this in your home network. </P> <P> To use a Messenger proxy server, select <EM>Enable Messenger proxy server</EM>, and type your proxy server settings in the boxes below. </P> <FORM NAME=Proxy onsubmit='return false;'><TABLE class=controlTable> <TR> <TD>Enable Messenger proxy server <TD><INPUT TYPE="CHECKBOX" NAME="Enabled" onclick="PROXY_Adjust();"> <TR> <TD id=disableMe>Proxy type: <TD><SELECT NAME="Type"><OPTION SELECTED VALUE = 1>SOCKS4<OPTION VALUE = 2>SOCKS5<OPTION VALUE = 4>HTTP</SELECT> <TR> <TD id=disableMe>Proxy server address: <TD><INPUT TYPE="TEXT" CLASS=inputText NAME="Server" MAXLENGTH=32> <TR> <TD id=disableMe>Proxy port: <TD><INPUT TYPE="TEXT" CLASS=inputText NAME="Port"> </TABLE> </FORM> </DIV> </DIV> <SCRIPT>CloseSettingsTable();</SCRIPT> <SCRIPT>
+function SetSettings()
+{
+	if (document.all.Enabled.checked) {
+		if (document.all.Server.value == "")
+		{
+			alert("Please enter a proxy server address.");
+			document.all.Server.focus();
+			return;
+		}
+		ProxySettings.Enabled = true;
+	} else {
+		ProxySettings.Enabled = false;
+	}
+	ProxySettings.Type = document.forms.Proxy.Type.value;		
+	ProxySettings.Server = document.forms.Proxy.Server.value;	
+	ProxySettings.Port = document.forms.Proxy.Port.value;	
+
+	ConnectionManagerSave();
+	history.go(-1);
+}
+</SCRIPT> </BODY>

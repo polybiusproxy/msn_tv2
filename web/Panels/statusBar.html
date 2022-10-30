@@ -1,0 +1,433 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/Progress.htc">
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+<style>
+
+.fixedTextField
+{
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: left;
+	font-family: segoe tv;
+	font-size: 17px;
+	color: #BEBEBE;
+}
+
+.clockLabel
+{
+	font-size: 16px;
+	font-family: segoe tv;
+	color: #BEBEBE;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align:center;
+}
+
+.icon
+{
+	height: 36px;
+	vertical-align: middle;
+	display: inline-block;
+}
+
+#memUsage {
+	width: 100%;
+	image-animation-offset-x:0;
+}
+
+</style>
+
+<script language="javascript" src="../Javascript/TVShell.js"></script>
+<script language="javascript">
+
+
+	MFOLDER_INBOX	= 0;
+	MLIST_ALLOW		= 1;
+	MSTATE_ONLINE	= 0x2;
+	LED_Off			= 0;
+	LED_On			= 1;
+ 
+	var Messenger	= null;
+	try {
+		Messenger = TVShell.UserManager.CurrentUser.Messenger;
+	} catch (ex) {
+		TVShell.Message( "Unable to get Messenger. " + ex + " " + ex.description );
+	}
+	var Sink		= new ActiveXObject("MSNTV.MultipleEventSink");
+	var onlineCount	= -1;
+	var waitingCount = 0;
+
+	var MSTATE_UNKNOWN  = 0x0000;
+	var MSTATE_OFFLINE  = 0x0001;
+
+	var clockUpdateID = 0;
+	var bLoadingPage = true;
+	var secureLevel = 0;
+
+	// controls the available memory update
+	var MemUpdateID = 0;
+	var TotalMemBase = 0;
+	var MemUpdateInterval = 750;
+	var SysInfo = TVShell.SystemInfo;
+//		MemUpdateID = 1;
+
+	var DiagUpdateID = 0;
+	var DiagUpdateInterval = 1000;
+	var bDisplayTCP = false;
+	var bDisplayIP = false;
+	var bDisplayUDP = false;
+
+	// For compatibility with older clients, continue to support the following two functions
+	document.ShowLoadIcon = function () { return UpdateCapsLockIcon( true , TVShell.CapsLock );};
+	document.HideLoadIcon = function () {return UpdateCapsLockIcon( false , TVShell.CapsLock );};
+
+ 
+	function OnUserStateChanged(pUser, mPrevState)
+	{
+		updateIMStatus();
+	}
+
+	function updateIMStatus()
+	{
+		var allowList = Messenger != null ?
+			Messenger.GetList(MLIST_ALLOW) : new Array();
+		var count = allowList.Count;
+		var newOnlineCount = 0;
+
+		for (var i = 0; i < count; i++) {
+			var st = allowList.Item(i).State;
+			if ( ( st & 3 ) == 2 )	// bit 1 covers all online states
+			{
+				newOnlineCount++;
+			}
+		}
+		var bUpdate = false;
+		if ( waitingCount != 0 )
+			bUpdate = true;
+		else
+		{
+			if ( newOnlineCount != onlineCount )
+			{
+				if ( newOnlineCount > onlineCount || newOnlineCount == 0 )
+					bUpdate = true;
+				onlineCount = newOnlineCount;
+			}
+		}
+		if ( bUpdate ) UpdateStatusField();
+	}
+
+function UpdateClock()
+{
+	UpdateCLockField();
+	clockUpdateID = setTimeout( "UpdateClock()" , 30000 );
+}
+
+function UpdateCLockField()
+{
+	var d = new Date();
+	var hh = d.getHours();
+	var mm = d.getMinutes();
+	var ampm = "am";
+	if ( hh > 11 )
+	{
+		if ( hh > 12 ) hh -= 12;
+		ampm = "pm";
+	}
+	if ( hh == 0 ) hh = 12;
+	var mm = ( mm <= 9 ) ? "0" + mm : mm;
+	var str = hh + ":" + mm + ampm;
+// testing	str = "12:55pm";
+	document.all.clockField.innerHTML = str;
+}
+
+function OnClockSet()
+{
+	TVShell.Message("OnClockSet- event");
+	UpdateCLockField();
+}
+
+
+	function UpdateWaitingCount( cnt )
+	{
+		waitingCount = cnt;
+		onlineCount = -1;
+		setTimeout( "updateIMStatus()" , 500 );
+	}
+
+	function OnListAddResult(hr, mList, pUser)
+	{
+		if (mList == MLIST_ALLOW) {
+			OnUserStateChanged(pUser, 0);
+		}
+	}
+
+			
+	function OnDownloadBegin(name, fileName, domain)
+	{
+		if (name == "main")
+		{
+			UpdateCapsLockIcon( true , TVShell.CapsLock );
+		}
+	}
+	
+	function OnDownloadComplete(name)
+	{
+		if (name == "main")
+		{
+			UpdateCapsLockIcon( false , TVShell.CapsLock );
+		}
+	}
+	
+	function OnSecurityIconChange(panelName, sLevel)
+	{
+		// NOTE: secureLevel of 1 means mixed.  We MAY want to show something different in that case
+		if (panelName == "main" )
+		{
+			secureLevel = sLevel;
+			UpdateLockIcon();
+			
+			TVShell.Message("secureLevel: " + secureLevel);
+		}
+	}
+
+// testing var testState = 0;
+
+	function OnCapsLockChange(isOn)
+	{
+		UpdateCapsLockIcon( bLoadingPage , isOn );
+	
+	}
+
+	function OnAfterFirstShow(panelName)
+	{
+		if (panelName == "statusbar")
+			TVShell.PrintManager.SearchPrinters();
+	}
+
+	function OnUserModified(dispID)
+	{
+		UpdateUserIcon();
+	}
+
+	function UpdateMemAvail()
+	{
+		if (TotalMemBase == 0) {
+			TotalMemBase = SysInfo.AvailPhysicalMemory;
+			TVShell.Message("StatusPanel: using " + TotalMemBase + " bytes for the base memory");
+		} else {
+			var amtUsed;
+			var amtAvail = SysInfo.AvailPhysicalMemory;
+			if (TotalMemBase <= amtAvail)
+				amtUsed = 0;
+			else
+				amtUsed = TotalMemBase - amtAvail;
+
+			document.all["memUsage"].percentComplete = Math.round(amtUsed/TotalMemBase*100);
+		}
+
+		MemUpdateID = setTimeout("UpdateMemAvail()", MemUpdateInterval);
+	}
+
+	
+	function UpdateDiagStatistics()
+	{
+
+		var str = "";
+		if ( bDisplayTCP )
+		{
+			str = "T("+TVShell.ConnectionManager.NetworkStatistics.TCPInSegs + "/" +
+				TVShell.ConnectionManager.NetworkStatistics.TCPInErrors + ")";
+		}
+		if ( bDisplayIP )
+		{
+			str += "&nbspI("+TVShell.ConnectionManager.NetworkStatistics.IPInReceives + "/" +
+				TVShell.ConnectionManager.NetworkStatistics.IPInHdrErrors + ")";
+		}
+		if ( bDisplayUDP )
+		{
+			str += "&nbspU("+TVShell.ConnectionManager.NetworkStatistics.UDPInDatagrams + "/" +
+				TVShell.ConnectionManager.NetworkStatistics.UDPInErrors + ")";
+		}
+		
+
+		document.all.StatusField.innerHTML = str;
+		
+		DiagUpdateID = setTimeout("UpdateDiagStatistics()", DiagUpdateInterval);
+	}
+
+	
+	function OnLoad()
+	{
+		if (Messenger)
+		{
+			Sink.AttachEvent(Messenger, "OnUserStateChanged", OnUserStateChanged);
+			Sink.AttachEvent(Messenger, "OnListAddResult", OnListAddResult);
+		}
+
+		Sink.AttachEvent(TVShell.DeviceControl, "OnSetClock", OnClockSet );
+		Sink.AttachEvent(TVShell.PanelManager, "OnSecurityIconChange", OnSecurityIconChange);
+		Sink.AttachEvent(TVShell.PanelManager, "OnAfterFirstShow", OnAfterFirstShow);
+		Sink.AttachEvent(TVShell.PanelManager, "OnDownloadBegin", OnDownloadBegin);
+		Sink.AttachEvent(TVShell.PanelManager, "OnDownloadComplete", OnDownloadComplete);
+		Sink.AttachEvent(TVShell, "OnCapsLockChange", OnCapsLockChange);
+		Sink.AttachEvent(TVShell.UserManager, "OnUserAttributeModified", OnUserAttributeModified);
+
+		if(TVShell.UserManager.CurrentUser.getAttribute("msgLight")=="true" && TVShell.UserManager.CurrentUser.ServiceList("mail::writemail"))
+			document.all.newemailText.style.display="block";
+		else
+			document.all.newemailText.style.display="none";
+
+		if (TVShell.UserManager.CurrentUser)
+			Sink.AttachEvent(TVShell.UserManager.CurrentUser, "OnUserModified", OnUserModified);
+
+		if (Messenger != null && TVShell.UserManager.CurrentUser.ServiceList.Item("messenger::root") != null) {
+			if (Messenger.LocalState != MSTATE_UNKNOWN && Messenger.LocalState != MSTATE_OFFLINE) { 
+				OnUserStateChanged(null, 0);
+			}
+		}
+
+		UpdateClock();
+		UpdateUserIcon();
+		UpdateStatusField();
+		UpdateLogo();
+		OnCapsLockChange( TVShell.CapsLock );
+
+		// Initial delay of 5 seconds to get a better base memory value
+		if (MemUpdateID != 0) {
+			MemUpdateID = setTimeout("UpdateMemAvail()", 5000);
+		}
+
+		if ( bDisplayUDP || bDisplayIP || bDisplayTCP )
+		{
+			DiagUpdateID = setTimeout("UpdateDiagStatistics()", DiagUpdateInterval);
+		}
+
+	}
+
+function UpdateUserIcon()
+{
+	var str = "";
+	if (TVShell.UserManager.CurrentUser)
+	{
+		var imgSource = TVShell.UserManager.CurrentUser.SmallIcon;
+		str = "<img src='" + imgSource + "' style='width:\"100%\"; height:30px;margin-top:5px;margin-bottom:1px;'>";
+		document.all.userIconField.innerHTML = str;
+	}
+}
+
+
+function UpdateStatusField()
+{
+
+	if ( bDisplayUDP || bDisplayIP || bDisplayTCP )
+	{	// diagnostics will be displayed here instead
+		return;
+	}
+
+	var str = "";
+	if ( waitingCount == 0 )
+	{
+		if ( TVShell.PanelManager.FocusedPanel.Name != "impanel" && onlineCount > 0 )
+		{
+			str += "&nbsp New contacts online" ;
+		}
+	}
+	else
+	{
+		str = "<span id=onlineIcon style='behavior: url(#default#alphaImageLoader); margin-left:4px; margin-right: 4px; width:20px; height: 22px; vertical-align: top; src:images/AlertsIconNewMessage.png;'></span>";
+		str += waitingCount + "&nbspWaiting for reply";
+	}
+
+	document.all.StatusField.innerHTML = str;
+}
+
+
+function UpdateLogo()
+{
+	var str = "";
+	if (MemUpdateID != 0) {
+		str = "<span style='vertical-align:middle; height:36px;'><msntv:progressbar id='memUsage' style='margin-top:13px;'/></span>";
+	} else {
+		str = "<span style='vertical-align:middle; height:36px; behavior:url(#default#alphaImageLoader); src:images/Logo_MSNTVStatusBar.png;'></span>";
+	}
+	document.all.logoField.innerHTML = str;
+}
+
+// display load icon when loading, caps lock icon if needed when not loading
+function UpdateCapsLockIcon( pageLoading , isOn )
+{
+	bLoadingPage = pageLoading;
+	var str = "";
+	if ( pageLoading )
+		str = "<img class=icon src='images/Icon_LoadPageStatusBar.gif'>";
+	else
+	{
+		if ( isOn )	str = "	<span class=icon style='behavior: url(#default#alphaImageLoader); src:images/Icon_CapsLockStatusBar.png;'></span>";
+	}
+	document.all.capsLockIcon.innerHTML = str;
+}
+
+function UpdateLockIcon()
+{
+	var str = "";
+// testing 	secureLevel = 2;
+	if ( secureLevel >= 2 )
+	{
+		str = "<span class=icon style='behavior: url(#default#alphaImageLoader); src:images/Icon_SecurePageStatusBar.png;'></span>";
+	}
+	document.all.lockIconField.innerHTML = str;
+}
+
+function OnUserAttributeModified(user, attributeName)
+{
+	if(attributeName=="msgLight" && user.EMail==TVShell.UserManager.CurrentUser.EMail)
+	{
+		var obj=document.all.newemailText;
+		if(obj)
+		{   
+			if(user.getAttribute("msgLight")=="true" && TVShell.UserManager.CurrentUser.ServiceList("mail::writemail"))
+				obj.style.display="block";
+			else
+				obj.style.display="none";
+		}
+	}
+}
+
+</script> 
+
+<title></title>
+</head>
+
+<BODY text=#E6E6E6 bottomMargin=0 leftMargin=0 topMargin=0 rightMargin=0 bgcolor=black onload="OnLoad();">
+<DIV style="position:absolute; top: 0px; left: 0px; width: 100%; height: 36px">
+	<table cellpadding="0" cellspacing="0" width="100%" height="100%">
+	  <tr>
+	    <td width="560">
+	    	<img src="images/StatusBarBG.jpg" width="560" height="36"></td>
+	    <td style="background: url(images/StatusBarStretch.jpg) repeat-x;width:100%;text-align:right">
+	    </td>
+	  </tr>
+	</table>
+</DIV>
+
+<DIV id="userIconField" style="position:absolute; top: 0px; left: 6px; width: 30px; height: 36px;"></DIV>
+<DIV id="newMailField" style="position:absolute; top: 12px; left: 45px; width: 100px; height: 36px;">
+<span id="newemailText" height=20 width=95 style="font-family:Segoe;font-size:18px;color:#BEBEBE;display:none">New mail</span>
+</DIV>
+<DIV id="StatusField" class ='fixedTextField' style="position:absolute; top: 14px; left: 140px; width:200px; height: 36px;"></DIV>
+
+<DIV id="capsLockIcon" style="position:absolute; top: 0px; right: 200px; height: 36px; width:20px;"></DIV>
+	
+<DIV id="lockIconField" style="position:absolute; top: 0px; right: 177px; height: 36px; width:20px;"></DIV>
+<DIV id="clockField" class='clockLabel' style="position:absolute; top: 14px; right: 109px; height: 36px; width:64px;"></DIV>
+<DIV id="logoField" style="position:absolute; top: 0px; right: 0px; height: 36px; width:109px; text-align:right;"></DIV>
+
+</body>
+
+</html>

@@ -1,0 +1,131 @@
+<HTML xmlns:msntv> <?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc"> <?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc"> <TITLE>Proxy settings</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ServiceList.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/ConnectionManager.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/parameters.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/SettingsTemplate.js"></SCRIPT> <SCRIPT LANGUAGE=Javascript>
+	var parameters	= FindParameters(TVShell.PanelManager);
+	var ProxySettings = TVShell.ConnectionManager.HTTPProxy;
+
+	function onLoadPage()
+	{
+		var panel = TVShell.PanelManager.FocusedPanel;
+		var proxyEnabled = panel.GetTravelLogFlag( "proxyEnabled" , panel.URL );
+		var proxyServer = panel.GetTravelLogFlag( "proxyServer" , panel.URL );
+		var proxyPort = panel.GetTravelLogFlag( "proxyPort" , panel.URL );
+
+		if ( proxyEnabled != null )
+			document.forms.Proxy.Enabled.checked = proxyEnabled;
+		else
+			document.forms.Proxy.Enabled.checked = ProxySettings.Enabled;
+
+		if ( proxyServer != null )
+			document.forms.Proxy.Server.value = proxyServer;
+		else
+			document.forms.Proxy.Server.value = ProxySettings.Server;
+
+		if ( proxyPort != null && proxyPort > 0 )
+			document.forms.Proxy.Port.value = proxyPort;
+		else
+		{
+		
+			if (ProxySettings.Port > 0)
+				document.forms.Proxy.Port.value = ProxySettings.Port;
+		}
+
+		PROXY_Adjust();
+	}
+
+	function PROXY_Adjust()
+	{
+		if (!document.forms.Proxy.Enabled.checked) {
+			document.forms.Proxy.Server.disabled = true;
+			document.forms.Proxy.Port.disabled = true;
+			var disableMes = document.all.disableMe;
+			for (var i = 0; i < disableMes.length; i++)
+				disableMes[i].disabled = true;
+		} else {
+			document.forms.Proxy.Server.disabled = false;
+			document.forms.Proxy.Port.disabled = false;
+			var disableMes = document.all.disableMe;
+			for (var i = 0; i < disableMes.length; i++)
+				disableMes[i].disabled = false;
+		}
+	}
+
+</SCRIPT><BODY onload="onLoadPage();"> <SCRIPT>OpenSettingsTable( "Settings" , "Proxy server settings" , "" , false );</SCRIPT><DIV id=sideBar> <msntv:CustomButton href="javascript:SetSettings()" class=buttonBarButton id=Done label="Save Changes" /> <msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" /> <script>document.all("Done").focus();</script> </DIV><DIV id=scrollArea><DIV class=description> <FORM NAME=Proxy> <P> If your <SCRIPT>document.write(ProductShortName);</SCRIPT> is part of a network that uses a Web proxy server, you need to provide some information about the proxy server so that you can connect to the <SCRIPT>document.write(ServiceFullName);</SCRIPT>. </P> <P> To use a Web proxy server, check the box labeled <EM>Enable Web proxy server</EM>, and then type the proxy server settings in the boxes below. </P> <P><TABLE class=controlTable> <TR> <TD>Enable Web proxy server <TD><INPUT TYPE="CHECKBOX" NAME="Enabled" onclick="PROXY_Adjust();"> <TR> <TD id=disableMe>Proxy server address: <TD><INPUT TYPE="TEXT" CLASS=inputText NAME="Server" MAXLENGTH=256> <TR> <TD id=disableMe>Proxy port: <TD><INPUT TYPE="TEXT" CLASS=inputText NAME="Port" SIZE=3 MAXLENGTH=5 VALUE="80"> </TABLE> </P> </FORM> If you need to use a different proxy server to be able to use MSN Messenger, please choose this link: <P><UL class=links><LI><A href="javascript:gotoIMProxy()">Messenger proxy server settings</A></LI></UL> </P> </DIV> </DIV> <SCRIPT>CloseSettingsTable();</SCRIPT> <SCRIPT>
+
+function gotoIMProxy()
+{
+	// temporarily tag this travellog entry so we can restore these values if we come back to this page
+	var panel = TVShell.PanelManager.FocusedPanel;
+	panel.SetTravelLogFlag( "proxyEnabled" ,  document.all.Enabled.checked );
+	panel.SetTravelLogFlag( "proxyServer" ,  document.all.Server.value );
+	panel.SetTravelLogFlag( "proxyPort" ,  document.forms.Proxy.Port.value );
+	
+	document.location = "../IMProxy/IMProxySettings.html";
+}
+
+function NavigateBack()
+{
+	history.go(-1);
+}
+
+function SaveCompleted()
+{
+	TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.",
+											 "msntv:/Panels/Images/TaskCompleted.gif",
+											 "Task_Complete", 2000);
+
+	NavigateBack();
+}
+
+function SetSettings()
+{
+	var digits = "0123456789";
+	var port = document.forms.Proxy.Port.value;
+	var validPort = false;
+
+	if ( port.length > 0 )
+	{
+		validPort = true;
+		for (var i=0; i<=port.length; i++)
+		{
+			if (digits.indexOf(port.charAt(i)) == -1 )  validPort = false;
+		}
+	}
+	
+
+	if (document.all.Enabled.checked) {
+		if (document.all.Server.value == "")
+		{
+			alert("Please enter a proxy server address.");
+			document.all.Server.focus();
+			return;
+		}
+		if ( !validPort )
+		{
+			alert("Please enter a valid port.");
+			document.all.Port.focus();
+			return;
+		}
+		ProxySettings.Enabled = true;
+	} else {
+		ProxySettings.Enabled = false;
+	}
+	
+	ProxySettings.BypassLocal = true; // always on
+
+	ProxySettings.Server = document.forms.Proxy.Server.value;	
+	if ( validPort )
+		ProxySettings.Port = document.forms.Proxy.Port.value;	
+	else
+		ProxySettings.Port = 80;
+
+	ConnectionManagerSave();
+
+	TVShell.ConnectionManager.HTTPProxy.ApplySettings();
+
+	if (parameters["confirm"])
+		location.replace("../ConfirmAndTryAgain.html?Proxy=1")
+	else
+		SaveCompleted();
+
+	return;
+}
+</SCRIPT> </BODY>

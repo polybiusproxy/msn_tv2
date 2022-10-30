@@ -1,0 +1,64 @@
+<html xmlns:msntv>
+<head>
+	<title>Albums</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Placing photos in albums" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+        You can store up to 100 photos on your <script>document.write( ProductShortName );</script>, and arrange them in albums. Once you've placed your photos in an album, you can view them on your TV as a slide show or a screen saver.
+        </p>
+        </p>
+        <b>Important:</b> Photos are saved on your <script>document.write( ProductShortName );</script> at a resolution that's suitable for viewing on a TV. If you want to keep high-resolution versions of your photos, make sure to store the originals elsewhere.
+        </p>
+        </p>
+	<p>
+        <p>
+        You don't have to sign in to the <script>document.write( ServiceFullName )</script> to save photos in albums. Just turn on your <script>document.write( ProductShortName );</script> and choose <b>Photos</b> from the Sign-in page.
+        </p>
+        </p>
+        <p>
+        <p>
+        To save photos in an album, you must first select the photos from a memory card or from a shared folder on a computer that's connected to your home network.
+        </span>
+	<p>
+        <p>
+        For information on viewing photos that are on a memory card, choose the link below:
+        <br>
+        <span class="customBullet"><a id="addrbookEmail1ID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_Photos_MemoryCard_Offline_v11.htm');">Viewing photos from a memory card</a><br>
+        </span>
+        <p>
+        <p>
+        For information on connecting your <script>document.write( ProductShortName );</script> to your home network, choose the link below:
+        <br>
+        <span class="customBullet"><a id="addrbookEmail1ID" class="topicLink" href="javascript:goToPageAndPassNewOrigin('MSNTV_PROC_SINGLE_HomeNet_Intro_v11.htm');">Connecting to a home network</a>
+        </span>
+        <p>
+        <p>
+        When you've selected the photos you want to put in an album, choose <b>Save Album</b> and choose an album, or create a new one if you like.
+        </p>
+        </p>
+        <p>
+        <p>
+        For detailed instructions on saving photos in albums, sign in to the <script>document.write( ServiceFullName )</script> and choose <b>Help</b> and then <b>Photos</b>.
+        </p>
+        </p>
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<html xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<title>Passport Login Failure</title>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script>
+	function FriendlyErrorTitle()
+	{
+		return "Passport login failure";
+	}
+
+  	function FriendlyErrorBody()
+	{
+		var errorBody = "<p>Sorry, the Passport servers could not be reached. Please try again later.</p>";
+		return errorBody;
+	}
+    
+</script>
+</head>
+<BODY class=fullPage>
+	<div id="icon"></div>
+	<div id="title" class="header">
+		<SCRIPT>
+			document.write(FriendlyErrorTitle());
+		</SCRIPT>
+	</div>	
+	<div id="description">
+		<SCRIPT>
+		document.write(FriendlyErrorBody());
+		</SCRIPT>
+	</div>
+	<div id="buttonBar">
+		<msntv:CustomButton id=default label="Done" onClick="javascript:history.go(-1)" />
+		<script>document.all("default").focus();</script>
+	</div>
+</body> 
+</html>

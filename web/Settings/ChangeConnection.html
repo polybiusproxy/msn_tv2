@@ -1,0 +1,112 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Advanced Dialing</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/MSNTVService.js"></SCRIPT>
+<SCRIPT>
+	var WANProvider = TVShell.ConnectionManager.WANProvider;
+	var TMBug = "<sup style='font-family: segoe tv; font-size: 10px;'>&#174;</sup>";
+</SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="../CSS/Settings.css">
+</HEAD>
+
+<BODY>
+<FORM name="dialSettingsForm">
+
+<SCRIPT>OpenSettingsTable( "Settings" , "Change the way you connect" , "" , true);</SCRIPT>
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:submitChanges()" class=buttonBarButton id=Done label="Save Changes" />
+		<msntv:CustomButton onclick="history.go(-1)" label="Cancel" id="default" />
+		<script>document.all("Done").focus();</script>
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description>
+			<P>
+			Currently, your <SCRIPT>document.write(ProductShortName);</SCRIPT> is connecting to the <SCRIPT>document.write(ServiceFullName);</SCRIPT>
+			using 
+			<SCRIPT>
+				if (WANProvider == BYOAEthernetProviderName)
+					document.write("<EM>broadband (a high-speed connection like cable or DSL)</EM>.");
+				else if (WANProvider == BYOAModemProviderName)
+					document.write("<EM>your own Internet Service Provider's dial-up service</EM>.");
+				else
+					document.write("<EM>MSN" + TMBug +" Dial-up Internet Access</EM>.");
+			</SCRIPT>
+			</P>
+			<P>
+			Choose one of the following:</P>
+			<TABLE class=options>
+			<TR>
+				<TD><INPUT type=radio name=NewProvider value=Keep checked>
+				<TD>Don't change the way I'm connecting
+			</TR>
+			<SCRIPT>
+				if (WANProvider != MSNIAModemProviderName)
+					document.write("\
+						<TR>\
+							<TD><INPUT type=radio name=NewProvider value='" + MSNIAModemProviderName + "'> \
+							<TD>Change my connection to use MSN" + TMBug + " Dial-up Internet Access\
+						</TR>");
+
+				if (WANProvider != BYOAModemProviderName)
+					document.write("\
+						<TR>\
+							<TD><INPUT type=radio name=NewProvider value='" + BYOAModemProviderName + "'> \
+							<TD>Change my connection to use my own Internet Service Provider's dial-up service\
+						</TR>");
+						
+				if (WANProvider != BYOAEthernetProviderName)
+					document.write("\
+						<TR>\
+							<TD><INPUT type=radio name=NewProvider value='" + BYOAEthernetProviderName + "'> \
+							<TD>Change to use broadband (a high-speed connection like cable or DSL)\
+						</TR>");
+			</SCRIPT>
+			</TABLE>
+			</P>
+		</DIV>
+	</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+	
+</FORM>
+</BODY>
+
+<SCRIPT>
+function NavigateBack()
+{
+	history.go(-1);
+}
+
+function submitChanges() 
+{
+	var buttons = document.all.NewProvider;
+	
+	if (!buttons[0].checked)	// buttons[0] is "keep old setting"
+	{
+		for (var i = 1; i < buttons.length; i++)
+			if (buttons[i].checked)
+			{
+				if (buttons[i].value == BYOAModemProviderName) {
+					document.location="msntv:/Settings/ISPInfo.html?SetConnectionType=true";
+					return;
+				} else {
+					SetConnectionType(buttons[i].value);
+					ConnectionManagerSave();
+				}
+				
+				break;
+			}
+	}
+
+	TVShell.PanelManager.AnimationMessageBox("Your changes have been saved.", "msntv:/Panels/Images/TaskCompleted.gif", "Task_Complete", 2000);
+	NavigateBack();
+}
+</SCRIPT>
+

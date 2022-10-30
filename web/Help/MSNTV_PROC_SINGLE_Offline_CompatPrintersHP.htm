@@ -1,0 +1,35 @@
+<html xmlns:msntv>
+<head>
+	<title>Supported HP printers</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Supported HP printers" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+                The following Hewlett-Packard printers are supported:
+        <ul>
+                <li>HP Apollo P2100, P2150, P2200,  and P2250</li>
+                <li>HP Color LaserJet 2500, 3500, 4550, 4600, and 5500</li>
+                <li>HP Deskjet 45WBT, 450, 450CBI, 450CI, 610C, 612C, 630C, 632C, 648C, 656, 810C, 812C, 815C, 816C, 825, 842C, 845, 850C, 850K, 890C, 890K, 895CSE, 895CXI, 920, 932C, 935C, 940, 948, 952C, 970CSE, 970CXI, 980, 990C, 995, 1125C, 1220C, 3816, 3820, 5160, 5158, 5551, 5670, 5850, 6127, 9300, 9600, CP1160, and CP1700</li>
+		<li>HP Deskjet PhotoSmart 1000, 1100, P2500, P2600, PS100, PS130, PS140, PS230, PS240, PS1115, PS1215, PS12818, PS1315, PS7150, PS7260, PS7268, PS7350, PS7550, PS7660, PS7760, and PS7960</li>
+		<li>HP Laserjet 1200, 1300, 2200, 2300, 4100, 4200, and 4300</li>
+        </ul>
+        </span>
+</div>
+
+<div id="sideBar">
+        <msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("DoneID").focus();</script>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<html><head> <title>hovering butterfly</title> <SCRIPT LANGUAGE="JavaScript">
+
+var wwidth, wheight;
+var ydir = '+=3';
+var xdir = '+=3';
+var id1, id2;
+var x = 1;
+var y = 1;
+
+function start() {
+    clearInterval(id1);
+    clearInterval(id2);
+    wwidth = document.body.clientWidth - 85;
+    wheight = document.body.clientHeight - 85;
+    id1=setInterval(randomdir, 20000);
+    id2=setInterval(animate, 20);
+}
+function randomdir() {
+    if (Math.floor(Math.random()*2))
+       (Math.floor(Math.random()*2)) ? xdir='-=3': xdir='+=3';
+    else
+       (Math.floor(Math.random()*2)) ? ydir='-=3': ydir='+=3';
+}
+function animate() {
+    eval('x'+xdir);
+    eval('y'+ydir);
+    pic1.pixelLeft = x;
+    pic1.pixelTop = y;
+
+    if (pic1.pixelTop <=-5) ydir = '+=3';
+    if (pic1.pixelTop >= wheight) ydir = '-=3';
+    if (pic1.pixelLeft >= wwidth) xdir = '-=3';
+    if (pic1.pixelLeft <=-10) xdir = '+=3';
+}
+
+</script> </head><body bgcolor="#000000" hspace="0" vspace="0" topmargin="0" leftmargin="0" OnLoad="start()" ><div id="pic1" style="position:absolute; visibility:visible; left:0px; top:0px;"> <img src="msntv:/images/MSNButterFlyBlack.gif" border="0" width="85" height="85"> </div> <script language="javascript">
+var pic1=document.all.pic1.style;
+</script> </body> </html>

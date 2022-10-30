@@ -1,0 +1,50 @@
+<html xmlns:msntv>
+<head>
+	<title>Playing purchased music</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<?IMPORT namespace="msntv" implementation="../HTC/ScrollingDIV.htc">	<!-- Required for scrolling area -->
+	<script language="Javascript" src="ServerPaneHelp.js"></script>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<!-- showScrollTop="true" displays gradient in text area -->
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Playing purchased music" helpURL="MSNTV_ALTTOC_main.htm" showScrollTop="true" />
+
+<div id="scrollArea">
+	<span class="description">
+If you've purchased music from an online source (MSN Music, for example) and downloaded it to your home computer, you can play that music using your Internet & Media Player.
+<p>
+<p>
+Some music files use Windows Media digital rights management (DRM) for file protection. To play DRM-protected files that are on a computer on your home network, you must first download, install, and run a free application called Windows Media Connect on your computer.
+<p>
+<p> 
+To download Windows Media Connect, use your computer's browser to go to www.microsoft.com, and then search for Windows Media Connect and follow the instructions you see.
+<p>
+<p>
+On your computer, use the Windows Media Connect Wizard to select the folders that contain your music files, and then select the Internet & Media Player as a device that can share those folders.
+
+
+</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="javascript:ReturnToReferrer()" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+
+</div>
+
+</body>
+</html>
+
+<script language="javascript" type="text/javascript">
+    var RF= escape(parent.document.referrer);  
+    var logo = 'http://c.msn.com/c.gif?DI=1455&PI=68206&';
+    var cImage = 'http://c.msn.com/c.gif?DI=1455&PI=68206&TP=http://msntv.msn.com/';
+// ********************************************************    
+    var taxonomy_data ='PASTEHERE';  
+// ********************************************************
+    var hello = '<img width=0 height=0 src=\"' + cImage + taxonomy_data + '&RF='+RF+'\" >';
+    document.write(hello);
+</script> 

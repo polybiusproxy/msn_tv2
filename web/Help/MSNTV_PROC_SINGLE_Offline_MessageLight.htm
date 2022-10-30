@@ -1,0 +1,49 @@
+<html xmlns:msntv>
+<head>
+	<title>Message Light</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Using the blue Messages light" showScrollTop="true" />
+
+<div id="ScrollArea">
+	<span class="description">
+        <p>
+        The blue Messages light on the front of your Internet & Media Player can tell you when you have new e-mail. 
+		It can even check for new mail when you're signed out. But you'll have to set it up.
+		</p>
+        <p>
+        Note: If you want your Messages light to work while you're signed out, you must save your password on the Sign-in page.
+		</p>
+        <ol>
+            <li>Choose <b>Settings</b> from the Sign-in page.</li>
+			<li>Choose <b>Set up automatic updates</b>.</li>
+            <li>Check the box labeled <b>Check for new mail while I'm signed out</b>.</li>
+			<li>Choose the box to the right of <b>Check for new mail every</b> and press <b>OK</b> to see a list of time intervals.</li>
+			<li>Choose how often you want the Player to check for new mail. (If you are using a dial-up connection, 
+				this involves a phone call to the MSN TV Service each time.) You can also choose when the Player will 
+				start checking for mail. Move the yellow highlight box to the line that says <b>Check for updates around</b> 
+				and choose a time.</li>
+			<li>Choose <b>Save Changes</b>.</li>
+			<li>On the Sign-in page, enter your password and make sure to check the box that says <b>Save password so I 
+				don't need to retype it</b>.</li>
+        </ol>
+        <p>
+        The blue light will illuminate when a person who is signed in gets new mail. If no one is signed in, then it lights 
+		up when anyone with a saved password gets mail. In that case, the Sign-in page will display the words <b>New mail</b> 
+		next to whoever has mail waiting.
+        </p>
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

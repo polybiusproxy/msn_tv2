@@ -1,0 +1,40 @@
+<html xmlns:msntv>
+<head>
+	<title>Connection Settings</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Home networking" showScrollTop="true" />
+
+<div id="ScrollArea">
+	<span class="description">
+		<P>
+		You can use your <SCRIPT>document.write(ProductShortName);</SCRIPT> to view photos, listen to music, and watch videos from the computers on your home network.
+		</P>
+		<P>
+		For instructions on how to use your <SCRIPT>document.write(ProductShortName);</SCRIPT> with your home network, choose <EM>Connecting your <SCRIPT>document.write(ProductNickname);</SCRIPT> to your home network</EM>.
+		<UL class=links>
+		<LI><A HREF='javascript:GetPaneHelpURL(PH_topicTOC,"MSNTV_PROC_SINGLE_HomeNetwork.htm")'>Connecting your <SCRIPT>document.write(ProductNickname);</SCRIPT> to your home network</A></LI>
+		</UL>
+		<P>
+		After you connect your <SCRIPT>document.write(ProductNickname);</SCRIPT> to your home network, choose <EM>Manage your home network</EM> to find the computers your <SCRIPT>document.write(ProductShortName);</SCRIPT> can access.
+		</P>
+		<P>
+		<UL class=links>
+		<LI><A HREF="msntv:/Settings/Network/HomeNetworking.html">Manage your home network</A>
+		</UL>
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

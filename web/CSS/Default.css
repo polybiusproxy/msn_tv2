@@ -1,0 +1,18 @@
+input {
+	font-size: 18px;
+}
+
+button {
+	font-size: 18px;
+}
+
+select {
+	font-size: 18px;
+}
+
+textarea {
+	font-size: 18px;
+}
+
+.dMSNME_1 { display: none; }
+.vMSNME_1 { visibility: hidden; }

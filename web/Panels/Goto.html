@@ -1,0 +1,336 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/DropDownList.htc">
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+
+<title>Goto Panel</title>
+
+<link rel=StyleSheet type="text/css" href="../CSS/Default.css">
+<link rel=StyleSheet type="text/css" href="../CSS/Panel.css">
+
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<script language="Javascript" src="../Javascript/PanelImpl.js"></script>
+
+<script language="Javascript">
+MAX_DROPDOWN_SIZE	= 6;
+
+var thisPanelName = window.name;
+
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var urls;
+var matches = new Array();
+var g_pendingURL = null;
+
+var TRIM_LEADING_SPACE =0x01;
+var TRIM_TAILING_SPACE =0x02;
+var TRIM_BOTH_END = 0x03;
+
+//this function is for debug purpose only
+function DumpUrls(URLS)
+{
+  var length=URLS.length;
+  var i;
+  if(length>0)
+    for(i=0;i<length;i++)
+	  TVShell.Message("URL"+i+"="+URLS[i]);
+  else
+       TVShell.Message("No urls");
+
+}
+
+function TrimSpace(data, mode)
+{
+  var len;
+  var begin;
+  var end;
+  if(mode&TRIM_LEADING_SPACE)
+  {
+	  len=data.length
+	  for(begin=0;begin<len;begin++)
+		  if(data.charAt(begin)!=' ')
+			 break;
+	  data=data.substr(begin);
+  }
+  if(mode&TRIM_TAILING_SPACE)
+  {
+	len=data.length
+	for(end=len-1;end>begin;end--)
+	  if(data.charAt(end)!=' ')
+		 break;
+	 data=data.substr(0,end+1)
+  }
+  return data;
+}
+
+function TrimUrlPrefix(url)
+{
+	if(url.indexOf("http://")==0) {
+		url = url.substr(7);
+	}
+	else if (url.indexOf("https://") == 0) {
+		url = url.substr(8);
+	}
+	if (url.indexOf("www.") == 0) {
+		url = url.substr(4);
+	}
+	return url;
+}
+
+function CompareStrings(string1, string2)
+{
+    var result=0;
+	var str1 = TrimUrlPrefix(string1);
+	var str2 = TrimUrlPrefix(string2);
+	if(str1 && str2)
+	    result=str1.localeCompare(str2);
+	else if(str1){
+	    TVShell.Message("string2 is undefined");
+	    result=1;
+	}
+	else if(str2){
+		TVShell.Message("string1 is undefined");
+	    return -1;
+	}
+	else{
+	    TVShell.Message("string 1 and string2 are undefined");
+	    result=0;
+	}
+
+	return result;
+}
+
+function GenerateUrls()
+{
+	var mainpanel = PanelManager.Item("main");
+	var PanelHistory =  mainpanel.History; 
+	
+	var count = PanelHistory.TypedCount;
+    var tempURL;
+	
+	urls.length = 0; 
+   
+	for(i = 0, j = 0; i < count; i++) {
+	   if (PanelHistory.TypedEntry(i) && (tempURL=PanelHistory.TypedEntry(i).URL))
+	       urls[j++] = tempURL;  
+	}
+	urls.sort(CompareStrings);
+
+	matches.length = 0;
+}
+
+function OnKeyUp()
+{
+	keyCode = window.event.keyCode;
+
+	//left and right arrow
+    if(keyCode==37 || keyCode==39) 
+	   return;
+
+    // backward: 8
+	if (keyCode!=8 &&( keyCode < 0x20 || keyCode > 0x7F)&& keyCode<128)
+		return;
+
+    UpdateMatches();
+}
+
+function UpdateMatches()
+{ 
+	var newMatches = new Array();
+	var url = TrimSpace(document.all.UrlTextBox.value,TRIM_LEADING_SPACE);   
+
+	url = TrimUrlPrefix(url.toLowerCase());
+
+	if (url != "") {
+		var matchIndex = 0;
+		var urlEntry;
+		var count = urls.length;
+		
+		for (i = 0; i < count; i++) {  
+			urlEntry = TrimUrlPrefix(urls[i]);
+            urlEntry = urlEntry.toLowerCase();
+			if (urlEntry.indexOf(url) == 0) {
+				newMatches[matchIndex++] = urls[i];
+			}
+			else if (url.localeCompare(urlEntry) < 0) {
+				break;
+			}
+		}
+	}
+
+	// Only update if first entry has changed.
+	if (matches.length != newMatches.length || matches[0] != newMatches[0]) {
+		matches = newMatches;
+		matches.sort(CompareStrings);
+		GenerateDropDown();
+	}
+}
+
+//for debug purpose on desktop
+
+// urls=["http://www.yahoo.com","http://www.msn.com","http://www.msn.com/index.html","d","e","f","g"];
+
+
+function GenerateDropDown()
+{
+	var dropDown = document.all.dropDown;
+
+	dropDown.RemoveItems();
+
+	if (matches.length > 0) {
+		dropDown.size = matches.length < MAX_DROPDOWN_SIZE ? matches.length : MAX_DROPDOWN_SIZE;
+		
+		for (var i = 0; i < matches.length; i++) {
+			dropDown.AppendItem(matches[i]);
+		}
+
+		document.all.dropDownCell.style.visibility = "visible";
+	}
+	else {
+		document.all.dropDownCell.style.visibility = "hidden";
+	}	
+}
+
+function GoToUrl()
+{
+	var url = TrimSpace(document.all.UrlTextBox.value,TRIM_BOTH_END);
+	var temp = url.toLowerCase();
+
+	if (temp != "http://" && temp != "" && temp != "http://www.") {   
+	    if (temp.indexOf("http://") == 0) {
+		    temp = temp.substr(7);
+	    }
+	    else if (temp.indexOf("https://") == 0) {
+	    	temp = temp.substr(8);
+	    }
+        
+		temp = TrimSpace(temp,TRIM_BOTH_END);
+
+        // block javascript from entering URL textbox
+		if ((TVShell.SystemInfo.Flavor == "release" || TVShell.SystemInfo.Flavor == "ppe") &&
+			(temp.indexOf("javascript:") == 0 || temp.indexOf("jscript:") == 0 ||
+			 temp.indexOf("vbscript:") == 0 || temp.indexOf("msntv:") == 0))
+	       return;
+
+		PanelManager.Show("main");
+		PanelManager.Item(thisPanelName).Document.execCommand("Unselect", false);
+		PanelManager.Item("main").History.AddToTypedList(url);
+		g_pendingURL = url;
+	}
+}
+
+function replaceGotoURL(url)
+{
+	document.all.UrlTextBox.value = url;
+	UpdateMatches();
+
+	document.all.theForm.focus();
+	document.all.UrlTextBox.focus();
+	document.all.UrlTextBox.select();
+
+	document.all.goButton.focus();
+	document.all.UrlTextBox.focus();
+}
+
+function OnBeforeShow(name)
+{
+	if (name == thisPanelName) {
+		TVShell.EventLog.Usage("goto","action=launch");
+	    // we need to get a clean array to avoid  js error
+		urls = new Array();
+		matches = new Array(); 
+		GenerateUrls();
+		GenerateDropDown();
+		document.all.UrlTextBox.value="http://www.";
+		SetFocusSafely(document.all.UrlTextBox);
+		var textRange = document.all.UrlTextBox.createTextRange();
+		textRange.collapse(false);
+		textRange.select();
+		g_PendingURL = null;
+	}
+}
+function OnAfterHide(name)
+{
+	if (name == thisPanelName && g_pendingURL) {
+		PanelManager.Item("main").GotoURL(g_pendingURL);
+		g_pendingURL = null;
+	}
+}
+
+function OnSelect(event)
+{
+	replaceGotoURL(matches[event.result]);
+}
+
+
+function OnLoad()
+{
+	Sink.AttachEvent(PanelManager, "OnBeforeShow", OnBeforeShow);
+	Sink.AttachEvent(PanelManager, "OnAfterHide",OnAfterHide);
+
+	document.all.UrlTextBox.style.pixelWidth = document.all.UrlTextBoxCell.clientWidth - 8;
+
+	var dropDown = document.all.dropDown;
+	dropDown.style.pixelWidth = document.all.dropDownCell.clientWidth - 16;
+	dropDown.onSelect = OnSelect;
+	dropDown.Open();
+}
+
+</script>
+</head>
+
+<body onload="OnLoad();">
+	<table style="height:100%; width:100%;" cellpadding="0" cellspacing="0">
+		<tr>
+			<td class="heading" style="height:30px;">
+				Type www
+			</td>
+		<tr>
+			<td class="subHeading" style="height:56;">
+				Type the address of a Web page you want to go to and then choose <b>Go</b>.
+				A Web address looks like this: www.website.com
+			</td>
+		</tr>
+		<tr>
+			<td style="height:30;">
+				<table style="width:100%;" cellpadding="0" cellspacing="0">
+					<tr style="vertical-align:top;">
+						<td id="UrlTextBoxCell" style="width:100%">
+							<form id="text" name=theForm action="javascript:GoToUrl();" style="padding:0px; margin:0px;">
+								<input id="UrlTextBox" class="inputText" style="margin-left:8px;" type="text" name="T1" onkeyup="OnKeyUp()">
+							</form>
+						</td>
+						<td>
+							<msntv:CustomButton id="goButton" style="margin:2px 0px 0px 8px;" label="Go" submitFormName="theForm" />
+						</td>
+						<td>
+							<msntv:CustomButton id="cancelButton" style="margin:2px 8px 0px 8px;" label="Cancel" onClick="Cancel();" />
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td style="height:2px;"></td>
+		</tr>
+		<tr> 
+			<td id="dropDownCell" style="height:100%; padding: 0px 8px; vertical-align:top; visibility:hidden;">
+				<table cellspacing=0 cellpadding=0 style="width:100%; height:26; border-top:1px solid #423F3F;">
+					<tr>
+						<td style="width:4px;">
+							<div style="width:4px; height:26px; behavior:url(#default#alphaImageLoader); src:url(msntv:/Shared/Images/DropDownCustomMiddleLeftEdge.png);"></div>
+						</td>
+						<td style="font-size:16px; padding-left:2px; behavior:url(#default#alphaImageLoader); src:url(msntv:/Shared/Images/DropDownCustomMiddleCenterStretch.png);">
+							Are you looking for?
+						</td>
+						<td style="width:20px;">
+							<div style="width:20px; height:26px; behavior:url(#default#alphaImageLoader); src:url(msntv:/Shared/Images/DropDownCustomMiddleRightEdge.png);"></div>
+						</td>
+					</tr>
+				</table>
+				<msntv:dropDownList id="dropDown" size="1" drawButton="false" autoClose="false"/>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

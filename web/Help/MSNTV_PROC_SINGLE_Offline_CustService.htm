@@ -1,0 +1,46 @@
+<html xmlns:msntv>
+<head>
+	<title>CustService</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Contacting Customer Service" showScrollTop="true" />
+
+<div id="ScrollArea">
+	<span class="description">
+        If you have questions about setting up your <script>document.write( ProductShortName );</script> or using <script>document.write( ServiceShortName );</script>, you should be able to find answers in the Setup Guide and User Guide that came with your <script>document.write( ProductShortName );</script> in the <script>document.write( ServiceShortName );</script> online Help or at http://support.msn.com.
+        <p>
+        <p>
+        If you can't find the information you're looking for, you can contact <script>document.write( ServiceShortName );</script> Customer Service. Call Customer Service if:
+        </p>
+        </p>
+        <ul>
+                <li>You can't connect to the <SCRIPT>document.write( ServiceFullName );</SCRIPT></li>
+                <li>You see an error message you don't understand</li>
+                <li>You want to set up an account on an <script>document.write( ProductShortName );</script> that is already registered to someone else (a used one you purchased, for example)</li>
+                <li>You change your connection method (from dial-up to broadband, for example)</li>
+                <li>You want to change billing or account information</li>
+        </ul>
+	Before you call:
+	<ul>
+                <li>Write down your <script>document.write( ProductShortName );</script>'s model number and serial number, which are located on the bottom of the <script>document.write( ProductShortName );</script>.</li>
+                <li>Be prepared to provide your e-mail name and ZIP code.</li>
+                <li>If you see an error message, write down exactly what the message says.</li>
+	</ul>
+        Call Customer Service at <b><script>document.write(CustomerCareNumber);</script></b>.
+
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,910 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+
+<HEAD>
+<TITLE>Microsoft Word Viewer</TITLE>
+
+<link rel=StyleSheet type="text/css" href="../CSS/Base.css">
+
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<script src="../Javascript/Parameters.js"></script>
+<SCRIPT language="Javascript" src="../Javascript/ServiceList.js"></SCRIPT>
+<script language="Javascript" src="../Javascript/DiplomaSettings.js"></script>
+<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+<script language="Javascript" src="../Javascript/StatusPanel.js"></script>
+<script language="Javascript" src="../Javascript/PanelImpl.js"></script>
+<script language=Javascript src="msntv:/Javascript/ContentPaneHelp.js"></script>
+
+<STYLE TYPE="text/css">
+
+a:link {
+	color: #0A2752;
+	font-family:highway;
+	font-size:16px;
+}
+a:visited {
+	color: #0A2752;
+	font-family:highway;
+	font-size:16px;
+}
+a:active {
+	color: #0A2752;
+	font-family:highway;
+	font-size:16px;
+}
+a:hover {
+	color: #0A2752;
+	font-family:highway;
+	font-size:16px;
+}
+
+#helpIcon
+{
+	position: relative;
+	top: 1px;
+	left: 4px;
+	margin-left: 4px;
+	behavior: url(#default#alphaImageLoader);
+	src: url(msntv:/Shared/images/Icon_Help_RelatedLink.png);
+	width: 20px;
+	height: 20px;
+}
+
+
+</STYLE>
+
+</HEAD>
+<script type="text/javascript" language="javascript">
+<!--
+
+var fileURL="";
+var currentZoomLevel = -1;
+var currentZoomValue = 0;
+var modeFullScreen = false;
+
+// Set to true to use the whole screen (eliminate status panel) when in Full Screen Mode
+var eliminateStatusPanelInFS = false;
+
+var PanelManager = TVShell.PanelManager;
+
+var DocViewerParameters	= FindParametersFromFile("\\Temp\\DocViewerParamFile");
+var doctype		= DocViewerParameters.doctype;
+var clsid		= (doctype=="word")? "FE44AC58-8E19-447D-9121-ED2281B6471B" : "AB0EBB00-26F7-440A-8210-419DD69467F0";								
+var viewerTitle = (doctype=="word")? "Word viewer" : "PDF viewer";
+var viewerIcon	= (doctype=="word")? "Assets/DocViewerIconWord.gif" : "Assets/DocViewerIconPdf.gif";
+var loadDocTimeoutID;
+var filePath;
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+var mainPanel = PanelManager.Item("main");
+var statusPanel  = PanelManager.Item("statusbar");
+var oldStatusPanelZorder;
+if(statusPanel)
+	oldStatusPanelZorder = statusPanel.ZOrder;
+var oldMainPanelZorder = mainPanel.ZOrder;	
+var oldMainPanelWidth = mainPanel.Width;
+var oldMainPanelHeight = mainPanel.Height;
+
+
+var screenWidth  = TVShell.DeviceControl.ScreenWidth;
+var screenHeight = TVShell.DeviceControl.ScreenHeight;
+var safeHeight = TVShell.DeviceControl.ScreenHeight;
+var safeWidth  = TVShell.DeviceControl.ScreenWidth;
+
+var safeTop    = 0;
+var safeLeft   = 0;
+
+var isDocumentLoaded = false;
+
+if (TVShell.DeviceControl.UseSafeArea) {
+	// Safe area excludes 1/16 of the total screen all around
+	safeHeight -= screenHeight / 8;
+	safeWidth  -= screenWidth  / 8;
+	safeLeft = (screenWidth -  safeWidth)  / 2;
+	safeTop  = (screenHeight - safeHeight) / 2;
+}
+
+var pageCountWidth = Math.floor(safeWidth/4) - 10;
+TVShell.Message("pageCountWidth = " + pageCountWidth);
+
+function CaptureDocThumbnail()
+{
+	var mainPanelHistory = mainPanel.History;
+	if(mainPanelHistory)
+	{
+
+		mainPanel.ReplaceBackURL = fileURL;
+
+		var ThumbnailManager = TVShell.ThumbnailManager; 
+		var ThumbanilLoc = ThumbnailManager.URL;
+		ThumbnailManager.CaptureThumbnail(mainPanel.WebBrowser,ThumbanilLoc,true);
+
+		var thumbnailLocation = "";
+		var succeed = mainPanelHistory.AddToRecentList(fileURL, document.title);
+		if (succeed)
+		{
+    		var historyEntry = mainPanelHistory.RecentEntry(0);
+			if(historyEntry)
+				thumbnailLocation = historyEntry.ThumbnailPath;
+		}
+			
+		if (thumbnailLocation != "")
+			ThumbnailManager.Copy(thumbnailLocation);
+
+	}
+
+}
+		
+function loadDocument() {
+	document.all.PageCount.innerText = "Page 1 of 1" ;
+    docvw.initialize();
+  
+	if(filePath)
+    {		
+		TVShell.Message("begin");
+		var totalPageCount = docvw.loaddoc(filePath);
+		
+		document.body.fireEvent("ondrag");
+		isDocumentLoaded = true;
+		PrintButton.disabled = false;
+		FSButton.disabled = false;
+		ZoomInButton.disabled = false;
+		ZoomOutButton.disabled = false;
+		
+		
+		
+		TVShell.Message("loaddoc retVal = " + totalPageCount);
+		
+		if(totalPageCount<0)
+		{
+			HideLoadIcon();
+			var msg;
+			
+			switch(totalPageCount)
+			{
+				case -1:
+					msg = "Sorry but that file is too large to load into the viewer.";
+					break;
+				case -2:
+					msg = "Sorry but that file is not found.";
+					break;
+				case -3:
+					msg = "Sorry but access is denied for the file.";
+					break;
+				case -4:
+					msg = "Sorry but there is a share violation for that file.";
+					break;
+				case -5:
+				case -15:
+				case -16:
+					msg = "Sorry but that file type is not supported.";
+					break;
+				case -6:
+					msg = "Sorry but the viewer encountered a bad file handle problem.";
+					break;
+				case -7:
+					msg = "Sorry but the viewer encountered a bad scale problem.";
+					break;
+				case -8:
+					msg = "Sorry but the viewer encountered a bad script ID.";
+					break;
+				case -9:
+					msg = "Sorry but the viewer encountered a bad image path.";
+					break;
+				case -10:
+					msg = "Sorry but the viewer encountered a bad page.";
+					break;
+				case -11:
+					msg = "Sorry but the viewer encountered a write failure problem.";
+					break;
+				case -12:
+					msg = "Sorry but disk is full.";
+					break;
+				case -13:
+					msg = "Sorry but the viewer encountered an internal error.";
+					break;
+				case -14:
+					msg = "Sorry but the viewer encountered an invalid password problem.";
+					break;
+				case -17:
+					msg = "Sorry but the viewer encountered an encryption problem.";
+					break;
+				default:
+					msg = "Sorry but the viewer encountered a problem."
+					break;
+			}
+	    		TVShell.PanelManager.CustomMessageBox("<P>" + msg + "</P>", "", "OK", 0, "", false, MGX_ICON_WARNING , MGX_SIZE_SMALL ); 
+			history.go(-1);
+		}
+		
+		TVShell.PanelManager.Item("printsettings").Document.all.totalPageCount.value=totalPageCount;	
+		HideLoadIcon();
+		document.all.PageCount.innerText = "Page 1 of " + totalPageCount;
+		
+		currentZoomLevel = 0;
+		currentZoomValue = docvw.zoomLevel;
+		var curZoomID = "zoom" + currentZoomLevel;
+		if(document.all[curZoomID])
+			document.all[curZoomID].bgColor = '#4BB359';
+
+		//ZoomTo(2);
+			
+		TVShell.Message("initZoomLevel = " + currentZoomValue);
+		
+		fileURL = DocViewerParameters.fileurl;
+		TVShell.Message("fileURL = " + fileURL);
+		
+		if(fileURL)
+		{
+			var slashPos  = fileURL.lastIndexOf("/");
+			var fileName  = fileURL.slice(slashPos+1);
+			if(fileName)
+				fileName = decodeURI(fileName);
+				
+			if (fileName)
+			{
+				TVShell.Message("fileName = " + fileName);
+				var quotePos  = fileName.indexOf("?");
+				if(quotePos != -1) 
+					fileName  = fileName.slice(0,quotePos);
+				document.all.FileName.innerText = fileName;
+				document.title = fileName;
+			}
+
+			var optionsPanel = PanelManager.Item("menupanel");
+			if(optionsPanel)
+				optionsPanel.UserStrData = fileURL;
+
+			var favoritesPanel = PanelManager.Item("favoritespanel");
+			if(favoritesPanel)
+				favoritesPanel.UserStrData = fileURL;
+			TVShell.EventLog.Usage("docviewerPanel","action=launch");
+			TVShell.EventLog.Usage("docviewerDoc","type="+doctype);
+
+		}
+	}
+
+	document.all.DocObj.focus();
+	docvw.object.scrollTop  = 0;
+	docvw.object.scrollLeft = 0;
+	UpdateArrows();	
+
+
+    if(mainPanel)
+	  setTimeout("CaptureDocThumbnail();",500);
+
+}
+
+function restoreMainPanel()
+{
+	if( statusPanel)
+	{
+		mainPanel.StartRect(safeLeft, safeTop, oldMainPanelWidth, oldMainPanelHeight );
+		mainPanel.ZOrder = oldMainPanelZorder;
+	}
+
+}
+
+
+function unloadDocument() {
+    docvw.unload();
+    docvw.close();
+	if(  modeFullScreen )
+	{
+		restoreMainPanel();
+	}
+
+}
+
+function ChangeSlash( element ) 
+{
+	if(element)
+	{
+		var re = /[/]/g; 
+		return element.replace(re, '\\');
+	}
+}
+
+
+function OnLoad()
+{
+	var left = document.all.FileName.offsetLeft;
+	if(!DocViewerParameters)
+		return;
+
+	filePath = DocViewerParameters.filepath;
+	TVShell.Message("filePath1 = " + filePath);
+	TVShell.Message("location = " + document.location );
+	if(filePath)
+	{
+		filePath = ChangeSlash(filePath);
+		TVShell.Message("filePath = " + filePath);
+		ShowLoadIcon();
+		clearTimeout(loadDocTimeoutID);
+		loadDocTimeoutID = setTimeout(loadDocument, 10000);
+	}
+}
+
+function UpdateArrows()
+{
+	var scrollTop    = docvw.object.scrollTop;
+	var scrollLeft   = docvw.object.scrollLeft;
+	var scrollHeight = docvw.object.scrollHeight;
+	var scrollWidth  = docvw.object.scrollWidth;
+	var clientHeight = docvw.object.clientHeight;
+	var clientWidth  = docvw.object.clientWidth;
+
+	var all              = document.all;
+	var ScrollUpArrow    = all.ScrollUpArrow;
+	var ScrollDownArrow  = all.ScrollDownArrow;
+	var ScrollLeftArrow  = all.ScrollLeftArrow;
+	var ScrollRightArrow = all.ScrollRightArrow;
+
+	if(scrollTop > 0)
+		ScrollUpArrow.style.visibility = "visible";
+	else
+		ScrollUpArrow.style.visibility = "hidden";
+
+	if (scrollTop + clientHeight < scrollHeight)
+		ScrollDownArrow.style.visibility = "visible";
+	else
+		ScrollDownArrow.style.visibility = "hidden";
+
+	if (scrollLeft > 0)
+		ScrollLeftArrow.style.visibility = "visible";
+	else
+		ScrollLeftArrow.style.visibility = "hidden";
+
+	if (scrollLeft + clientWidth < scrollWidth)
+		ScrollRightArrow.style.visibility = "visible";
+	else
+		ScrollRightArrow.style.visibility = "hidden";
+
+	if ( modeFullScreen )
+	{
+		ScrollUpArrow.style.right = "0.5%";
+		ScrollUpArrow.style.top = "0px";
+		ScrollDownArrow.style.right = "0.5%";
+		ScrollDownArrow.style.bottom = "8px";
+		ScrollRightArrow.style.right = "0%";
+		ScrollRightArrow.style.top = "50%";
+		ScrollLeftArrow.style.left = "5px";
+		ScrollLeftArrow.style.top = "50%";
+	}
+	else
+	{
+		ScrollUpArrow.style.right = "20.5%";
+		ScrollUpArrow.style.top = "37px";
+		ScrollDownArrow.style.right = "20.5%";
+		ScrollDownArrow.style.bottom = "8px";
+		ScrollRightArrow.style.right = "20%";
+		ScrollRightArrow.style.top = "52%";
+		ScrollLeftArrow.style.left = "5px";
+		ScrollLeftArrow.style.top = "52%";
+	}
+}
+
+function HandleKey()
+{
+
+	if(document.activeElement.id !="DocObj")
+		return;
+
+	var key = event.keyCode;
+	//TVShell.Message("Key = " + key);
+
+	var verticalScrollIncrement = 40;
+	var horizontalScrollIncrement = 150;
+	var scrollTop    = docvw.object.scrollTop;
+	var scrollLeft   = docvw.object.scrollLeft;
+	var scrollHeight = docvw.object.scrollHeight;
+	var scrollWidth  = docvw.object.scrollWidth;
+	var clientHeight = docvw.object.clientHeight;
+	var clientWidth  = docvw.object.clientWidth;
+	var playSound = false;
+	var lastScrollTop = scrollTop;
+	var lastScrollLeft = scrollLeft;
+	switch (key)
+	{	
+		case 38:
+
+			scrollTop -= verticalScrollIncrement;
+			if (scrollTop < 0)
+					scrollTop = 0;
+			if(docvw.object.scrollTop != scrollTop)
+				docvw.object.scrollTop = scrollTop;
+			event.returnValue=false;
+			if ( scrollTop == lastScrollTop ) playSound = true;
+			break;
+
+		case 40:
+
+			scrollTop += verticalScrollIncrement;
+			if (scrollTop + clientHeight > scrollHeight)
+				scrollTop = scrollHeight - clientHeight;
+			if(docvw.object.scrollTop != scrollTop)
+				docvw.object.scrollTop = scrollTop;
+			event.returnValue=false;
+			if ( scrollTop == lastScrollTop ) playSound = true;
+			break;
+
+		case 33:
+			scrollTop -= Math.floor( clientHeight / verticalScrollIncrement ) * verticalScrollIncrement;
+			if (scrollTop < 0)
+				scrollTop = 0;
+			if(docvw.object.scrollTop != scrollTop)
+				docvw.object.scrollTop = scrollTop;
+			event.returnValue=false;
+			if ( scrollTop == lastScrollTop ) playSound = true;
+			break;
+
+		case 34:
+			scrollTop += Math.floor( clientHeight / verticalScrollIncrement ) * verticalScrollIncrement;
+			if (scrollTop + clientHeight > scrollHeight)
+				scrollTop = scrollHeight - clientHeight;
+			if(docvw.object.scrollTop != scrollTop)
+				docvw.object.scrollTop = scrollTop;
+			event.returnValue=false;
+			if ( scrollTop == lastScrollTop ) playSound = true;
+			break;
+
+		case 37:
+			scrollLeft -= horizontalScrollIncrement;
+			if (scrollLeft < 0)
+					scrollLeft = 0;
+			if(docvw.object.scrollLeft != scrollLeft)
+				docvw.object.scrollLeft = scrollLeft;
+			event.returnValue=false;
+			if ( scrollLeft == lastScrollLeft ) playSound = true;
+			break;
+
+		case 39:
+			scrollLeft += horizontalScrollIncrement;
+			if ((scrollLeft + clientWidth > scrollWidth) && (scrollWidth >= clientWidth))
+				scrollLeft = scrollWidth - clientWidth;
+
+			if(scrollWidth < clientWidth)
+				event.returnValue=true;	
+			else if(docvw.object.scrollLeft != scrollLeft)
+			{
+				docvw.object.scrollLeft = scrollLeft;
+				event.returnValue=false;
+			}
+			else
+				event.returnValue=true;		
+			if ( scrollLeft == lastScrollLeft ) playSound = true;
+			break;
+		case 13:	//enter key
+			break;
+		default:
+			break;
+	}
+
+	if ( playSound ) TVShell.DeviceControl.PlaySound("Page_Boundary");	
+	UpdateArrows();	
+}
+
+function ZoomBy(newZoomValue)
+{	
+// this function is not used
+	if(newZoomValue == currentZoomValue)
+	{
+		return;
+	}
+
+	var curZoomID = "zoom" + currentZoomLevel;
+	TVShell.Message("curZoomID = " + curZoomID);
+	
+	if(document.all[curZoomID])
+	{
+		document.all[curZoomID].bgColor = '#90A8C9';
+	}
+
+	TVShell.Message("Zoom from " + currentZoomLevel + " to " + newZoomLevel );
+	docvw.zoomby(newZoomLevel);
+
+	currentZoomLevel = newZoomLevel;
+	curZoomID = "zoom" + currentZoomLevel;
+
+	if(document.all[curZoomID])
+	{
+		document.all[curZoomID].bgColor = '#4BB359';
+	}
+}
+
+var zoomStep;
+
+function ZoomTo(newZoomLevel)
+{
+	TVShell.Message("Zoom from " + currentZoomLevel + " to " + newZoomLevel + " curVal = " + currentZoomValue);
+	if(currentZoomLevel==newZoomLevel)
+		return;
+	
+	var curZoomID = "zoom" + currentZoomLevel;
+	if(document.all[curZoomID])
+		document.all[curZoomID].bgColor = '#90A8C9';
+	
+	// number of pixels (clientWidth * currentZoomValue) that PDFReader's WindowProcCallback can render
+	//	49692	ok
+	//	50096	crash
+	var maxZoomValue = parseInt(50000 / docvw.object.clientWidth);
+
+	if (currentZoomLevel != 4)
+		zoomStep =(maxZoomValue - currentZoomValue) / (4-currentZoomLevel);
+	TVShell.Message("Zoom step=" + zoomStep);
+
+	currentZoomValue += parseInt(zoomStep*(newZoomLevel-currentZoomLevel));
+	currentZoomLevel = newZoomLevel;
+
+	if(currentZoomValue > maxZoomValue)
+		currentZoomValue = maxZoomValue;
+	TVShell.Message("Zoom new value=" + currentZoomValue);
+
+	docvw.zoomby(currentZoomValue);
+	
+	curZoomID = "zoom" + currentZoomLevel;
+	if(document.all[curZoomID])
+		document.all[curZoomID].bgColor = '#4BB359';
+}
+
+function ZoomIn()
+{
+	TVShell.Message("ZoomIn by " + currentZoomLevel + " value = " + currentZoomValue);
+	if(!isDocumentLoaded)
+	{
+		TVShell.DeviceControl.PlaySound("Page_Boundary");
+		return;
+	}
+		
+	switch (currentZoomLevel)
+	{
+		case  0:
+		case  1:
+		case  2:
+		case  3:
+				 ZoomTo(currentZoomLevel+1);
+				 TVShell.DeviceControl.PlaySound("Task_Complete");
+				 break;
+		case  4:
+				TVShell.DeviceControl.PlaySound("Page_Boundary");
+				break;	 
+	} 
+
+	var scrollTop    = docvw.object.scrollTop;
+	var clientHeight = docvw.object.clientHeight;
+
+	if(scrollTop < clientHeight)
+		docvw.object.scrollTop = 0;
+	
+	UpdateArrows();
+}
+
+function ZoomOut()
+{
+	TVShell.Message("ZoomOut by " + currentZoomLevel  + " value = " + currentZoomValue);
+	if(!isDocumentLoaded)
+	{
+		TVShell.DeviceControl.PlaySound("Page_Boundary");
+		return;
+	}
+	switch (currentZoomLevel)
+	{
+		case  4:
+		case  3:
+		case  2:
+		case  1:
+				 ZoomTo(currentZoomLevel-1);
+				 TVShell.DeviceControl.PlaySound("Task_Complete");
+				 break;	
+		case 0:
+				TVShell.DeviceControl.PlaySound("Page_Boundary");
+				break;	 
+	} 
+
+	
+	var scrollTop    = docvw.object.scrollTop;
+	var clientHeight = docvw.object.clientHeight;
+
+	TVShell.Message("ST = " + scrollTop + " CH " + clientHeight);		
+
+	if(scrollTop < clientHeight)
+		docvw.object.scrollTop = 0;
+	UpdateArrows();
+}
+
+function PrintStatus(PageNum, TotalPages, Percent) 
+{
+	var statusStr=PROGRESS_PLEASE_WAIT + "Printing Page "+PageNum+ " of "+TotalPages+"...";
+
+	SetProgressPercent(Percent);
+	SetProgressText(statusStr);
+	if(Percent==100 && TVShell.PrintManager.CurrCopy==TVShell.PrintManager.Copies)
+	{
+	    SetProgressText("Print completed.");	    
+	  	HideProgressPanel();
+	}
+}
+
+function DoneKeyDown()
+{
+	if(event.keyCode == 40 && !document.all.ZoomInButton.disabled)
+	{
+		document.all.ZoomInButton.focus();
+		event.returnValue= false;
+	}
+}
+
+function toggleViewMode()
+{
+  if ( modeFullScreen )
+  	GoToNormalView();
+  else
+  	GoToFS();
+  	
+}
+
+function showFSDiploma()
+{
+	var txt = "<P>To return from full screen view at any time, press the <EM>Back</EM> key on your keyboard.</P>";
+	DiplomaCustomMessageBox(0,MDIPLOMA_DOCVIEWERFS, txt, "", "OK", 0, "", false,MGX_ICON_INFO, MGX_SIZE_SMALL);
+}
+
+// Enter full screen mode
+function GoToFS()
+{
+	if( !isDocumentLoaded )
+	{
+		TVShell.DeviceControl.PlaySound("Page_Boundary");
+		return;
+	}
+
+	if ( modeFullScreen ) return;
+	TVShell.Message("Go Full Screen");
+	if(statusPanel && eliminateStatusPanelInFS )
+	{
+		mainPanel.StartRect(safeLeft, safeTop, safeWidth, safeHeight);
+		mainPanel.ZOrder = statusPanel.ZOrder + 5;
+	}
+	
+	document.all.titleRow.style.display = "none";
+	document.all.controlColumn.style.display = "none";
+	document.all.contentColumn.width = "100%";
+	modeFullScreen = true;
+	UpdateArrows();
+	document.all.DocObj.focus();
+	document.all.DocObj.hideFocus = true;
+
+	if ((TVShell.UserManager.CurrentDiplomaSettings & MDIPLOMA_DOCVIEWERFS) == 0 )
+	{
+		setTimeout( showFSDiploma , 300 );
+	}
+}
+
+// Enter normal View
+function GoToNormalView()
+{
+	if ( !modeFullScreen ) return;
+	TVShell.Message("Go normal view");
+	restoreMainPanel();
+	
+	document.all.titleRow.style.display = "block";
+	document.all.controlColumn.style.display = "block";
+	document.all.contentColumn.width = "80%";
+	modeFullScreen = false;
+	UpdateArrows();
+	document.all.DocObj.hideFocus = false;
+	document.all.DocObj.focus();
+}
+
+function OnServiceListKeyDown(ServiceEntry)
+{
+	if (PanelManager.FocusedPanel.Name == "main")
+	{
+		var alertPanel = PanelManager.Item("alert");						
+		if (alertPanel && alertPanel.State == 0)
+			return;
+
+		if (ServiceEntry.name == "browser::back")
+		{
+			if ( modeFullScreen )
+			{
+				GoToNormalView();
+			}
+			else
+			{
+				history.go( -1 );
+			}
+		}
+	}
+}
+
+function OnCancelTemplatePrint()
+{
+	if(IsMainPanelInDocViewer())
+    {
+	   TVShell.Message("DocViewer: Print canceled!");
+	   HideProgressPanel();
+	}
+    
+}
+
+Sink.AttachEvent(TVShell, "OnServiceListKeyDown", OnServiceListKeyDown);
+Sink.AttachEvent(TVShell.PrintManager, "OnCancelTemplatePrint", OnCancelTemplatePrint);
+// -->
+</script>
+
+<script type="text/javascript" for="docvw" event="OnNavigate(PageNum, TotalPages)">
+    TVShell.Message( "Navigated to page " + PageNum + " of " + TotalPages);
+	document.all.PageCount.innerText = "Page " +  PageNum + " of " + TotalPages;
+</script>
+
+<script type="text/javascript" for="docvw" event="OnFormat(PageNum)">
+    TVShell.Message( "Formatting page " + PageNum);
+</script>
+
+<script type="text/javascript" for="docvw" event="OnPrintStatus(PageNum, TotalPages, Percent)">
+    PrintStatus(PageNum, TotalPages, Percent);
+</script>
+
+<BODY bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0"  onload="OnLoad();" onunload="unloadDocument()" onkeydown="HandleKey();">	
+	<table cellpadding=0 cellspacing=0 width=100% height=100%>
+		<tr id="titleRow">
+			<td colspan=2  style="width:100%; height:33px; background-image:url(Assets/DocViewerHeader.jpg);">
+				<span style="width:15px;"></span>
+				<script>
+					document.write("<img src=" + viewerIcon + " ALIGN=absmiddle>");
+				</script>
+				
+				<span style="width:2px;"></span>
+				<span style="font-size:21px; font-family:Segoe TV; font-weight:bold; color:#a5c9fe; align:left; valign:middle;">
+					<script>
+						document.write(viewerTitle);
+					</script>
+				</span>
+				<span style="width:8px; "></span>
+				<span id=FileName  class=ellipsis style="width:280px; font-size:21px; xbackground-color:red; font-family:Segoe TV;color:#F7F7F7; align:left; valign:middle;">document</span>
+				<span style="width:8px; "></span>
+				<A onclick="document.location = GetPaneHelpURL(PH_topicTOC,'MSNTV_TRS_TOC_DocViewer.htm')"  style="font-size:16px; font-family:Segoe TV; color:#e6e6ec; align:right; valign:middle;">Help<SPAN id=helpIcon></SPAN></A>				
+		</tr>
+		
+		<tr>
+			<td id="contentColumn" width=80%>
+				<table cellpadding=0 cellspacing=0 width=100% height=100% >
+					<tr>
+						<td height=2px colSpan=3 bgColor=#C3DFF6></td>
+					</tr>
+					<tr>
+						<td width=5px xbgColor=red STYLE="behavior: url(#default#gradient); startColor:#C3DFF6; endcolor:#78ACD2; angle:0;"></td>
+						<td>
+							<table tabIndex=0 ID=DocObj cellpadding=0 cellspacing=0 width=100% height=100% xbgColor=#BDD6C6 xbgColor=red STYLE="behavior: url(#default#gradient); startColor:#C3DFF6; endcolor:#78ACD2; angle:0;" onclick="GoToFS();">
+								<tr>
+									<td height=18px colSpan=3></td>
+								</tr>
+								<tr>
+									<td width=19px xbgcolor=red></td>
+									<td>
+										<script>
+											document.write("<OBJECT ID=docvw CLASSID=CLSID:" + clsid + " TABINDEX=-10001 WIDTH=100% HEIGHT=100% VIEWASTEXT></OBJECT>");
+										</script>					
+										</td>
+									<td width=20px></td>
+								</tr>
+								<tr>
+									<td height=20px colSpan=3></td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>	
+						<td height=4px colSpan=3 bgColor=#78ACD2></td>
+					</tr>
+				</table>
+			</td>
+			<td id="controlColumn" width=20% bgcolor=#C3DFF6 xstyle="background-image:url(Assets/sidebar_1px.jpg);">
+				<table cellpadding=0 cellspacing=0 width=100% height=100% xbgColor=red style="font-size:16px; font-family:highway;color:#0A2752;">
+					<tr>
+						<td rowspan=9 width=8px xbgcolor=green>
+						<td height=20px>&nbsp;</td>
+						<td rowspan=9 width=4px xbgcolor=green>
+					</tr>
+					<tr >
+						<td ><msntv:CustomButton id="PrintButton" label="Print" onClick="GotoPrint();" disabled style="margin:0; padding:0; text-align:left; width:100%; "/></td>
+					</tr>
+					<tr>
+						<td height=4px></td>
+					</tr>
+					<tr >
+						<td ><msntv:CustomButton id="FSButton" label="Full Screen" onClick="GoToFS();"  disabled style="margin:0; padding:0; text-align:left; width:100%; "/></td>
+					</tr>
+					<tr>
+						<td height=4px></td>
+					</tr>
+					<tr>
+						<td ><msntv:CustomButton id="DoneButton" label="Done" onkeydown="DoneKeyDown();" onClick="unloadDocument();history.back();" style=" margin:0; padding:0; text-align:left; width:100%; "/></td>
+					</tr>
+					<tr>
+						<td height=30px></td>
+					</tr>
+					<tr>
+						<td xbgcolor=red valign=top> 
+							<table cellpadding=0 cellspacing=0 width=100% style="font-size:16px; font-family:highway;color:#5E5E5E;">
+								<tr>	
+									<td colspan=4 align=center style=" font-size:16px; font-family:Segoe TV; align:center; valign:middle;">
+										Zoom in
+									</td>
+								</tr>
+								
+								<tr height=8px><td></td>
+								
+								<tr height=24px >
+									<td width=10px></td>
+									<td id=zoom4 width=37px align=middle valign=top bgColor=#90A8C9 >
+									<td width=7px rowspan=10 xbgcolor=red></td>
+									<td rowspan=5 vAlign=top ><msntv:CustomButton id="ZoomInButton" disabled label="+" onClick="ZoomIn();" style=" font-size:20px; font-family:highway; font-weight: bold; margin:0; padding-left:7px;text-align:center; width:35px; "/>
+								</tr>
+								
+								<tr height=4px><td></td>
+								
+								<tr height=18px>
+									<td width=10px></td>
+									<td id=zoom3 width=37px align=middle valign=top bgColor=#90A8C9>
+								</tr>
+								
+								<tr height=5px><td></td>
+								
+								<tr height=14px>
+									<td width=10px></td>
+									<td id=zoom2 width=37px align=middle valign=top bgColor=#90A8C9>
+								</tr>
+								
+								<tr height=6px><td></td>
+								
+								<tr height=11px>
+									<td width=10px></td>
+									<td id=zoom1 width=37px align=middle valign=top bgColor=#90A8C9>
+									<td rowspan=3 vAlign=bottom ><msntv:CustomButton id="ZoomOutButton" label="-" disabled onclick="ZoomOut();" style=" font-size:24px; font-family:Segoe TV; font-weight: bold; margin:0; xpadding-left:10px;xtext-align:center; width:35px; "/>
+								</tr>
+								
+								<tr height=7px><td></td>
+								
+								<tr height=8px>
+									<td width=10px></td>
+									<td id=zoom0 width=37px align=middle valign=top bgColor=#90A8C9>
+								</tr>
+								
+								<tr height=5px><td></td>
+								
+								<tr >
+									<td colspan=4 align=center style=" font-size:16px; font-family:Segoe TV; align:center; valign:middle;">
+										Zoom out
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<tr>
+					<td>
+						<span id=PageCount style='text-align:left; width:93px; font-size:16px; font-family:Segoe TV;color:#1d1d1d; valign:bottom;'>Page 1 of 1</span>			
+					</td>	
+					</tr>
+					<tr>
+						<td height=20px></td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+	<div ID="ScrollUpArrow"    style="position:absolute; right:20.5%; top:37px;  z-index:10; visibility:hidden; behavior:url(#default#alphaImageLoader); src:../Shared/Images/ScrollIndicatorUpGlobal.png;"></div>
+	<div ID="ScrollDownArrow"  style="position:absolute; right:20.5%; bottom:8px; z-index:10; visibility:hidden; behavior:url(#default#alphaImageLoader); src:../Shared/Images/ScrollIndicatorDownGlobal.png;"></div>
+	<div ID="ScrollLeftArrow"  style="position:absolute; left:5px;   top:52%; z-index:10; visibility:hidden; behavior:url(#default#alphaImageLoader); src:../Shared/Images/ScrollIndicatorLeftGlobal.png;"></div>
+	<div ID="ScrollRightArrow" style="position:absolute; right:20%; top:52%; z-index:10; visibility:hidden; behavior:url(#default#alphaImageLoader); src:../Shared/Images/ScrollIndicatorRightGlobal.png;"></div>
+	
+	<div ID="Div1" style="position:absolute; right:40%; top:39%; width:202px; padding-left:50px; padding-right:50px; z-index:10; background-color:white; ">
+		<img src="Assets/LoadingDocViewer.gif" align=middle>
+	</div>
+	<div ID="Div2" align=center style="position:absolute; top:60%; width:450px; z-index:10;">
+	<span style="text-align:center; valign:top; font-size:16px; font-family:Segoe TV;color:#3479ac;">Please wait while we get your document ready.</span>
+	</div>
+
+</BODY>
+</HTML>

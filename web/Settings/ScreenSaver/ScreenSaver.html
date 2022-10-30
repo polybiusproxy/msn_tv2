@@ -1,0 +1,52 @@
+<HEAD> <TITLE>ScreenSaver</TITLE> </HEAD><LINK REL=StyleSheet TYPE="text/css" HREF="../../CSS/Settings.css"> <SCRIPT LANGUAGE=Javascript SRC="../../Javascript/TVShell.js"></SCRIPT> <SCRIPT>
+	var thisPanel = TVShell.PanelManager.Item(window.name);
+
+	function GoUpOneLevel()
+	{
+		// Get the location into a String typed variable
+		var here = thisPanel.URL + "";
+
+		// Remove trailing file...
+		here = here.substr(0, here.lastIndexOf('/'));
+
+		// Remove everything under here from the history list
+		thisPanel.ClearTravelLog(here);
+
+		// Pop up one level
+		history.go(-1);
+
+		return false;
+	}
+</SCRIPT><BODY><H1>ScreenSaver</H1> <FORM NAME=SaverChoice onsubmit="return SetSaver();"><DIV HEIGHT=60%><TABLE ALIGN=CENTER WIDTH=80%> <TR> <SCRIPT>
+	var ScreenSaver = TVShell.ScreenSaver;
+	var Count = ScreenSaver.Count;
+	var CurrentName;
+	var i;
+
+	if (ScreenSaver.CurrentSaver)
+		CurrentName = ScreenSaver.CurrentSaver.Name;
+	else
+		CurrentName = "";
+
+	for (i = 0; i < Count; i++) {
+		var Saver = ScreenSaver.Item(i);
+		var Checked;
+		if (CurrentName == Saver.Name)
+			Checked = " CHECKED";
+		else
+			Checked = "";
+		document.write("<TR><TD>"+Saver.Description+"<TD><INPUT TYPE=RADIO NAME=SaverMenu VALUE="+Saver.Name+Checked+">");
+	}
+</SCRIPT> </TABLE> </DIV> <CENTER><DIV WIDTH=80% ALIGN="CENTER"> <P ALIGN="RIGHT"> <INPUT TYPE=SUBMIT ID=Settings VALUE="Settings"> <INPUT TYPE=SUBMIT ID=Done VALUE="Done" SELECTED> </P> </DIV> </CENTER> </FORM> <SCRIPT>
+function SetSaver()
+{
+	var i;
+	for (i = 0; i < document.SaverChoice.SaverMenu.length; i++)
+		if (document.SaverChoice.SaverMenu[i].checked) {
+				ScreenSaver.CurrentSaver = document.SaverChoice.SaverMenu[i].value;
+				ScreenSaver.Save();
+		}
+
+	return GoUpOneLevel();
+}
+</SCRIPT> </BODY>

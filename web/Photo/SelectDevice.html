@@ -1,0 +1,572 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/PhotoHeading.htc">
+<head>
+	<title>Photo Select Device</title>	
+	<link rel=StyleSheet type="text/css" href="../css/Photo.css">
+	<link rel=StyleSheet type="text/css" href="../css/Base.css">
+	<script LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></script>
+	<script src="msntv:/Javascript/ProgressPanel.js"></script>
+	<script src="msntv:/Javascript/ServiceList.js"></script>
+	<script src="msntv:/Javascript/Parameters.js"></script>
+	<script src="msntv:/Javascript/ContentPaneHelp.js"></script>
+	<script src="msntv:/Javascript/HomeNetworking.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/DMRHome.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/DMRCommon.js"></script>
+	<script language="Javascript" src="msntv:/Javascript/DMREnumerate.js"></script>
+	<script src="Photos.js"></script>
+	<script src="PhotosNavigate.js"></script>
+	<script src="msntv:/Javascript/DMRHome.js"></script>
+	<script language="Javascript">
+	  		ShowProgressPanel();
+	  		SetProgressPercent(10);
+	
+			var MAIL_SERVICE_ENTRY = "mail::photoattachments";
+			
+//TBD:START HACK
+			if (!fileOpen && !upload && !parameters.action)
+			{
+				var message = "FIX ME: Change the Service call to the ActiveX PhotoControl's LaunchPhotoPicker() to specify either 'mail:AddAttachments' or 'mail::EditAttachments' as the source. What do you want to do?";
+				var retVal = PanelManager.CustomMessageBox(message, "", "Insert New Photos;Edit Attachments", 0, "", true, MGX_ICON_INFO, 0);
+				if ( retVal != 0 )
+				{
+					var destURL = "Viewer.html?fromMail=true&picker=1&action=EditAttachments";//&editAttachments=true&location=0
+					document.location = destURL;
+				}
+			}			
+else TVShell.Message( "SelectDevice.html: REMOVE THIS HACK!!" );			
+//TBD:END HACK
+			var allowUPNPAndOnlineFiles = true;//fileOpen ? false : true;
+			var numDevice = 0;
+			var lastSelectedFileName="lastSelected.txt"
+			var StorageManager = TVShell.StorageManager;
+ 
+			function GenerateDeviceList()
+			{
+				numDevice = 0;
+
+				var str ="<span id=descriptionSpan>";
+
+				if(fileOpen|| upload)
+					str += '"Uploading" photos is a lot like sending photos in e-mail. First select where the photos are coming from.';
+				else
+					str+="To insert photos into an e-mail message, first select where the photos are coming from.";
+
+				str +="</span>";
+				str +="<p></p>";
+			
+				//find saved albums
+
+                var numAlbums=0;
+				str += "<TABLE cellpadding=0 cellspacing=0 width=100%>";
+				str += "<TR><TD><SPAN class=sectionTitle>Photos on your "+ProductShortName+"</SPAN></TD></TR>";
+
+				if(userDataPath)
+				{
+					var userDataVolumeName = userDataPath;
+					var slashPos  = userDataPath.lastIndexOf("\\");
+					if(slashPos != -1 && slashPos > 0)
+						userDataVolumeName = userDataPath.slice(slashPos+1);
+					if(userDataVolumeName)
+					{
+						var StorageDevice = FindStorageDevice(userDataVolumeName);
+						if (StorageDevice) 
+						{	
+							var xmlStr = StorageDevice.EnumerateItems("Photo\\Albums", "", 1);
+							if (xmlStr) 
+							{
+								var xmlDoc = new ActiveXObject("Msxml2.DOMDocument");
+								xmlDoc.async = false;
+
+								if (xmlDoc.loadXML(xmlStr)) 
+								{
+									var nodes = xmlDoc.selectNodes("//a:response[a:propstat/a:prop/a:iscollection = 1]");
+									if (nodes && nodes.length > 0) 
+									{
+										str += "<TR><TD><TABLE cellpadding=0 cellspacing=0>";
+
+
+										for (i = 0; i < nodes.length; i++)
+										{
+											var node= nodes.item(i);
+											var displayName = node.selectSingleNode(".//a:displayname").text;
+											var hrefText = node.selectSingleNode(".//a:href").text;
+											var hrefTextLC = hrefText.toLowerCase();
+											var pathText = "";
+											slashPos = hrefTextLC.indexOf(userDataVolumeName.toLowerCase());
+											if(slashPos != -1)
+												pathText = hrefText.slice(slashPos+userDataVolumeName.length + 1);
+
+											str+="<TR><TD>";
+											str+="<table cellpadding=0 cellspacing=0><tr><td><INPUT type=radio name=radio ID=radio";
+											str+=numDevice;
+											str+=" device=Box StorageDeviceVN='";
+											str+=userDataVolumeName;
+											str+="' path=\"";
+											str+=pathText;
+											str+="&parentFolderName="+escape(displayName);
+											str+="\"></td><td width=5px></td><td> ";
+											str+=displayName;
+											str+="</td></tr></table></TD></TR>";
+										    numAlbums++;
+											numDevice++;
+										}
+										str += "</TABLE></TD></TR>";
+									}
+								}
+							}
+						}
+					}
+				}
+				str += "</TABLE>";
+
+				if(numAlbums==0)
+				{
+					str+="<span style=\"display:block; padding-top:5px;\"><UL class=links><LI><a id=albumLearnMore onclick='GotoURL(\"" + GetDMRHelpURL("MSNTV_PROC_SINGLE_Photos_Albums") + "\");'>Learn More</a></LI></ul></span>";
+				}
+				
+				//find online albums
+				if ( allowUPNPAndOnlineFiles ) 
+				{
+	                var numOnlineAlbums=0;
+				
+					str += "<TABLE cellpadding=0 cellspacing=0 width=100%>";
+					str += "<TR height=10><TD></TD></TR>";
+					str += "<TR><TD>";
+					str += "<TABLE cellpadding=0 cellspacing=0 width=100%>";
+					str += "<TR><TD><SPAN class=sectionTitle>Photos saved online</SPAN></TD></TR>";
+					str += "<TR><TD><TABLE>";
+			
+					var entry =
+						TVShell.ActiveServiceList.Item(MAIL_SERVICE_ENTRY);
+					if ( entry && entry.URL )
+					{
+						//Add email - put mail with online storage
+						str+="<TR><TD>";
+						str+="<INPUT type=radio name=radio ID=radio";
+						str+=numDevice;
+						str+=" device='Mail' > ";
+						str+=" Photos in Mail "
+						str+="</TD></TR>";
+						numDevice++;
+					} else {
+						TVShell.Message( "SelectDevice.html:WARNING: Missing mail service entry " + MAIL_SERVICE_ENTRY );
+					}
+			
+					for (i=0; i<StorageManager.Count; i++) 
+					{
+						var StorageDevice = StorageManager.Item(i);
+						if (!StorageDevice.Removable && 
+							StorageDevice.IsNetwork && 
+							StorageDevice.Mounted &&
+							StorageDevice.Provider.toLowerCase()=="onlinestorage")
+						{
+							//TVShell.Message("SelectDevice.html:StorageDevice.VN = " + StorageDevice.VolumeName);
+
+							str+="<TR><TD>";
+							str+="<INPUT type=radio name=radio ID=radio";
+							str+=numDevice;
+							str+=" device='OnlineAlbum' StorageDeviceVN='";
+							str+=StorageDevice.VolumeName;
+							str+="' path=''> ";
+							str+=StorageDevice.Name;
+							str+="</TD></TR>";
+						    numOnlineAlbums++;
+							numDevice++;
+						}
+					}
+
+					str += "</TABLE></TD></TR>";
+					str += "</TABLE>";
+					str += "</TD></TR></TABLE>";
+
+					if (numOnlineAlbums==0)
+					{
+						if (TVShell.UserManager.CurrentUser.ServiceList("onlinestorage::root") != null )
+							str+="<span style=\"display:block; padding-top:5px;\"><UL class=links><LI><a id=onlineAlbumLearnMore onclick='GotoURL(\"" + GetDMRHelpURL("MSNTV_PROC_SINGLE_Photos_OnlineAlbums") + "\");'>Learn More About Online Albums</a></LI></ul></span>";
+					}
+				}
+
+				//find usb devices
+				str += "<TABLE cellpadding=0 cellspacing=0 width=100%>";
+                
+				str += "<tr height=10><td></td></tr>";
+
+				str += "<TR><TD><TABLE cellpadding=0 cellspacing=0 width=100%>";
+				str += "<TR><TD><SPAN class=sectionTitle>Photos saved on your home network</SPAN></TD></TR>";
+				str += "<TR><TD><TABLE cellpadding=0 cellspacing=0>";
+
+
+				var numUSBDevice=0;
+				for (i=0; i<StorageManager.Count; i++) 
+				{
+					var StorageDevice = StorageManager.Item(i);
+					if (StorageDevice.Removable && 
+						!StorageDevice.IsNetwork && 
+						StorageDevice.Mounted) 
+					{
+						//TVShell.Message("SelectDevice.html:StorageDevice.VN = " + StorageDevice.VolumeName);
+						numUSBDevice++;
+					
+						str+="<TR><TD>";
+						str+="<table cellpadding=0 cellspacing=0><tr><td><INPUT type=radio name=radio ID=radio";
+						str+=numDevice;
+						str+=" device=USB StorageDeviceVN='";
+						str+=StorageDevice.VolumeName;
+						str+="' path=></td><td width=5px></td><td>" + ToFriendlyName(StorageDevice, numUSBDevice) +"<td></tr></table></TD></TR>";
+
+						numDevice++;
+					}
+				}
+			
+				//find UPNP Devices	
+				
+				var numUPNPDevice=0;		
+				for (i=0; i<StorageManager.Count; i++) 
+				{
+					var StorageDevice = StorageManager.Item(i);
+					if (!StorageDevice.Removable && 
+						StorageDevice.IsNetwork && 
+						StorageDevice.Mounted &&
+						StorageDevice.Provider.toLowerCase()!="onlinestorage")
+					{
+						//TVShell.Message("SelectDevice.html:StorageDevice.VN = " + StorageDevice.VolumeName);
+						if ( allowUPNPAndOnlineFiles
+						     ||StorageDevice.Provider.toLowerCase() != "upnp" )
+						{
+							str+="<TR><TD>";
+							str+="<INPUT type=radio name=radio ID=radio";
+							str+=numDevice;
+							str+=" device=UPNP StorageDeviceVN='";
+							str+=StorageDevice.VolumeName;
+							str+="' path=''> ";
+							str+=StorageDevice.Name;
+							str+="</TD></TR>";
+						    numUPNPDevice++;
+							numDevice++;
+						}
+					}
+				}
+			
+				//find UNC shares	
+			    var numUNCDevice=0;
+				for (i=0; i<HomeNetworkObj.Count; i++)
+				{
+					var he = HomeNetworkObj.Item(i);
+					for (j=0; j<he.Count; j++)
+					{
+						var se = he.Item(j);
+						if (se.Enabled && se.Type == HN_RESOURCE_STORAGE ) 
+						{
+							str+="<TR><TD>";
+							str+="<INPUT type=radio name=radio ID=radio";
+							str+=numDevice;
+							str+=" device=UNC StorageDeviceVN='";
+							str+=StorageDevice.VolumeName;
+							str+="' path='' host='";
+							str+=EscapeScriptString(he.Name);
+							str+="' share='";
+							str+=EscapeScriptString(se.Name);
+							str+="'> ";
+							str+=EscapeScriptString(se.Name);
+							str+=" on ";
+							str+=EscapeScriptString(he.Name);;
+							str+="</TD></TR>";
+						    numUNCDevice++;
+							numDevice++;
+						}
+					}
+				}
+				
+				str += "</TABLE></TD></TR>";
+				str += "</TABLE>";
+				str += "</TD></TR></TABLE>";
+
+				if((numUSBDevice+numUPNPDevice+numUNCDevice)==0)
+				{
+					str+="<span style=\"display:block; padding-top:5px;\"><UL class=links><LI><a id=HomeNetworkLearnMore onclick='GotoURL(\"" + GetDMRHelpURL("MSNTV_PROC_SINGLE_Photos_HomeNet_Intro") + "\");'>Learn More</a></LI></ul></span>";
+				}
+			
+				if(numDevice==0)
+				   CancelButton.label="Done";
+
+				return str;
+			}
+			
+			Sink.AttachEvent(TVShell, "OnServiceListKeyDown", OnServiceListKeyDown);
+			Sink.AttachEvent(StorageManager	, "OnDeviceAdd", OnDeviceAdd);
+			Sink.AttachEvent(StorageManager	, "OnDeviceRemove", OnDeviceRemove);	
+			if (HomeNetworkObj)
+			{
+				Sink.AttachEvent(HomeNetworkObj, "OnHostHandler", OnHostHandler);
+				Sink.AttachEvent(HomeNetworkObj, "OnServiceHandler", OnServiceHandler);
+			}
+
+	  		SetProgressPercent(20);
+
+			function ToUrl(serviceName, parameter)
+			{
+				var entry = TVShell.ActiveServiceList.Item(serviceName);
+				var url = entry ? entry.URL + "?picker=1" : null;
+				if (parameter && url)
+					url+= "&" + parameter;
+				return url;
+			}
+			//
+			// HomeNetworking - Eventhandler for device add events
+			//
+			function OnDeviceAdd()
+			{
+				SetupDeviceListScrollArea();
+				if(numDevice>0 && document.all.ContinueRow)
+				{
+					ContinueRow.style.display = "block";
+					ContinueButton.focus();
+				}
+			}
+
+			//
+			// HomeNetworking - Eventhandler for device remove events
+			//
+			function OnDeviceRemove()
+			{
+				SetupDeviceListScrollArea();
+				if(numDevice>0 && document.all.ContinueRow)
+				{
+					ContinueRow.style.display = "block";
+					ContinueButton.focus();
+				}
+			}
+
+			//
+			// HomeNetworking - Eventhandler for Host events
+			//
+			function OnHostHandler(hnx, he, evt, status)
+			{
+				TVShell.Message("SelectDevice.html:OnHostEvent - " + he.Name + " event=" + evt + " status=" + status);
+			}
+
+    		function OnServiceHandler(he, se, evt, status)
+	    	{
+                TVShell.Message( "SelectDevice.html:OnServiceHandler(he=" + he + ",se=" + se + ",evt=" + evt + ",status=" + status + ")" );
+                
+    			switch (evt) {
+	    		case HN_EVT_MOUNTED:
+		    		HideProgressPanel();
+			        if (status==0) {
+    			    	// service is up - move storage device under storage manager
+	    			    var sd = se.NetStorage;
+				
+        				// We don't want these firing for the mount.
+	        			Sink.DetachEvent(StorageManager, "OnDeviceAdd", OnDeviceAdd);
+			
+    					var destURL = "Viewer.html?picker=1";
+	    				if(fileOpen)
+		    				destURL+="&fileOpen=true";
+		    			else if(upload && postURL)
+		    			{
+		    				destURL+="&upload=true&postURL=";
+		    				destURL+=encodeURIComponent(postURL);
+		    			}
+			    		else
+				    		destURL+="&fromMail=true&action=Attach";
+						    	
+					    destURL+="&location=2&StorageDeviceVN=" + sd.VolumeName + "&path=";
+					    document.location = destURL;	
+        			}
+    	    		else
+			    	{
+				    	ShareUnavailableMessageBox( he, se, status, true );
+    			    }   			
+    			    break;
+				case HN_EVT_NEWSERVICE:
+					// status == 1 indicates that share was removed
+					SetupDeviceListScrollArea();
+					break;
+    			}
+	    	}	
+	    	
+					
+			function OnLoad()
+			{
+		  		SetProgressPercent(30);
+				SetupDeviceListScrollArea();
+				
+				if(!fileOpen && !upload && document.all.attachmentOverview)
+				{
+					var str = AttachmentItemCount == 1 ? " photo" : " photos";
+					str = "Attachments: " + AttachmentItemCount + str;
+					document.all.attachmentOverview.innerHTML = str;
+					attachmentSep.style.display="block";
+				}
+
+		  		SetProgressPercent(90);
+				for (var i = 0; i < HomeNetworkObj.Count; i++) {
+					HomeNetworkObj.Item(i).AutoDetect(1);
+				}
+				PanelManager.Show('PhotoPickerPanel');
+				HideProgressPanel();
+			}
+
+			function SetupDeviceListScrollArea()
+			{
+				var str = GenerateDeviceList();
+				descDiv.innerHTML=str;
+				if(numDevice>0)
+				{
+
+					if(document.all.radio0)
+						radio0.checked = true;
+
+                    
+					var savedStr=Utilities.ReadTextFile(userDataVolumeName+"\\"+PhotoSettingsPath+"\\"+lastSelectedFileName);
+					if(savedStr)
+					{
+					   var pairs=savedStr.split(";");
+                       if(pairs && pairs.length>1)
+					   {
+							var lastVN=pairs[0].split("=");
+							var lastPath=pairs[1].split("=");
+
+                            if(lastVN[0]=="lastSelectedVN" && lastPath[0]=="lastSelectedPath")
+							{
+							    var vName=unescape(lastVN[1]);
+							    var path=unescape(lastPath[1]);
+								var i;
+								for(i=0; i<numDevice; i++)
+								{
+									var item = document.all["radio" + i];
+									if(item.StorageDeviceVN==vName &&item.path==path)
+									{
+									   item.checked=true;
+									   break;
+									}
+								}
+
+							}
+					   }
+					}
+
+				} 
+                if(numDevice==0)
+				    document.all.descriptionSpan.innerHTML= "No valid locations were found to browse for photos."
+				if(numDevice>0)
+				{
+					ContinueRow.style.display = "block";
+					ContinueButton.focus();
+				}
+				else
+				{
+					ContinueRow.style.display = "none";
+					CancelButton.focus();
+				}
+			}
+
+
+			function OnContinue()
+			{
+				for(i=0; i<numDevice; i++)
+				{
+					var item = document.all["radio" + i];
+					if(item.checked)
+					{
+
+                        Utilities.EnsureFolderExist(userDataVolumeName+"\\"+PhotoSettingsPath);
+						var selectedItemStr="lastSelectedVN="+escape(item.StorageDeviceVN)+";lastSelectedPath="+escape(item.path);
+		                Utilities.CreateTextFile(userDataVolumeName+"\\"+PhotoSettingsPath+"\\"+lastSelectedFileName, selectedItemStr);
+	
+
+						//TVShell.Message("SelectDevice.html:"+item.StorageDeviceVN);
+						var destURL = "Viewer.html?picker=1";
+
+						if(fileOpen)
+							destURL+="&fileOpen=true";
+						else if(upload && postURL)
+		    			{
+		    				destURL+="&upload=true&postURL=";
+		    				destURL+=encodeURIComponent(postURL);
+		    			}
+						else
+							destURL+="&fromMail=true&action=Attach";
+							
+						switch(item.device)
+						{
+							case "Box" :
+								destURL+="&location=1&StorageDeviceVN=" + item.StorageDeviceVN + "&path=" + item.path;
+								document.location = destURL;
+								break;
+							case "USB" :
+								destURL+="&location=0&StorageDeviceVN=" + item.StorageDeviceVN + "&path=" + item.path;
+								document.location = destURL;
+								break;
+							case "UNC" :
+								Mount(item.host, item.share);
+								break;
+							case "UPNP" :
+								destURL+="&location=2&StorageDeviceVN=" + item.StorageDeviceVN + "&path=" + item.path;
+								document.location = destURL;
+								break;
+							case "OnlineAlbum" :
+							//FIX ME: SHOULD THIS LOCATION BE 2 (existing UPNP on) or a new one 3.
+								destURL+="&location=3&StorageDeviceVN=" + escape(item.StorageDeviceVN) + "&path=" + item.path;
+								document.location = destURL;
+								break;
+							case "Mail" :
+								destURL+="&location=4&AttachmentViewer=true";
+								document.location = destURL;
+								break;
+							default:
+								warn( "Unknown type of device", "Unable to handle a " + item.device + " device. Please choose another." );
+								break;
+						}
+					}
+				}
+			}
+
+			function OnServiceListKeyDown(ServiceEntry)
+			{
+				TVShell.Message("SelectDevice.html:--------------OnServiceListKeyDown " + ServiceEntry.name + " focus=" +  (PanelManager.FocusedPanel?PanelManager.FocusedPanel.Name :'no-panel') + " panel='" + ServiceEntry.Panel + "'");
+
+				var alertPanel = PanelManager.Item("alert");						
+				if (alertPanel && alertPanel.State == 0)
+					return;
+
+				// If a key is pressed to bring up a panel, 
+				// then leave the select device.
+				if (ServiceEntry.Panel != null
+					|| ServiceEntry.name == "browser::back"
+					|| ServiceEntry.name == "browser::esc")
+					OnCancel();
+			}
+	</script>
+</head>
+<body topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 onload="OnLoad();">
+		<msntv:PhotoHeading id=Heading label="Insert photos into an e-mail"/>
+		
+		<DIV id=sideBar>
+			<table cellpadding=0 cellspacing=0 width=100% align=center ID="Table1">
+				<tr id="ContinueRow" style='display:none;'>
+					<td height=30 ><msntv:CustomButton onclick="OnContinue();" class=sideBarButton id="ContinueButton" label="Continue" /></td>
+				</tr>
+				<tr>
+					<td height=30 ><msntv:CustomButton onclick="OnCancel();" class=sideBarButton id="CancelButton" label="Cancel" /></td>
+				</tr>
+			</table>			
+		</DIV>
+		
+		<DIV id=scrollArea>		
+			<DIV class=description id=attachmentOverview>
+			</DIV>
+			<div id="attachmentSep" style="display:none; height:2px; line-height:2px; width:100%; margin:0px 6px; background-color:#888888;">&nbsp;</div>
+			<DIV class=description id=descDiv>		
+			</DIV>
+		</DIV>
+		
+		<script>
+			if((fileOpen || upload) && document.all.Heading)
+				Heading.label = "Upload photos to website";
+			scrollArea.style.pixelHeight = document.body.clientHeight - scrollArea.offsetTop;
+		</script>
+		
+</body>
+</html>

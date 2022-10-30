@@ -1,0 +1,54 @@
+<html xmlns:msntv>
+<head>
+	<title>Connection Settings</title>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+	<?IMPORT namespace="msntv" implementation="MSNTVPaneHelpHeading.htc">
+	<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+	<link REL=StyleSheet TYPE="text/css" HREF="MSNTVPaneHelp.css">
+</head>
+<body>
+
+
+<msntv:MSNTVPaneHelpHeading label="Help" label2="Connection settings" showScrollTop="true" />
+
+<div id="ScrollArea">
+	<span class="description">
+        In order to communicate with the <SCRIPT>document.write( ServiceFullName );</SCRIPT>, your <script>document.write( ProductShortName );</script> uses a dial-up phone line or a broadband connection. See the Setup Guide that came with your <script>document.write( ProductShortName );</script> for information on connecting to the <SCRIPT>document.write( ServiceFullName );</SCRIPT>.
+        <p>
+        <p>
+        You chose a connection option (dial-up or broadband) when you set up your <script>document.write( ProductShortName );</script>. To view or change your connection settings:
+        </p>
+        </p>
+        <ol>
+                <li>Choose <b>Settings</b> from the top of the Sign-in page.</li>
+		<li>Choose <b>Connection settings</b>.</li>
+                <p>
+                <p>
+                You'll see a list of connection topics.
+		</p>
+		</p>
+		<li>Choose a topic and change the necessary information. For example, if you're using a dial-up connection, you might decide to block call waiting while you're connected to <script>document.write( ServiceShortName );</script>.</li>
+        </ol>
+        To change the way you connect to <script>document.write( ServiceShortName );</script> (for example, from dial-up to broadband if you set up a home network):
+        <ol>
+         	<li>Choose <b>Settings</b> from the top of the Sign-in page.</li>
+		<li>Choose <b>Connection settings</b>.</li>
+                <li>Choose <b>Change the way you connect</b>, and then fill in the required information.</li>
+        </ol>
+		<p>
+                <p>
+                Note: If you change the way you connect, you should call <script>document.write( ServiceShortName );</script> Customer Service at <script>document.write(CustomerCareNumber);</script>, as your billing information may change.
+		</p>
+		</p>
+                For more information on connecting to a home network, use your computer to go to www.msntv.com.
+
+	</span>
+</div>
+
+<div id="sideBar">
+	<msntv:CustomButton onclick="history.go(-1)" id="doneID" label="Done" />
+	<script>document.all("doneID").focus();</script>
+</div>
+
+</body>
+</html>

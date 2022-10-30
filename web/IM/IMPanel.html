@@ -1,0 +1,3885 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<TITLE>MSN IM Panel</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="im.css">
+<style>
+body {
+	background-image: none;
+	font-family:segoe tv; 
+	font-size: 18px;
+	color: #1D1D1D;
+	margin: 0px;
+	word-wrap:break-word;
+}
+
+a:link {
+	color: #07214D;
+}
+a:visited {
+	color: #07214D;
+}
+a:active {
+	color: #07214D;
+}
+a:hover {
+	color: #07214D;
+}
+
+.gradientContent {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 100%;
+	endtransparency: 60%;
+	angle: 0;
+}
+.sidebarButton {
+	font-size: 16px;
+	color: #07214D;
+	text-align: left;
+	margin: 0px 0px 2px 0px;
+}
+.bottombarButton {
+	font-size: 16px;
+	text-align: center;
+	margin: 0px 0px 0px 0px;
+}
+.inputText {
+	background-color: #0D3146;
+	color: #C0C6CD;
+	border-style:window-inset;
+	border-width: 4px;
+	border-color: #9297A1;
+	border-right-color: #6F7783;
+	padding-left:3px;
+	padding-right:4px;
+}
+
+#ListPanel { 
+	position:absolute; 
+	left:0px; 
+	top:75px; 
+	width:560px;
+	height:265px; 
+	z-index:1; 
+	visibility:hidden;
+}
+
+#InvitePanel { 
+	position:absolute; 
+	left:0px; 
+	top:75px; 
+	width:560px;
+	height:265px; 
+	z-index:1; 
+	visibility:hidden;
+}
+
+#ChangeStatusPanel {
+	position:absolute; 
+	left:0px; 
+	top:75px;
+	width:560px;
+	height:265px;
+	z-index:10; 
+	visibility:hidden;
+}
+
+#SessionPanel { 
+	position:absolute; 
+	left:0px; 
+	top:75px; 
+	width:560px;
+	height:265px; 
+	z-index:2; 
+	visibility:hidden; 
+}
+
+#ContentPanel { 
+	position:absolute; 
+	left:0px; 
+	top:75px; 
+	width:560px;
+	height:265px; 
+	z-index:6; 
+	visibility:hidden; 
+}
+#EmoticonPanel { 
+	position:absolute; 
+	left:395px; 
+	top:35px; 
+	height:200px; 
+	width:156px; 
+	z-index:12; 
+	visibility:hidden;
+}
+
+#sessionTitle { 
+	position:relative; 
+	height:30px;
+}
+
+.scroller {
+	width:100%; 
+	height:100%; 
+	overflow-y:auto;
+	behavior:url(../HTC/ScrollingDIV.htc);
+}
+
+#txt { 
+	width:395px; 
+	height:110px; 
+	font-family:segoe tv; 
+	font-size:18px; 
+	overflow-y: auto; 
+	behavior: url(../HTC/ScrollingDIV.htc); 
+}
+
+#txtContent { 
+	margin-left:4px;
+	width:371px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-wrap:break-word;
+	font-size: 18px;
+	color: #1D1D1D;
+}
+
+#SubContentDiv { 
+	text-overflow: ellipsis;
+	word-wrap:break-word;
+	font-size: 18px;
+	color: #1D1D1D;
+}
+
+.headerTitle
+{
+	font-family:segoe tv; 
+	font-size:18px; 
+	color:#1D1D1D;	
+}
+.nameContent {
+	font-family:segoe tv; 
+	font-size:18px; 
+	color:#000000;	
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.alertListContent {
+	font-size:18px; 
+	color:#07214D;	
+	width:330px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.contactListContent {
+	font-size:18px; 
+	color:#07214D;	
+	width:330px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.contactListContentOffline {
+	font-size:18px; 
+	color:#524E4E;	
+	width:250px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.sessionTitleContent {
+	font-family:segoe tv; 
+	font-size:18px; 
+	width:335px;
+	height:22px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.leftMenuBarContent {
+	font-size:16px;
+	width:90px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.bigTitle {
+	font-family:segoe tv;
+	font-weight:bold; 
+	font-size:20px;
+}
+.smallTitle {
+	font-size:16px;
+}
+.blackContent
+{
+	font-size:18px;
+	color:#000000;
+}
+.listPanelContent
+{
+	font-family:segoe tv;
+	font-weight:bold; 
+	font-size:18px;
+	color:#1B3764;
+}
+.historyContent
+{
+	left:2px;
+	font-size:18px;
+	color:#663300;
+}
+.warningContent
+{	
+	left:2px;
+	font-size:18px;
+	color:#6A1B17;
+}
+.titleBoldContent
+{
+	font-family:segoe tv; 
+	font-size:18px; 
+	font-weight: bold;
+	color:#F7F8FB;
+}
+.titleContent
+{
+	font-family:segoe tv; 
+	font-size:18px; 
+	color:#F7F8FB;
+}
+.rMessage
+{
+	color:#165E0D;
+}
+.sMessage
+{
+	color:#165E0D;
+}
+td,tr 
+{
+	margin:0;
+	padding:0;
+}
+</style>
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script language=Javascript src="../Javascript/PanelImpl.js"></script>
+<script language=Javascript src="../Javascript/ContentPaneHelp.js"></script>
+<script language=Javascript src="IMCommon.js"></script>
+<script language=Javascript src="IMEmoticon.js"></script>
+<SCRIPT language=javascript>
+var utilities = TVShell.Utilities;
+var PanelManagerObj = TVShell.PanelManager;
+var thisPanel = PanelManagerObj.Item(window.main);
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var MsgrObj = TVShell.UserManager.CurrentUser.Messenger;
+	
+	MyHeader 					= "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n";
+	MyHeaderLen 				= MyHeader.length - 3;
+	TypingAlertHeader			= "MIME-Version: 1.0\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: ";
+	TypingAlertHeaderLen		= TypingAlertHeader.length;
+
+	InboxUnreadHeader 					= "Inbox-Unread: ";
+	MessageDeltaHeader 					= "Message-Delta: ";
+	FromHeader 							= "From: ";
+
+	MaxNumOfSession		= 7;
+	MaxNumOfContactBar	= 5;
+	MaxNumOfBlockBar	= 2;
+	MaxCharactersOfSession = 15000;
+	IMSERVICE_INT	= 0;
+	IMSERVICE_PPE	= 1;
+	IMSERVICE_PROD	= 2;
+
+var connectedIMService = IMSERVICE_PROD;
+var globalKeyDownFrozen = false;
+var globalKeyDownFrozenTimerID = 0;
+var reminderTxt			= 'Do not send credit card or password by using Instant Messenger';
+var reminderStr			= '<span class=warningContent>' + reminderTxt + '</span><br><br>';
+var tooManySessionAlert = 'You cannot have more than ' + MaxNumOfSession + ' conversations at once. To start a new conversation, end one of your current conversations.';
+var tooLongMessage      = 'Your message is too long. Instant messages are limited to 400 characters.';
+var blockedUserStr		= ' is currently blocked from seeing when you are online or sending you instant messages. <br>Blocked contacts are listed in your contact list with a <span style=\"padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_block.png;\"></span>&nbsp;icon or a <span style=\"padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_block_online.png;\"></span>&nbsp;icon.';
+
+var currentFocusedSubPanel					= "ListPanel";
+var currentSessionNum					= -1;
+var SessionStack						= [];
+var currentAddContact					= "";
+var checkReverseListTimerID				= 0;
+var checkDrawContactListDivTimerID		= 0;
+
+var bReconnecting						= false;
+var g_fContinueSendTyping				= false; 
+var g_fContinueReceiveTyping			= false; 
+var g_keepaliveTimer					= 0; 
+var g_typingTimer						= 0;
+var emptyStrSessionStatusBar=" ";
+var LocalFriendlyName 					= " ";
+var LocalState							= null;
+var logoff								= true;
+var contactList 						= null;
+var allowList 							= null;
+var blockList 							= null;
+var reverseList 						= null;
+var askMeLaterStack						= [];
+var contactRequestStack					= [];
+var firstEnterConversation				= true;
+var previousAction						= "";
+
+var blockButtonLabel = "Block";
+var unblockButtonLabel = "Allow";
+
+var MAX_PARTICIPANTS = 4;
+
+function HandleJSError(oErr)
+{
+	var sPage = thisPanel.URL;
+	sPage = sPage.substring(sPage.lastIndexOf("/") + 1);
+	var sCaller = GetCaller(HandleJSError);
+	var sErrMsg = 'Messenger UI Script Error*** '
+		+ 'Error: ' + oErr.description + '   '
+		+ 'Page: ' + sPage + '    '
+		+ 'Call Stack: ' + sCaller;
+
+	if (TVShell.SystemInfo.Flavor == "debug") {
+		alert(sErrMsg);
+		throw(oErr);
+	}
+	TVShell.Message(sErrMsg);
+}
+
+function GetCaller(oFunction)
+{
+	var SHOW_ARGS = true;
+	var sFunction;
+	var sCaller = '';
+	var cArgs = null;
+	var iNumArgs = 0;
+	if (oFunction.caller) {// while(oFunction.caller)  ???
+		sFunction = oFunction.caller.toString();
+		if (SHOW_ARGS) {
+			cArgs = oFunction.caller.arguments;
+			iNumArgs = cArgs.length;
+			sCaller += '  ' + sFunction.substring(9, sFunction.indexOf("(") + 1);
+			for (var i=0; i< iNumArgs; i++) {
+				sCaller+= cArgs[i] + (i < iNumArgs-1 ? ', ' : '');
+			}
+			sCaller += ')';
+			sCaller += '\r\n';
+		} else {
+			sCaller += '  ' + sFunction.substring(9, sFunction.indexOf(")") + 1) + '\r\n';
+		}
+//		oFunction = oFunction.caller;
+	}
+	return sCaller;
+}
+
+function ThrowError(sDescription)
+{
+	var oErr = new Error();
+	oErr.description = sDescription;
+	if (TVShell.SystemInfo.Flavor == "debug") 
+		throw (oErr);
+}
+function GlobalKeyDown()
+{
+	if (globalKeyDownFrozen == true) {
+		window.event.returnValue = false;
+		window.event.keyCode = 0;
+	}
+//	TVShell.Message("global keydown ="+window.event.keyCode + " globalKeyDownFrozen="+globalKeyDownFrozen);
+	return;
+}
+function SetGlobalKeyDownFrozen()
+{	
+	globalKeyDownFrozen = true;
+	if (globalKeyDownFrozenTimerID != 0) {
+		clearTimeout(globalKeyDownFrozenTimerID);
+	}
+	globalKeyDownFrozenTimerID = setTimeout("ClearGlobalKeyDownFrozen()",30000);// clear globalKeyDownFrozen if no response from server for 30 seconds
+	return;
+}
+function ClearGlobalKeyDownFrozen()
+{	
+	globalKeyDownFrozen = false;
+	if (globalKeyDownFrozenTimerID != 0) {
+		clearTimeout(globalKeyDownFrozenTimerID);
+	}
+	globalKeyDownFrozenTimerID = 0;
+	return;	
+}
+	
+// UISession constructor
+function UISession(ID, chatHistory, blocked, visited, firstVisited, live, emailAddress, friendlyName)
+{
+	this.ID = ID; // -1: offline  0: pending connection or connection dropped  >0: an effective connection
+	this.chatHistory = chatHistory;
+	this.blocked = blocked;
+	this.visited = visited;
+	this.emailAddress = emailAddress;
+	this.friendlyName = friendlyName;// will be shown in left menu bar
+	this.inviteeStack = [];
+	this.live = live; // true: a live connection      false: a dead connection
+	this.primaryUserLeft = false;
+	this.restoreSessionMsg = "";
+	this.unSentOutMsg ="";
+	this.firstVisited = firstVisited;
+}
+
+function GetErrorCode(hrNum)
+{
+	TVShell.Message("ErrorCode="+hrNum);
+	return hrNum & 0x000000FF;
+}
+
+function IsUserInContactList(emailAddress)
+{	
+	var b_inContactList = false;
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	for (var i =0; i < contactList.Count && b_inContactList == false; i++){
+		if (contactList.Item(i).EmailAddress == emailAddress)
+			b_inContactList = true;
+	}
+	return b_inContactList;
+}
+
+function IsUserInAllowList(emailAddress)
+{	
+	var b_inAllowList = false;
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	for (var i =0; i < allowList.Count && b_inAllowList == false; i++){
+		if (allowList.Item(i).EmailAddress == emailAddress)
+			b_inAllowList = true;
+	}
+	return b_inAllowList;
+}
+
+function IsUserInBlockList(emailAddress)
+{	
+	var b_inBlockList = false;
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	for (var i =0; i < blockList.Count && b_inBlockList == false; i++){
+		if (blockList.Item(i).EmailAddress == emailAddress)
+			b_inBlockList = true;
+	}
+	return b_inBlockList;
+}
+
+function IsUserBlocked(emailAddress)
+{		
+	var b_blocked = false;
+	if (MsgrObj.MessagePrivacy == MMSGPRIVACY_ALLOW_LIST_ONLY) {
+		allowList = MsgrObj.GetList(MLIST_ALLOW);
+		b_blocked = true;
+		for (var i = 0; i < allowList.Count && b_blocked == true; i++) {
+			if(allowList.Item(i).EmailAddress== emailAddress)
+				b_blocked = false;
+		}
+	} else if(MsgrObj.MessagePrivacy == MMSGPRIVACY_BLOCK_LIST_EXCLUDED) {
+		blockList = MsgrObj.GetList(MLIST_BLOCK);
+		b_blocked = false;
+		for(var i = 0; i < blockList.Count && b_blocked == false; i++) {
+			if(blockList.Item(i).EmailAddress == emailAddress)
+				b_blocked = true;
+		}
+	}
+	return b_blocked;
+}
+
+function ResetIMPanel()
+{
+	currentFocusedSubPanel					= null;
+	currentSessionNum					= -1;
+	SessionStack						= [];
+	currentAddContact					= null;
+	checkReverseListTimerID				= 0;
+	checkDrawContactListDivTimerID		= 0;
+
+	bReconnecting						= false;
+	g_fContinueSendTyping				= false; 
+	g_fContinueReceiveTyping			= false; 
+	g_keepaliveTimer					= 0; 
+	g_typingTimer						= 0;
+	emptyStrSessionStatusBar			= " ";
+	LocalFriendlyName 					= " ";
+	LocalState							= null;
+	logoff								= true;
+	contactList 						= null;
+	allowList 							= null;
+	blockList 							= null;
+	reverseList 						= null;
+	askMeLaterStack						= [];	
+	contactRequestStack					= [];
+	firstEnterConversation				= true;
+	previousAction						= "";
+	MainMenuTable.style.visibility="hidden";
+	updateWaitingCount();
+}
+
+function Login()
+{
+	var email=TVShell.UserManager.CurrentUser.EMail;
+	if (email != "" && (MsgrObj.LocalState == MSTATE_UNKNOWN || MsgrObj.LocalState == MSTATE_OFFLINE)) {
+		TVShell.Message("starting logon "+email);
+		try{
+//			MsgrObj.ServerIPAddress = "messenger.hotmail.com";
+			MsgrObj.Logon(email, MsgrObj.Services.PrimaryService);
+			ProcessError(855,null);
+		}
+		catch(e){
+			TVShell.Message("Messenger logon fail");
+			HandleJSError(e);
+			if (currentFocusedSubPanel != "ErrorPanel") {///???
+				OnLogonResult(-1, null);
+			}
+			return;
+		}
+	}
+}
+
+function OnLogonResult(hr, pService)
+{
+	var msgUrl = MsgrObj.ServerIPAddress;
+	if (msgUrl) {
+		if (msgUrl.indexOf("-int.com") > 0)
+			connectedIMService = IMSERVICE_INT;
+		else if (msgUrl.indexOf("-ppe.com") > 0)
+			connectedIMService = IMSERVICE_PPE;
+		else
+			connectedIMService = IMSERVICE_PROD;
+	}
+
+	TVShell.Message("IMPanel - OnLogonResult");
+	if (hr != 0) {
+		if (TVShell.SystemInfo.Flavor == "debug") 
+			alert("Logon Fail Result="+ (hr & 0x000000FF));
+		ProcessError(911,null);
+		return false;
+	}
+
+	logoff=false;
+	MsgrObj.NoMoreCalls=false;
+
+	MainMenuTable.style.visibility="visible";
+	setTimeout("DrawMyStatus();",2000);
+	//DrawContactListDiv();
+	SetCheckDrawContactListDivTimer();
+	ShowListPanel();
+
+	CheckReverseList();
+	return true;
+}
+
+function LogOff()
+{
+	if (MsgrObj && !logoff) {
+		MsgrObj.Logoff();
+		logoff=true;
+	}
+}
+
+function OnLogoff()
+{
+	TVShell.Message("IMPanel - OnLogoff");
+//	logoff = true;
+//	ResetIMPanel();
+//	ProcessError(511,null);
+}
+
+function OnServiceLogoff(hr, pService)
+{
+	TVShell.Message("IMPanel - OnServiceLogoff");
+	logoff = true;
+	ResetIMPanel();
+	if ((hr & 0x000000FF) == MSGR_E_REMOTE_LOGIN)
+		ProcessError(511,null);
+	else
+		ProcessError(512,null);
+}
+
+function OnBeforeShow(name)
+{
+	if (name == "impanel") {
+		TVShell.EventLog.Usage("messenger","action=launch");
+		TVShell.Message("messenger--action=launch");
+		var alertPanel = PanelManagerObj.Item("alert");
+        var userData = alertPanel.UserStrData;
+        if (alertPanel.State == 0 && userData != null) {
+			var event = userData.substr(0, 1);
+            var emailAddress = userData.substr(2, userData.length);
+            switch (event) {
+				case "0":
+                           // buddy online
+						CreateSession(emailAddress);//create a session with this guy
+						PanelManagerObj.Hide("alert");
+                        break;
+				case "1":
+						if (currentFocusedSubPanel != "ContactRequestPanel") {
+                            // buddy request
+							for (var i = 0; i < contactRequestStack.length; i++) {
+								if (contactRequestStack[i] == emailAddress) {
+									ProcessContactRequest(i);
+									break;
+								}
+							}
+							PanelManagerObj.Hide("alert");
+						}
+                        break;
+				case "2":
+						for(var i=0;i< SessionStack.length;i++){
+							// invitation
+							if(SessionStack[i].emailAddress==emailAddress){
+								ShowSessionPanel(i);
+								PanelManagerObj.Hide("alert");
+								break;
+							}
+						}
+						break;
+			}
+		}
+		im_bg.background = "images/IM_BG.jpg";
+		im_top.background = "images/IM_Top.jpg";
+		if (PanelManagerObj.Item('statusbar').Document.parentWindow.waitingCount == 0)
+			PanelManagerObj.Item('statusbar').Document.parentWindow.StatusField.innerHTML = "";
+	}
+}
+function OnAfterHide(name)
+{
+	if (name == "impanel") {
+		im_bg.background = "msntv:/Images/1x1.gif";
+		im_top.background = "msntv:/Images/1x1.gif";
+	}
+}
+
+function RestoreSession(emailAddress)
+{ 
+	var ppIMSessions = MsgrObj.IMSessions;
+	var pIMSession = null;
+	
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	var state;
+	var friendlyName;
+	for (var i = 0; i < contactList.Count; i++) {
+		if (contactList.Item(i).EmailAddress == emailAddress) {
+			friendlyName=contactList.Item(i).FriendlyName;
+			state = contactList.Item(i).State;
+			break;				
+		}
+	}
+
+	if (state != MSTATE_OFFLINE && state != MSTATE_UNKNOWN) {
+		pIMSession = MsgrObj.CreateIMSession(emailAddress);
+		SessionStack[currentSessionNum].ID = pIMSession.SessionID; 
+		disableMessageInput();
+		var stxt = 'Connecting ' + removeTags(cutLongString(MatchFriendlyName(friendlyName))) + '...';
+		insertSessionStatusText(stxt);
+	} else {
+		SessionStack[currentSessionNum].chatHistory += '<FONT class=warningContent>'+MatchFriendlyName(friendlyName)+' is currently offline and may not respond to your instant message.<br>Online contacts are listed in your contact list with a green <span style=\"padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_online.png;\"></span>&nbsp;contact icon</font><br>';
+		SessionStack[currentSessionNum].chatHistory = chopChatHistory(SessionStack[currentSessionNum].chatHistory);
+		txtContent.innerHTML=SessionStack[currentSessionNum].chatHistory;
+		txt.MyDoScroll("scrollToStart");
+		txt.MyDoScroll("scrollToEnd");
+	}
+	return pIMSession;
+}
+function CleanJunkSession()//this function remove one session which firstVisited is false 
+{
+	for (var i = 0; i < SessionStack.length; i++) {
+		if (SessionStack[i].firstVisited == false) {
+			if (SessionStack[i].ID > 0) {
+				var pSession = FindSession(SessionStack[i].ID);
+				if (pSession != null)
+					pSession.LeaveSession();
+			}	
+			SessionStack.splice(i,1);
+			break;
+		}
+	}
+}
+function CreateSession(emailAddress)
+{ 
+	TVShell.Message("IMPanel - CreateSession num="+SessionStack.length);
+	TVShell.EventLog.Usage("messenger","action=createSession");
+	if (MsgrObj.LocalState == MSTATE_INVISIBLE || MsgrObj.LocalState == MSTATE_OFFLINE) {
+		ProcessError(600,null);
+		return;
+	}
+
+	for (var j = 0; j < SessionStack.length;j++) {
+		if (SessionStack[j].emailAddress == emailAddress 
+			&& SessionStack[j].inviteeStack.length == 0) { 
+			num = j;
+			SessionStack[j].firstVisited = true;
+			ShowSessionPanel(num);
+			return;
+		}
+	}
+
+	var b_blockedUser = false;
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	for (var i = 0; i< blockList.Count && b_blockedUser == false; i++){
+		if (emailAddress == blockList.Item(i).EmailAddress) 
+			b_blockedUser = true;
+	}
+	if (b_blockedUser == true) {
+		ProcessBlockedContact(emailAddress);
+		return;
+	}
+
+	var friendlyName;
+	var state;
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	for (var i = 0; i < contactList.Count; i++) {
+		if (contactList.Item(i).EmailAddress == emailAddress) {
+			friendlyName=contactList.Item(i).FriendlyName;
+			state=contactList.Item(i).State;
+			break;				
+		}
+	}
+	TVShell.Message("CreateSession buddy state="+state);
+	if (state == MSTATE_OFFLINE || state == MSTATE_UNKNOWN) {
+		ProcessError(100,emailAddress);
+		return;
+	}
+
+	var ppIMSessions = MsgrObj.IMSessions;
+	var tooManySession=true;
+	if (SessionStack.length >= MaxNumOfSession) {
+		ProcessError(280,"");
+		return false;
+	}
+
+	var num = -1;
+	for (var i = 0;i < ppIMSessions.Count; i++) {
+		var pSession = ppIMSessions.Item(i);
+		for (var j = 0;j < SessionStack.length; j++) {
+			if (pSession.SessionID == SessionStack[j].ID) {
+				var ppUsers = pSession.Members;
+				var userCount = ppUsers.Count;
+				for (var k = 0;k < userCount;k++){
+					if (ppUsers.Item(k).EmailAddress == emailAddress) {
+						num = j;
+						if (userCount == 1) {
+							ShowSessionPanel(j);
+							return true;
+						}
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	if (num != -1) 
+		ShowSessionPanel(num);
+	else {
+		if (state != MSTATE_OFFLINE && state != MSTATE_UNKNOWN) {
+			var pIMSession = MsgrObj.CreateIMSession(emailAddress);
+///////////	function UISession(ID, chatHistory, blocked, visited, firstVisited, live, emailAddress, friendlyName)
+			SessionStack.push( new	UISession(pIMSession.SessionID,  reminderStr, b_blockedUser, true, true, false,emailAddress, friendlyName));
+			if (SessionStack.length == MaxNumOfSession) 
+				CleanJunkSession();			
+			if (SessionStack.length >= MaxNumOfSession)
+				MsgrObj.NoMoreCalls=true;
+			num=SessionStack.length-1;
+			ShowSessionPanel(num);
+			disableMessageInput();
+			var stxt = 'Connecting ' + removeTags(cutLongString(MatchFriendlyName(friendlyName))) + '...';
+			insertSessionStatusText(stxt);
+		} else {
+///////////	function UISession(ID, chatHistory, blocked, visited, firstVisited, live, emailAddress, friendlyName)
+//			SessionStack.push( new	UISession(-1, reminderStr, b_blockedUser, true, true, false, emailAddress, friendlyName));
+//			num=SessionStack.length-1;
+//			SessionStack[num].chatHistory +='<FONT style="font-size:16px;color:#663300;">'+MatchFriendlyName(friendlyName)+' is currently offline and may not respond to your instant message.<br>Online contacts are listed in your contact list with a green <span style=\"padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_online.png;\"></span>&nbsp;contact icon</font><br>';
+//			ShowSessionPanel(num);
+		}
+
+		if (SessionStack.length >= MaxNumOfSession)
+			MsgrObj.NoMoreCalls=true;
+
+	}
+	return true;
+}
+
+var disableMessageInputTimerID = 0;
+function disableMessageInput()
+{
+	SetGlobalKeyDownFrozen();
+	MessageInput.disabled = false;
+	MessageInput.focus();
+	MessageInput.value = "Please Wait ...";
+	MessageInput.disabled = true;
+	if (disableMessageInputTimerID != 0) {
+		clearTimeout(disableMessageInputTimerID);
+	}
+	disableMessageInputTimerID = setTimeout("enableMessageInput()",30000);
+
+}
+
+function enableMessageInput()
+{
+	if (disableMessageInputTimerID != 0) {
+		clearTimeout(disableMessageInputTimerID);
+	}
+	disableMessageInputTimerID = 0;
+	ClearGlobalKeyDownFrozen();
+	MessageInput.disabled = false;
+	if ( currentFocusedSubPanel == "SessionPanel" ) MessageInput.focus();
+	MessageInput.value = "";
+}
+
+// update # of new conversations waiting
+function updateWaitingCount()
+{
+	var count = 0;
+
+	if ( !logoff )
+	{
+		for ( var i = 0 ; i < SessionStack.length ; i++ )
+		{
+			if ( !SessionStack[i].visited ) count++;
+		}
+	}
+
+	TVShell.Message("update cnt = " + count );
+	PanelManagerObj.Item('statusbar').Document.parentWindow.UpdateWaitingCount( count );
+}
+
+function OnNewSessionRequest(pRequestUser,pIMSession)
+{
+	TVShell.Message("Messenger UI: OnNewSessionRequest pRequestUser = "+pRequestUser.EmailAddress);
+
+	if (IsUserBlocked(pRequestUser.EmailAddress) == true)
+		return;
+		
+	var num = -1;
+	for (var i = 0; i < SessionStack.length && num == -1; i++) {
+		if(SessionStack[i].emailAddress == pRequestUser.EmailAddress && SessionStack[i].inviteeStack.length == 0) {
+			SessionStack[i].ID = pIMSession.SessionID;
+			SessionStack[i].live = true;
+			num = i;
+		}
+	}
+	if (num == -1) {
+//		if (SessionStack.length >= MaxNumOfSession) {
+//			pIMSession.LeaveSession();
+//			return false;
+//		}
+////////function UISession(ID, chatHistory, blocked, visited, firstVisited, live, emailAddress, friendlyName)
+		if (SessionStack.length == MaxNumOfSession-1) 
+			CleanJunkSession();			
+		SessionStack.push( new	UISession(pIMSession.SessionID, reminderStr, false, false, false, true, pRequestUser.EmailAddress, pRequestUser.FriendlyName));
+		if (SessionStack.length >= MaxNumOfSession)
+			MsgrObj.NoMoreCalls = true;
+//		DrawSessionLeftMenuDiv();
+		return true;
+	}
+}
+
+function CloseMySession()
+{
+	TVShell.Message("IMPanel - CloseMySession");
+	if (currentSessionNum == -1) {
+		if (TVShell.SystemInfo.Flavor == "debug") 
+			alert("ERROR 202")
+		return false;//FATAL ERROR
+	}
+	if (SessionStack[currentSessionNum].ID > 0) {
+		var pSession = FindSession(SessionStack[currentSessionNum].ID);
+		if(pSession) {
+			pSession.LeaveSession();
+			TVShell.DeviceControl.PlaySound("End_Conversation");
+		}
+	}
+	SessionStack.splice(currentSessionNum,1);
+	TVShell.Message("Session num="+SessionStack.length);
+	MsgrObj.NoMoreCalls = false;
+	currentSessionNum = -1;
+	for (var i = 0; i < SessionStack.length; i++) {
+		if (SessionStack[i].firstVisited == true) {
+			currentSessionNum = i;
+			break;
+		}
+	}
+	if (currentSessionNum == -1) {
+		ShowListPanel();
+	} else {
+		ShowSessionPanel(currentSessionNum);
+	}
+	DrawSessionLeftMenuDiv();
+	
+}
+function CloseSession(num)
+{
+	if (SessionStack[num].ID > 0) {
+		var pSession = FindSession(SessionStack[num].ID);
+		if (pSession) {
+			pSession.LeaveSession();
+		}
+	}
+	SessionStack.splice(num,1);
+	MsgrObj.NoMoreCalls = false;
+}
+function CloseAllSession()
+{
+	TVShell.Message("IMPanel - CloseAllSession");
+	while(SessionStack.legnth > 0) {
+		CloseSession(0);
+	}
+	SessionStack = [];
+	MsgrObj.NoMoreCalls = false;
+}
+function OnLocalFriendlyNameChangeResult(hr, pService,bstrPrevFriendlyName)
+{
+	TVShell.Message("OnLocalFriendlyNameChangeResult friendlyName="+MsgrObj.LocalFriendlyName);
+	TVShell.EventLog.Usage("messenger","action=changename");
+//	DrawMyStatus();
+}
+
+function OnLocalStateChangeResult(hr, mLocalState, pService)
+{
+	TVShell.Message("Local state changed hr=" + hr + " state=" + mLocalState);
+	if (mLocalState != MSTATE_UNKNOWN && mLocalState != MSTATE_LOCAL_FINDING_SERVER
+		&& mLocalState != MSTATE_LOCAL_CONNECTING_TO_SERVER 
+		&& mLocalState != MSTATE_LOCAL_SYNCHRONIZING_WITH_SERVER 
+		&& mLocalState != MSTATE_LOCAL_DISCONNECTING_FROM_SERVER 
+		&& mLocalState != MSTATE_OFFLINE && !logoff) {
+		DrawMyStatus();
+	}
+}
+
+function OnUserJoin(pIMsgrUser, pIMSession)
+{  
+	TVShell.Message("Messenger UI: OnUserJoin pIMsgrUser = " + pIMsgrUser.EmailAddress);
+	enableMessageInput();
+	var num = -1;
+	for (var i = 0; i < SessionStack.length && num == -1; i++) {
+		if (SessionStack[i].ID == pIMSession.SessionID) { 
+			num = i;
+			if (SessionStack[i].emailAddress == pIMsgrUser.EmailAddress) { // primary user joined my session
+				SessionStack[i].primaryUserLeft = false; // sometimes primary user left, then get reinvited by me when I try to send message to him
+				if(SessionStack[i].inviteeStack.length == 0 && SessionStack[i].live == false) {
+					SessionStack[i].live = true;
+					if (SessionStack[i].restoreSessionMsg != "") {
+						pIMSession.SendText(MyHeader, SessionStack[i].restoreSessionMsg, MMSGTYPE_ALL_RESULTS);
+						SessionStack[i].restoreSessionMsg = "";
+					}
+				}
+			}
+			break;
+		}
+	}
+
+	if (num == -1) {
+		if (TVShell.SystemInfo.Flavor == "debug") 
+			alert("FATAL ERROR 101");
+		return;//FATAL ERROR
+	}
+
+	var b_blockedUser = IsUserInBlockList(pIMsgrUser.EmailAddress);
+
+	if (pIMSession.Members.Count == 1) {
+		SessionStack[num].friendlyName = pIMsgrUser.FriendlyName;
+		SessionStack[num].emailAddress = pIMsgrUser.EmailAddress;
+		if (b_blockedUser) {
+			SessionStack[num].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName))) + blockedUserStr + '<br>Select Allow if you wish to receive instant messages from ' + AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+'.</font><br>';
+		}
+		SessionStack[num].blocked = b_blockedUser;
+	} else {
+		SessionStack[num].inviteeStack.push(pIMsgrUser.EmailAddress);
+		SessionStack[num].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+' has been added to the conversation.</FONT><br>';
+		if ( num == currentSessionNum)
+		{
+			DrawSessionTitle();
+		}
+		DrawSessionLeftMenuDiv();
+	}
+	SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+	if (currentFocusedSubPanel != "SessionPanel" && SessionStack[num].inviteeStack.length == 0 && SessionStack[num].firstVisited == true)
+		ShowSessionPanel(num);
+	if (num == currentSessionNum) {
+		if (!b_blockedUser) {
+			var str = removeTags(cutLongString(MatchFriendlyName(pIMsgrUser.FriendlyName))) + ' has joined this session.';                
+			insertSessionStatusText(str);
+		}
+		txtContent.innerHTML = SessionStack[num].chatHistory;
+		txt.MyDoScroll("scrollToStart");
+		txt.MyDoScroll("scrollToEnd");
+		if ( firstEnterConversation )
+		{
+			MessageInput.value = "Type your message here";
+			MessageInput.select();
+		}
+	}
+}
+
+function OnUserLeave(pIMsgrUser, pIMSession)
+{	
+	TVShell.Message("Messenger UI: OnUserLeave pIMsgrUser = " + pIMsgrUser.EmailAddress);
+	var num = -1;
+	for (var i = 0; i < SessionStack.length; i++) {
+		if (SessionStack[i].ID == pIMSession.SessionID) {
+			num = i;
+			if (SessionStack[i].emailAddress == pIMsgrUser.EmailAddress 
+			 && SessionStack[i].live == true) { // primary user left
+				if (SessionStack[i].inviteeStack.length == 0) {
+					SessionStack[i].primaryUserLeft = true;
+					SessionStack[i].live = false;
+					if (SessionStack[i].firstVisited == false) {
+						pIMSession.LeaveSession();
+						SessionStack.splice(i,1);
+						num = -1;
+					}
+				} else {
+					var email = SessionStack[i].inviteeStack.shift();
+					SessionStack[i].emailAddress = email;// move the next one to primary user
+					SessionStack[i].friendlyName = FindFriendlyName(email);
+					SessionStack[i].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+' has left the conversation.</FONT><br>';
+					SessionStack[i].chatHistory = chopChatHistory(SessionStack[i].chatHistory);
+				}
+			} else {
+				var stack = [];
+				var ppUsers = pIMSession.Members;
+				var userCount = ppUsers.Count;
+				for (var k = 0; k < userCount; k++) {
+					var email = ppUsers.Item(k).EmailAddress;
+					if( ( email != SessionStack[i].emailAddress ) && ( email != pIMsgrUser.EmailAddress ) )
+					{
+						stack.push(email);
+					}
+				}
+
+				SessionStack[i].inviteeStack=stack;
+				SessionStack[i].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+' has left the conversation.</FONT><br>';
+				SessionStack[i].chatHistory = chopChatHistory(SessionStack[i].chatHistory);
+			}
+			break;
+		}
+	}
+	if (num != -1) {
+		if(num==currentSessionNum){
+			txtContent.innerHTML = SessionStack[num].chatHistory;
+			txt.MyDoScroll("scrollToStart");
+			txt.MyDoScroll("scrollToEnd");
+			DrawSessionTitle();
+		}
+		DrawSessionLeftMenuDiv();
+	}
+}
+function OnUserDropped(hr, pIMsgrUser, pIMSession)
+{
+	TVShell.Message("Messenger UI: OnUserDropped pIMsgrUser = " + pIMsgrUser.EmailAddress);
+	var num = -1;
+	for (var i = 0; i < SessionStack.length; i++) {
+		if (SessionStack[i].ID == pIMSession.SessionID) {
+			num = i;
+			SessionStack[i].ID = 0;
+			SessionStack[i].live = false;
+			if (SessionStack[i].emailAddress == pIMsgrUser.EmailAddress) {
+				if(SessionStack[i].inviteeStack.length > 0) {
+					SessionStack[i].chatHistory +='<FONT class=warningContent>This conversation has been inactive; some participants will be removed.</FONT><br>';
+					SessionStack[i].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+' has been removed.</FONT><br>';
+					SessionStack[i].chatHistory +='<FONT class=warningContent>To resume the conversation, reinvite the people who have been removed.</FONT><br>';
+					var email = SessionStack[num].inviteeStack.shift();
+					SessionStack[i].emailAddress = email;
+					SessionStack[i].friendlyName = FindFriendlyName(email);
+				} else {
+					if (SessionStack[i].firstVisited == false) {
+						pIMSession.LeaveSession();
+						SessionStack.splice(i,1);
+						num = -1;
+					} else
+						SessionStack[i].chatHistory +='<FONT class=warningContent>MSN Messenger has dropped this conversation due to inactivity.</FONT><br>';
+				}
+			} else {
+					SessionStack[i].chatHistory +='<FONT class=warningContent>This conversation has been inactive; some participants will be removed.</FONT><br>';
+					SessionStack[i].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+' has been removed.</FONT><br>';
+					SessionStack[i].chatHistory +='<FONT class=warningContent>To resume the conversation, reinvite the people who have been removed.</FONT><br>';
+					var stack = SessionStack[i].inviteeStack;
+					var index = -1;
+					for(var k = 0; k< stack.length && index == -1; k++) {
+						if(stack[k] == pIMsgrUser.EmailAddress)
+							index = k;
+					}
+					SessionStack[i].inviteeStack.splice(index,1);
+			}
+			break;
+		}
+	}
+	if (num != -1) {
+		SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+		if (num == currentSessionNum) {
+			txtContent.innerHTML = SessionStack[num].chatHistory;
+			txt.MyDoScroll("scrollToStart");
+			txt.MyDoScroll("scrollToEnd");
+			DrawSessionTitle();
+		}
+		DrawSessionLeftMenuDiv();
+	}
+}
+
+function SendMessage()
+{
+	if (currentSessionNum == -1 ) 
+		return false;//FATAL ERROR
+
+	var curID = SessionStack[currentSessionNum].ID;
+	if (curID ==-1) 
+		return false;
+
+	var inputStr = MessageInput.value;
+	if (inputStr == "") 
+		return false;
+	if (SessionStack[currentSessionNum].blocked == true && SessionStack[currentSessionNum].inviteeStack.length ==0) {
+		return;
+	}
+	var str = '<span STYLE="font-size:18px;font-weight:bold;position:relative;left:2px; font-color:#1D1D1D;" >' + AddEmoticon(removeTags(cutLongString(MatchFriendlyName(MsgrObj.LocalFriendlyName)))) + ' says: </span>'
+		   +  '<SPAN style="font-size:18px;font-color:#1D1D1D;">'
+	       +   AddLinks(NLtoBR(AddEmoticon(removeTags(inputStr))))
+		   +  '</SPAN><br>';
+	SessionStack[currentSessionNum].chatHistory += str;
+	SessionStack[currentSessionNum].chatHistory = chopChatHistory(SessionStack[currentSessionNum].chatHistory);
+	txtContent.innerHTML = SessionStack[currentSessionNum].chatHistory;
+	txt.MyDoScroll("scrollToStart");
+	txt.MyDoScroll("scrollToEnd");
+	var pSession = null;
+	if ( curID > 0 ) pSession = FindSession( curID );
+	if ( curID == 0 || pSession == null )
+	{
+		//  this session was dropped by SB server, need to restore this session 
+		if(SessionStack[currentSessionNum].restoreSessionMsg == "") {
+			SessionStack[currentSessionNum].restoreSessionMsg = inputStr;
+			RestoreSession(SessionStack[currentSessionNum].emailAddress);
+		} else
+			SessionStack[currentSessionNum].restoreSessionMsg += inputStr;
+	}
+	else
+	{
+		if (pSession)
+		{
+			if (pSession.Members.Count==0 && SessionStack[currentSessionNum].primaryUserLeft == true) {// primary use left, now invite him back
+				pSession.InviteUser(SessionStack[currentSessionNum].emailAddress);
+				SessionStack[currentSessionNum].restoreSessionMsg += inputStr;
+			} else {
+				if (SessionStack[currentSessionNum].live == true)
+					pSession.SendText(MyHeader, inputStr, MMSGTYPE_ALL_RESULTS);
+				else
+					SessionStack[currentSessionNum].restoreSessionMsg += inputStr;
+			}
+		}
+		else
+		{
+			if (TVShell.SystemInfo.Flavor == "debug") alert("ERROR 103");
+		}
+	}	
+
+	if (MessageInput.disabled == false) {
+		MessageInput.value = "";
+		MessageInput.focus();
+	}
+	return true;
+}	
+function OnInviteUser(pIMsgrUser, pIMSession, hr)
+{
+	var errorCode = GetErrorCode(hr);
+	TVShell.Message("OnInviteUser="+errorCode);
+	if (errorCode == MSGR_E_TOO_MANY_SESSIONS) {
+		for (var i = 0; i < SessionStack.length; i++) {
+			if(SessionStack[i].ID == pIMSession.SessionID) {
+				if (SessionStack[i].emailAddress == pIMsgrUser.EmailAddress 
+					&& SessionStack[i].inviteeStack.length == 0) {
+					SessionStack[i].primaryUserLeft = true;
+				}
+				if (pIMsgrUser.State == MSTATE_UNKNOWN)
+					SessionStack[i].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+ ' may not reply because he or she appears to be offline.</FONT><br>';
+				else
+					SessionStack[i].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pIMsgrUser.FriendlyName)))+ ' has too many active conversations. Currently he or she cannot receive instant messages from you.</FONT><br>';
+				SessionStack[i].chatHistory = chopChatHistory(SessionStack[i].chatHistory);
+				if(i == currentSessionNum){
+					txtContent.innerHTML = SessionStack[i].chatHistory;
+					txt.MyDoScroll("scrollToStart");
+					txt.MyDoScroll("scrollToEnd");
+				}
+				ClearGlobalKeyDownFrozen();
+				break;
+			}
+		}
+	}
+}
+
+function OnAppInviteReceived(pUser, lCookie, bstrAppGUID, bstrAppName, bstrAppURL, lInviteType)
+{
+	var appName = bstrAppName.toLowerCase();
+	var inputStr = "";
+	if (appName.indexOf("file transfer") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have File Transfer functionality and can not accept your request";
+	}
+	else if (appName.indexOf("audio conversation") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have Audio Converation functionality and can not accept your request";
+	}
+	else if (appName.indexOf("viewing webcam") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have Webcam Viewing functionality and can not accept your request";
+	}
+	else if (appName.indexOf("application sharing") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have Application Sharing functionality and can not accept your request";
+	}
+	else if (appName.indexOf("remote assistance") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have Remote Assistance functionality and can not accept your request";
+	}
+	else if (appName.indexOf("whiteboard") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have Whiteboard functionality and can not accept your request";
+	}
+	else if (appName.indexOf("groups") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have Threedegrees Groups functionality and can not accept your request";
+	}
+	else if (appName.indexOf("musicmix") > -1)
+	{
+		inputStr = MsgrObj.LocalLogonName + " (" + MsgrObj.LocalFriendlyName + ") " + "does not have Threedegrees Musicmix functionality and can not accept your request";
+	}
+	if (inputStr != "")
+		pUser.SendText(MyHeader, inputStr, MMSGTYPE_ALL_RESULTS);
+}
+
+function chopChatHistory( someHTML )
+{     
+    if (someHTML && someHTML.length > MaxCharactersOfSession) {
+        someHTML = someHTML.substr(someHTML.length - MaxCharactersOfSession, MaxCharactersOfSession); 
+        var firstBR = someHTML.indexOf('<br>');
+        someHTML = someHTML.substr(firstBR, someHTML.length - '<br>'.length);      
+    }
+    return someHTML;
+} 
+
+function removeUnusedSpace(s)
+{
+	if (s == '')
+		return s;
+	var start = 0 ;
+	var end = s.length;
+	for (var i = 0; i < s.length; i++) {
+		if (s.charAt(i) != ' ') {
+			start = i;
+			break;
+		}
+	}
+	for (var i = s.length -1; i >= 0; i--) {
+		if (s.charAt(i) != ' ') {
+			end = i+1;
+			break;
+		}
+	}
+	return s.substring(start, end);
+}
+
+function removeTags(plainText)
+{
+   return utilities.EscapeHTML(plainText);
+}
+
+function NLtoBR(s)
+{
+    var str = new String(s); 
+
+    while(str.indexOf('\r\n') != -1) {
+        str = str.replace('\r\n', '<br>'); 
+	}
+    while(str.indexOf('\n') != -1) {
+        str = str.replace('\n', '<br>'); 
+	}    
+    while(str.indexOf('\r') != -1) {
+        str = str.replace('\r', '<br>'); 
+	}
+	return str; 
+}
+
+
+	
+function AddLinks(s)
+{
+    var str; 
+    var i; 
+    var nlindex; 
+    
+    var splitArray = s.split(' ');     
+    var temp; 
+
+    str = '';
+    for (i = 0; i < splitArray.length; i++ )
+    {
+        if( (splitArray[i].toLowerCase()).indexOf('http://') == 0 
+         || (splitArray[i].toLowerCase()).indexOf('https://') == 0  
+         || (splitArray[i].toLowerCase()).indexOf('ftp://') == 0 
+         || (splitArray[i].toLowerCase()).indexOf('www.') == 0 
+         || ((splitArray[i].toLowerCase()).indexOf('www.') >= 4 &&  splitArray[i].substring((splitArray[i].toLowerCase()).indexOf('www.')-4,4) =="<br>") ) {
+            //splitArray[i] = splitArray[i].link(splitArray[i]); 
+			temp = '<A tabindex=0 id=anchorLinkMessage onClick="ShowMainPanelWithURL(\''+splitArray[i].substring((splitArray[i].toLowerCase()).indexOf('www.'), splitArray[i].length)+'\');"><font style=\"color:green;text-decoration:underline;\" >'+splitArray[i]+'</font></A>';
+			splitArray[i] = temp; 
+        } 
+        str += splitArray[i] + ' '; 
+    }
+    
+    return str; 
+}
+
+function MatchedMyHeader(bstrMsgHeader)
+{
+	return (bstrMsgHeader.substr(0, MyHeaderLen) == MyHeader.substr(0, MyHeaderLen));
+}
+
+function MatchedTypingAlertHeader(bstrMsgHeader)
+{
+	return (bstrMsgHeader.substr(0, TypingAlertHeaderLen) == TypingAlertHeader.substr(0, TypingAlertHeaderLen));
+}
+
+function OnTextReceived(pSession, pSourceUser, bstrMsgHeader, bstrMsgText, pfEnableDefault)
+{	
+	TVShell.Message("IMPanel - OnTextReceived");
+//	if (MsgrObj.LocalState != 2 ) {
+//    	return; 
+//	}
+	if (MatchedTypingAlertHeader(bstrMsgHeader) || MatchedMyHeader(bstrMsgHeader)) {
+		var num = -1;
+		for (var i = 0; i < SessionStack.length; i++) {
+			if(SessionStack[i].ID == pSession.SessionID) {
+				num = i;
+				break;
+			} else if (SessionStack[i].ID == 0 && SessionStack[i].emailAddress == pSourceUser.EmailAddress && SessionStack[i].inviteeStack.length == 0) {
+				SessionStack[i].ID = pSession.SessionID;
+				SessionStack[i].live = true;
+				num = i;
+				break;
+			}
+		}
+		if (num == -1) {
+//			pSession.LeaveSession();
+//			if (TVShell.SystemInfo.Flavor == "debug") 
+//				alert("FATAL ERROR 102")
+			return false;//FATAL ERROR
+		}
+
+		// if the number of particpants have been changed in this conversation, then
+		// update the invitee stack
+		var userCount = pSession.Members.Count;
+		if ( userCount != ( SessionStack[num].inviteeStack.length + 1 ) )
+		{
+			var stack = [];
+			for (var k = 0; k < userCount; k++)
+			{
+				var email = pSession.Members.Item(k).EmailAddress;
+				if( email != SessionStack[num].emailAddress ) stack.push(email);
+			}
+			SessionStack[num].inviteeStack=stack;
+			if ( currentSessionNum == num )
+			{
+				DrawSessionTitle();
+			}
+			DrawSessionLeftMenuDiv();
+		}
+
+
+		TVShell.Message("OnText : email="+pSourceUser.EmailAddress + "     fn=" + pSourceUser.FriendlyName );
+		if (MatchedTypingAlertHeader(bstrMsgHeader)) {
+			if (currentSessionNum == num && SessionStack[currentSessionNum].blocked == false) {
+				var str = removeTags(cutLongString(MatchFriendlyName(pSourceUser.FriendlyName))) + ' is typing a message...';                
+				insertSessionStatusText(str);
+			}
+		} else if (MatchedMyHeader(bstrMsgHeader)) {
+			EraseSessionStatus();
+			var str ='<FONT STYLE="font-size:18px;font-weight:bold;position:relative;left:2px;" class=rMessage>' + AddEmoticon(removeTags(cutLongString(MatchFriendlyName(pSourceUser.FriendlyName)))) + ' says: </FONT>'
+			       + '<SPAN style="font-size:18px;" class=rMessage>' + AddLinks(NLtoBR(AddEmoticon(removeTags(bstrMsgText)))) + '</SPAN><br>';                
+			SessionStack[num].firstVisited = true;
+			if (currentSessionNum == num && SessionStack[currentSessionNum].blocked == false) {
+//				TVShell.Message("scrolltop="+txt.scrollTop+" scrollHeight="+ txt.scrollHeight + "  offsetHeight="+txt.offsetHeight);
+				if (txt.scrollTop == txt.scrollHeight - txt.offsetHeight || txt.scrollHeight <= txt.offsetHeight  ) {
+					SessionStack[num].chatHistory += str;
+					SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+					txtContent.innerHTML = SessionStack[num].chatHistory;
+					txt.MyDoScroll("scrollToStart");
+			 		txt.MyDoScroll("scrollToEnd");
+				} else {
+					SessionStack[num].chatHistory += str;
+					SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+					txtContent.innerHTML = SessionStack[num].chatHistory;
+				}
+				if (PanelManagerObj.FocusedPanel.Name != 'impanel')
+					TVShell.DeviceControl.PlaySound("Email_Alert");
+			} else if (currentSessionNum != num) {
+				SessionStack[num].chatHistory += str;
+				SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+				SessionStack[num].visited=false;//blink again
+				TVShell.DeviceControl.PlaySound("Email_Alert");
+				DrawSessionLeftMenuDiv();
+				updateWaitingCount();
+			}
+			if (currentFocusedSubPanel != 'SessionPanel')
+				FlashConversationsButton();
+		}
+	}
+}
+var MessageInputPreValue=null;
+function doTextKeyDown() 
+{ 	
+	var e = window.event;
+	if (e.altKey || e.ctrlKey )
+		return;
+	if (firstEnterConversation && (e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40 || e.keyCode == 9)) {
+		firstEnterConversation = false;
+		MessageInput.value = "";
+		if (e.keyCode == 39)
+			emoticonButton.focus();
+		return;
+	}
+
+	var inputStr = MessageInput.value;
+	if (inputStr.length >= 400 && MessageInputPreValue != inputStr && e.keyCode != 39) {
+		MessageInput.value=inputStr.substr(0,400);
+		e.returnValue = false;
+		setTimeout("alert(tooLongMessage)",1);
+	} else if (!e.shiftKey && e.keyCode == 13){
+		if (firstEnterConversation) {
+			MessageInput.value = "";
+			var textRange = MessageInput.createTextRange();
+			textRange.collapse(true);
+			textRange.select();
+			MessageInput.focus();
+			firstEnterConversation = false;
+		} else
+			SendMessage();
+		e.returnValue = false;
+		g_fContinueSendTyping = false; 
+		clearInterval(g_typingTimer);
+		g_typingTimer = 0;       
+	} else if (e.keyCode == 37) {
+		if (firstEnterConversation) {
+			MessageInput.value = "";
+			firstEnterConversation = false;
+		}
+		if(inputStr.length == 0) {
+			if(document.all.ShowSessionPanelMenuBar3)
+				document.all.ShowSessionPanelMenuBar3.focus();
+			else if(document.all.ShowSessionPanelMenuBar2)
+				document.all.ShowSessionPanelMenuBar2.focus();
+			else if(document.all.ShowSessionPanelMenuBar1)
+				document.all.ShowSessionPanelMenuBar1.focus();
+			else if(document.all.ShowSessionPanelMenuBar0)
+				document.all.ShowSessionPanelMenuBar0.focus();
+		}
+	} else if ( inputStr.length != 0 && MessageInputPreValue != MessageInput.value && e.keyCode != 39) {
+		if (firstEnterConversation)
+			firstEnterConversation = false;
+		g_fContinueSendTyping = true; 
+        if (g_typingTimer == 0) {
+            SendTypingTextOnInterval();
+            g_fContinueSendTyping = true; 
+            g_typingTimer = setInterval('SendTypingTextOnInterval()', 8 * 1000);
+        }
+	}
+	MessageInputPreValue = MessageInput.value;
+}
+
+function doOnBlur()
+{
+//	if (firstEnterConversation) {
+//		TVShell.Message("message vale="+MessageInput.value);
+//		MessageInput.value = "";
+//		firstEnterConversation = false;
+//	}
+}
+
+function BackspaceHandler()
+{ 
+    if (window.event.ctrlKey == false && window.event.altKey == false && window.event.keyCode == 8) { 
+        g_fContinueSendTyping = true; 
+        if (g_typingTimer == 0) {
+            SendTypingTextOnInterval();
+            g_fContinueSendTyping = true; 
+            g_typingTimer = setInterval('SendTypingTextOnInterval()', 8 * 1000);
+        }
+    } 
+} 
+
+function SendTypingTextOnInterval()
+{
+	if (currentSessionNum == -1 || SessionStack[currentSessionNum].ID <= 0) 
+		return false;
+
+	if (g_fContinueSendTyping) { 
+        var headstr = TypingAlertHeader + MsgrObj.LocalLogonName + '\r\n\r\n';	
+		var pSession = FindSession(SessionStack[currentSessionNum].ID);
+		if (pSession) {
+			pSession.SendText(headstr, ' '+'\n', MMSGTYPE_NO_RESULT);
+		}		
+        g_fContinueSendTyping = false; 
+	}
+	return true;
+}
+
+function ClearTypingOnTimeout()
+{ 
+    if (g_fContinueReceiveTyping) { 
+        g_fContinueReceiveTyping = false; 
+    }
+} 
+
+function userInSession( email , sessionNum )
+{
+	if ( SessionStack[sessionNum].emailAddress == email ) return true;
+	var stack = SessionStack[sessionNum].inviteeStack;
+	var count = stack.length;
+	for ( var i = 0 ; i < count ; i++ )
+	{
+		if ( email == stack[i] ) return true;
+	}
+	return false;
+}
+
+function OnUserStateChanged(pUser, mPrevState)
+{	
+	TVShell.Message("IMPanel - OnUserStateChanged");
+	if (logoff) return;
+
+	var email = pUser.EmailAddress;
+	var blocked = IsUserBlocked(email);
+	var statusText;
+	var imgSrcTemp = getStatusIcon( pUser.State , blocked );
+	switch (pUser.State)
+	{
+		case MSTATE_ONLINE:
+			statusText =" is online.";
+			break;
+		case MSTATE_BUSY:
+		case MSTATE_ON_THE_PHONE:
+			statusText =" is busy and may not reply.";
+			break;
+		case MSTATE_AWAY:
+		case MSTATE_BE_RIGHT_BACK:
+		case MSTATE_IDLE:
+		case MSTATE_OUT_TO_LUNCH:
+			statusText =" is away and may not reply.";
+			break;
+		case MSTATE_INVISIBLE:
+		case MSTATE_UNKNOWN:
+		case MSTATE_OFFLINE:
+		default:
+			statusText =" may not reply because he or she appears to be offline.";
+			break;
+	}
+	
+	for (var j = 0; j < SessionStack.length; j++)
+	{
+		if ( userInSession( email , j ) )
+		{
+			// if a user has just come back online
+			if ( mPrevState == MSTATE_OFFLINE && pUser.State != MSTATE_OFFLINE && SessionStack[j].live == false )
+			{
+				if(SessionStack[j].ID == -1) SessionStack[j].ID = 0;
+				if (SessionStack[j].ID > 0) SessionStack[j].live = true;
+				if (currentFocusedSubPanel=="SessionPanel" && currentSessionNum == j)
+				{
+					if (MessageInput.disabled == false) MessageInput.focus();
+				}
+			}
+
+			// if online user just went offline
+			if (mPrevState != MSTATE_OFFLINE && pUser.State == MSTATE_OFFLINE && SessionStack[j].ID > 0 )
+			{
+				// is it the primary buddy?
+				if ( SessionStack[j].emailAddress == email )
+				{
+					if (SessionStack[j].inviteeStack.length == 0)
+					{
+						SessionStack[j].ID = -1;
+						SessionStack[j].live = false;
+						SessionStack[j].primaryUserLeft = true;
+						if (currentFocusedSubPanel=="SessionPanel" && currentSessionNum == j)
+							document.all.endButton.focus();
+					}
+					else
+					{
+						var eml = SessionStack[j].inviteeStack.shift();
+						SessionStack[j].emailAddress = eml;// move the next one to primary user
+						SessionStack[j].friendlyName = FindFriendlyName(eml);
+					}
+				}
+				else
+				{	// one of the invited buddies has left, update invitee stack
+					var stack = [];
+					for ( var k = 0 ; k < SessionStack[j].inviteeStack.length ; k++ )
+					{
+						if ( SessionStack[j].inviteeStack[k] != email ) stack.push( SessionStack[j].inviteeStack[k] );
+					}
+					SessionStack[j].inviteeStack = stack;
+				}
+			}
+
+			SessionStack[j].chatHistory += "<span style=\"padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader); src:"+ imgSrcTemp + ";\"></span><FONT class=warningContent>&nbsp;"+ AddEmoticon(removeTags(cutLongString(MatchFriendlyName(pUser.FriendlyName)))) + statusText +"</FONT><br>";
+			if (currentSessionNum == j)
+			{
+				txtContent.innerHTML = SessionStack[j].chatHistory;
+				txt.MyDoScroll("scrollToStart");
+				txt.MyDoScroll("scrollToEnd");
+				DrawSessionTitle();
+			}
+		}
+	}
+
+	DrawSessionLeftMenuDiv();
+	SetCheckDrawContactListDivTimer();
+	if (currentFocusedSubPanel=="ListPanel") ShowListPanel();
+}
+
+function OnUserFriendlyNameChangeResult(hr, pUser, bstrPrevFriendlyName)
+{
+	for (var j = 0; j < SessionStack.length; j++) {
+		if (SessionStack[j].emailAddress == pUser.EmailAddress) {
+			SessionStack[j].friendlyName = pUser.FriendlyName;
+		}
+	}
+	//DrawContactListDiv();
+	TVShell.Message('OnUserFriendlyNameChangeResult = ' + pUser.FriendlyName );
+	SetCheckDrawContactListDivTimer();
+	if (currentFocusedSubPanel=="ListPanel")
+		ShowListPanel();
+	//TVShell.EventLog.Usage("messenger","action=userNameChange");
+}
+function DrawMyStatus()
+{
+	var imgSrcTemp;
+	var statusText;
+	switch (MsgrObj.LocalState) {
+		case MSTATE_ONLINE:
+			imgSrcTemp = 'images/IM_icon_big_online.png';
+			statusText = "Online";
+			ChangeStatusInput[0].checked=true;
+			break;
+		case MSTATE_BUSY:
+			imgSrcTemp = 'images/IM_icon_big_busy.png';
+			statusText = "Busy";
+			ChangeStatusInput[2].checked=true;
+			break;
+		case MSTATE_AWAY:
+			imgSrcTemp = 'images/IM_icon_big_away.png';
+			statusText = "Away";
+			ChangeStatusInput[3].checked=true;
+			break;
+		case MSTATE_INVISIBLE:
+			imgSrcTemp='images/IM_icon_big_offline.png';
+			statusText = "Appear Offline";
+			ChangeStatusInput[1].checked=true;
+			break;
+	}
+	MyStatusImg.innerHTML="<div style=\"padding:0px; height:29px; width:25px; behavior:url(#default#alphaImageLoader);src:" + imgSrcTemp + ";\"></div>";
+	MyStatusText.innerText="My Status: "+statusText;
+}
+function ChangeStatus()
+{	
+	var newState;
+	if (ChangeStatusInput[0].checked)
+		newState = MSTATE_ONLINE;
+	else if (ChangeStatusInput[1].checked)
+		newState = MSTATE_INVISIBLE;
+	else if (ChangeStatusInput[2].checked)
+		newState = MSTATE_BUSY;
+	else if (ChangeStatusInput[3].checked)
+		newState = MSTATE_AWAY;
+	if (MsgrObj.LocalState != newState) {
+		if (newState == MSTATE_INVISIBLE && SessionStack.length > 0) {
+			ProcessError(150,'');
+		} else {
+			MsgrObj.LocalState = newState;
+			TVShell.DeviceControl.PlaySound("Task_Complete");
+			ShowListPanel();
+		}
+	}
+}
+function ChangeStatusToOffline()
+{	
+	TVShell.DeviceControl.PlaySound("Task_Complete");
+	CloseAllSession();
+	MsgrObj.LocalState = MSTATE_INVISIBLE;
+	return;
+}
+
+function MoveChangeStatusFocus()
+{
+	var e = window.event;
+	if (e.altKey || e.ctrlKey )
+		return;
+	if (e.keyCode == 37) {
+		ChangeStatusInput[0].focus();
+		e.returnValue = false;
+	}
+}
+function DrawAlertListDiv()
+{
+	contactRequestStack = [];
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	reverseList = MsgrObj.GetList(MLIST_REVERSE);
+	for (var i= 0; i < reverseList.Count; i++) {
+		var in_allowblockList=false;
+		for(var j=0;j< allowList.Count;j++){
+			if(reverseList.Item(i).EmailAddress==allowList.Item(j).EmailAddress){
+				in_allowblockList=true;
+				break;
+			}
+		}
+		if (!in_allowblockList) {
+			for (var k = 0; k < blockList.Count; k++) {
+				if (reverseList.Item(i).EmailAddress == blockList.Item(k).EmailAddress) {
+					in_allowblockList = true;
+					break;
+				}
+			}
+		}
+		if (!in_allowblockList) {
+			var inaskMeLaterStack =	false;
+			for (var m = 0; m < askMeLaterStack.length && !inaskMeLaterStack; m++) {
+				if (askMeLaterStack[m] == reverseList.Item(i).EmailAddress){
+					inaskMeLaterStack = true;
+				}
+			}
+			if (!inaskMeLaterStack) {
+				contactRequestStack.push(reverseList.Item(i).EmailAddress);
+			}
+		}
+	}
+	var count = contactRequestStack.length;
+	var str;
+	if (count > 0) {
+		str ="<table width=100% valign=top cellspacing=0 cellpadding=0 border=0>";
+		if (count == 1)
+			str+="<tr><td style=\"padding-bottom:10px; border-bottom:1px solid #666666 \">You have one contact request pending. To reply to the request, choose it.</td></tr>";
+		else
+			str+="<tr><td style=\"padding-bottom:10px; border-bottom:1px solid #666666 \">You have "+ count +" contact requests pending. To reply to a request, choose it from the list below.<br><br></td></tr>";
+		for (var i = 0; i < count; i++) {
+			str+="<tr><td style=\"border-bottom:1px solid #666666 \">"
+			   + "		<a tabindex=0 id=AlertBar"+i+" onClick=\"ProcessContactRequest("+ i +");\">"
+     		   + "			<table height=24 width=100% cellspacing=2 cellpadding=2 border=0>"
+			   + "				<tr><td style=\"padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader); src:images/IM_icon_request.png;\"></td>"
+			   + "					<td><font class=alertListContent>" + removeTags(contactRequestStack[i]) +"</font></td></tr>"
+			   + "			</table></a></td></tr>";
+		}
+		str +="	  <tr><td height=15></td></tr>"
+			+ "</table>";
+	}else {
+		str  ="<table width=100% height=0 valign=top>"
+			+ "</table>";
+	}
+	AlertListDiv.innerHTML=str;
+}
+function cutLongString(s)
+{
+	if (s.length > 23) 
+		return (s.substr(0,20)+'...');
+	else
+		return s;
+}
+function SetCheckDrawContactListDivTimer()
+{
+	if (checkDrawContactListDivTimerID != 0) 
+		clearTimeout(checkDrawContactListDivTimerID);
+	checkDrawContactListDivTimerID = setTimeout("DrawContactListDiv()",500);
+}
+
+function getStatusIcon( state, blocked )
+{
+	var img;
+	switch ( state )
+	{
+	case MSTATE_ONLINE:
+		if(blocked)
+			img = 'images/IM_icon_block_online.png';
+		else
+			img = 'images/IM_icon_online.png';
+		break;
+	case MSTATE_BUSY:
+	case MSTATE_ON_THE_PHONE:
+		if(blocked)
+			img = 'images/IM_icon_block_online.png';
+		else
+			img = 'images/IM_icon_busy.png';
+		break;
+	case MSTATE_AWAY:
+	case MSTATE_BE_RIGHT_BACK:
+	case MSTATE_IDLE:
+	case MSTATE_OUT_TO_LUNCH:
+		if(blocked)
+			img = 'images/IM_icon_block_online.png';
+		else
+			img = 'images/IM_icon_away.png';
+		break;
+	case MSTATE_INVISIBLE:
+	case MSTATE_UNKNOWN:
+	case MSTATE_OFFLINE:
+	default:
+		if (blocked)
+			img = 'images/IM_icon_block.png';
+		else	
+			img = 'images/IM_icon_offline.png';
+		break;
+	}
+	return img;
+}
+
+function getStatusText( state )
+{
+	var statusText;
+	
+	switch (state)
+	{
+	case MSTATE_ONLINE:
+		statusText ="(Online)";
+		break;
+	case MSTATE_BUSY:
+	case MSTATE_ON_THE_PHONE:
+		statusText ="(Busy)";
+		break;
+	case MSTATE_AWAY:
+	case MSTATE_BE_RIGHT_BACK:
+	case MSTATE_IDLE:
+	case MSTATE_OUT_TO_LUNCH:
+		statusText ="(Away)";
+		break;
+	case MSTATE_INVISIBLE:
+	case MSTATE_UNKNOWN:
+	case MSTATE_OFFLINE:
+	default:
+		statusText ="(Offline)";
+		break;
+	}
+	return statusText;
+}
+
+
+// First order all online, busy, away, etc. by alphabet
+// then order all offline,invisible, unknown by alphabet
+function orderContacts( a , b )
+{
+  var s1 = contactList.Item(a).State;
+  var aOnline = (
+  				( s1 != MSTATE_INVISIBLE ) &&
+  				( s1 != MSTATE_UNKNOWN ) &&
+  				( s1 != MSTATE_OFFLINE )
+  				);
+  var s2 = contactList.Item(b).State;
+  var bOnline = (
+  				( s2 != MSTATE_INVISIBLE ) &&
+  				( s2 != MSTATE_UNKNOWN ) &&
+  				( s2 != MSTATE_OFFLINE )
+  				);
+  if ( aOnline && !bOnline ) return -1;
+  if ( !aOnline && bOnline ) return 1;
+
+  var aName = contactList.Item(a).FriendlyName;
+  aName = aName.toLowerCase();
+  var bName = contactList.Item(b).FriendlyName;
+  bName = bName.toLowerCase();
+  if ( aName < bName ) return -1;
+  if ( aName == bName ) return 0;
+  return 1;
+}
+
+
+// this function is called on various user state changes
+function DrawContactListDiv()
+{
+	if ( currentFocusedSubPanel == "SessionPanel" )
+	{
+		DrawSessionTitle();
+		DrawSessionLeftMenuDiv();
+	}
+
+	if ( 	currentFocusedSubPanel == "ProcessInvitePanel" )
+	{
+		ProcessInvite();
+	}
+
+	
+	checkDrawContactListDivTimerID = 0;
+
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	var count = contactList.Count;
+	if (count == 0) {
+		ContactListDiv.innerHTML = " ";
+		return;
+	}
+
+	var indexArray = new Array(count);
+	for (var i = 0; i < count; i++)
+	{
+		indexArray[i] = i;
+	}
+	indexArray.sort( orderContacts );
+	
+	var blockcount=blockList.Count;
+	var str  ="<table width=100% valign=top cellspacing=0 cellpadding=0 border=0>"
+			+ "	<tr><td style=\"padding-bottom:10px; font-color:#0B1740; border-bottom:1px solid #666666; \">To send an instant message, choose an online contact from the list below.</td></tr>";
+	for (var i = 0; i < count; i++) {   	
+		var trueIndex = indexArray[i];
+		var itemState = contactList.Item(trueIndex).State;
+		var itemEmailAddress = contactList.Item(trueIndex).EmailAddress;
+		var itemFriendlyName = contactList.Item(trueIndex).FriendlyName;
+
+		var blocked = false;
+		for (var j = 0; j < blockcount && !blocked; j++) {
+			if (itemEmailAddress == blockList.Item(j).EmailAddress)
+				blocked = true;
+		}
+		var statusText = getStatusText( itemState );
+		var imgSrcTemp = getStatusIcon( itemState , blocked );
+		
+		str +="<tr><td style=\"border-bottom:1px solid #666666 \">"
+			+ "		<a tabindex=0 id=ContactBar"+i+" onClick=\"CreateSession(\'"+ itemEmailAddress +"\');\">"
+     		+ "			<table height=24 width=100% cellspacing=2 cellpadding=2 border=0>";
+		if (itemState == MSTATE_OFFLINE || itemState == MSTATE_UNKNOWN) {
+			str	+="				<tr><td style=\"padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader); src:"+imgSrcTemp+";\"></td>"
+				+ "					<td><font class=contactListContent>" + removeTags(cutLongString(MatchFriendlyName(itemFriendlyName))) + "&nbsp" + statusText +"</font></td></tr>";
+		} else {
+			str	+="				<tr><td style=\"padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader); src:"+imgSrcTemp+";\"></td>"
+				+ "					<td><font class=contactListContent>" +  removeTags(cutLongString(MatchFriendlyName(itemFriendlyName))) + "&nbsp" + statusText +"</font></td></tr>";
+		}
+		str += "		</table></a></td></tr>";
+	}
+
+	str+="</table>";
+	ContactListDiv.innerHTML = str;
+}
+
+function DrawSessionLeftMenuDiv()
+{
+	var str= "<table cellspacing=0 cellpadding=0 border=0 valign=top style=\"margin-left:15px;margin-top:36px;margin-right:6px;\">";
+	
+	var b_GoodSessionExist = false;
+	for (var i = 0; i < SessionStack.length; i++) {
+		if (SessionStack[i].firstVisited == true) {
+			b_GoodSessionExist = true;
+			break;
+		}
+	}
+	var numOfMenuBar = 0;
+	if (b_GoodSessionExist) {
+		for (var i = 0; i < SessionStack.length; i++) {
+			if (SessionStack[i].firstVisited == true) {
+				var name;
+				if ( SessionStack[i].inviteeStack.length == 0 )
+					name = MatchFriendlyName(SessionStack[i].friendlyName);
+				else
+					name = SessionStack[i].inviteeStack.length + 1 + " Participants";
+
+				str += "<tr><td><table cellspacing=0 cellpadding=0 border=0>";
+
+				if (currentSessionNum == i) {
+					str += "		<tr><td><a tabindex=0 id=ShowSessionPanelMenuBar"+i+">"
+						+  "				<table cellspacing=0 cellpadding=0 border=0>"
+						+  "					<tr><td background=\"images/IM_ActiveButton.gif\" style=\"width:129px; height:26px;\">";
+				} else {
+					if (SessionStack[i].visited == false) {
+						str += "	<tr><td><a tabindex=0 id=ShowSessionPanelMenuBar"+i+" onClick=\"ShowSessionPanel("+i+");\">"
+							+  "			<table cellspacing=0 cellpadding=0 border=0>"
+							+  "				<tr><td background=\"images/IM_AlertButton.gif\" style=\"width:129px; height:26px;\">";
+					} else {
+						str += "	<tr><td><a tabindex=0 id=ShowSessionPanelMenuBar"+i+" onClick=\"ShowSessionPanel("+i+");\">"
+							+  "			<table cellspacing=0 cellpadding=0 border=0>"
+							+  "				<tr><td background=\"images/IM_Button.jpg\" style=\"width:129px; height:26px;\">";
+					}
+				
+				}
+				if (currentSessionNum == i) {
+					str += "							<table width=100% cellspacing=0 cellpadding=0 border=0 align=left>"
+						+  "								<tr><td width=5></td>"
+						+  "									<td><div style=\"marging:0px; padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader); src:images/IM_IconTalk.png;\"></div></td>"
+						+  "									<td width=3></td>"
+						+  "									<td><font style=\"width:98px; height:22px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:16px;\" class=rMessage>"+name+"</font></td>"
+						+  "									<td width=4></td></tr>"
+						+  "							</table></td></tr>";
+				} else {
+					str += "							<table width=100% cellspacing=0 cellpadding=0 border=0 align=left>"
+						+  "								<tr><td width=3></td>"
+						+  "									<td><font style=\"width:122px; height:22px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:16px; color:#07214D;\">"+name+"</font></td>"
+						+  "									<td width=4></td></tr>"
+						+  "							</table></td></tr>";
+				}
+				
+				str += "					</table></a></td></tr>"
+					+  "		</table></td></tr>"
+					+  "<tr><td height=4></td></tr>";
+				numOfMenuBar++;
+			}
+		}
+	}
+	if (numOfMenuBar < MaxNumOfSession-3) {
+		str+= "			<tr><td height="+ (30*(MaxNumOfSession-3-numOfMenuBar)) +"></td></tr>"
+		   +  "			<tr><td class=smallTitle>Tips: To start a new conversation, choose the <b>Contact List</b> tab.</td></tr>";
+	}
+	str+= "	</table>";
+	SessionLeftMenu.innerHTML = str;
+}
+
+function GetFriendlyName( emailAddress )
+{
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	for (var i =0; i < contactList.Count; i++)
+	{
+		if ( contactList.Item(i).EmailAddress == emailAddress )
+		{
+			return contactList.Item(i).FriendlyName;
+		}
+	}
+	return null;
+}
+
+function GetSessionTitleString()
+{
+	var friendlyName = SessionStack[currentSessionNum].friendlyName;
+	var emailAddress = SessionStack[currentSessionNum].emailAddress;
+	var str = "<font class=sessionTitleContent><b>To:&nbsp;";
+	if ( SessionStack[currentSessionNum].inviteeStack.length <= 0 )
+	{
+		str += (removeTags(cutLongString(friendlyName))+"</b>&nbsp("+ removeTags(emailAddress) +")");
+	}
+	else
+	{
+		var names = "";
+		names +=friendlyName;
+		for ( var i = 0 ; i < SessionStack[currentSessionNum].inviteeStack.length ; i++ )
+		{
+			names += ",";
+			emailAddress = SessionStack[currentSessionNum].inviteeStack[i];
+			friendlyName = GetFriendlyName( emailAddress );
+			if ( friendlyName != null ) names +=friendlyName;
+		}
+		str +=removeTags(cutLongString( names ));
+		str += "</b>";
+	}
+
+	str += "</font>";
+	return str;
+}
+
+function DrawSessionTitle()
+{
+	if ( currentSessionNum == -1 ) return;
+	var str= "<table width=100% cellSpacing=2 cellPadding=0 border=0>"
+		 +   "	<tr><td style=\"padding:0px; height:13px; width:16px; behavior:url(#default#alphaImageLoader); src:images/IM_IconTalk.png;\"></td>"
+		 +   "		<td>" + GetSessionTitleString() + "</td></tr>"
+		 +   "</table>";
+	sessionTitle.innerHTML=str;
+}
+
+function FindSession(ID)
+{
+	var ppIMSessions = MsgrObj.IMSessions;
+	var count = ppIMSessions.Count;
+	var pSession = null;
+	for (var i = 0; i < count; i++) {
+		if (ppIMSessions.Item(i).SessionID == ID) {
+			pSession = ppIMSessions.Item(i);
+			break;
+		}
+	}
+	return pSession;
+}
+function FindFriendlyName(emailAddress)
+{	
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	for (var i = 0; i < allowList.Count; i++) {
+		if( allowList.Item(i).EmailAddress == emailAddress) {
+			return allowList.Item(i).FriendlyName;
+		}
+	}
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	for (var i = 0; i < blockList.Count; i++) {
+		if (blockList.Item(i).EmailAddress == emailAddress) {
+			return blockList.Item(i).FriendlyName;
+		}
+	}
+//	if (TVShell.SystemInfo.Flavor == "debug") //  anonymous user is not in allow and Block lists
+//		alert("error1");
+	return emailAddress;
+}
+function FindState(emailAddress)
+{	
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	for (var i = 0; i < allowList.Count; i++) {
+		if (allowList.Item(i).EmailAddress == emailAddress) {
+			return allowList.Item(i).State;
+		}
+	}
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	for(var i = 0; i < blockList.Count; i++) {
+		if (blockList.Item(i).EmailAddress == emailAddress) {
+			return blockList.Item(i).State;
+		}
+	}
+//	if (TVShell.SystemInfo.Flavor == "debug") //  anonymous user is not in allow and Block lists
+//		alert("error1");
+	return MSTATE_UNKNOWN;
+}
+
+function BlockUser()
+{
+	if (SessionStack[currentSessionNum].ID == -1)
+		return false;
+
+	var pSession = null;
+	if (SessionStack[currentSessionNum] != 0) {
+		pSession = FindSession(SessionStack[currentSessionNum].ID);
+	}
+	if (pSession == null)
+		return false;
+
+	var ppUsers = pSession.Members;
+	var count = ppUsers.Count;
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	if (count == 1) {
+		if (IsUserInAllowList(pSession.Members.Item(0).EmailAddress))
+			allowList.Remove(pSession.Members.Item(0));
+		if (!IsUserInBlockList(pSession.Members.Item(0).EmailAddress)) {
+			blockList.Add(pSession.Members.Item(0));
+			SetGlobalKeyDownFrozen();
+		}
+	} else if (count > 1) {
+		
+	} else if (count == 0) {
+		var pUser = MsgrObj.CreateUser(SessionStack[currentSessionNum].emailAddress, MsgrObj.Services.PrimaryService);
+		if (IsUserInAllowList(pUser.EmailAddress))
+			allowList.Remove(pUser);
+		if (!IsUserInBlockList(pUser.EmailAddress)) {
+			blockList.Add(pUser);
+			SetGlobalKeyDownFrozen();
+		}
+	} 
+	TVShell.DeviceControl.PlaySound("Block");
+}
+function UnblockUser()
+{
+	if (SessionStack[currentSessionNum].ID == -1)
+		return false;
+	
+	var pSession = null;
+	if(SessionStack[currentSessionNum] != 0) {
+		pSession = FindSession(SessionStack[currentSessionNum].ID);
+	}
+	if(pSession == null)
+		return false;
+
+	var ppUsers = pSession.Members;
+	var count = ppUsers.Count;	
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	if (count == 1) {
+		if (IsUserInBlockList(pSession.Members.Item(0).EmailAddress)) 
+			blockList.Remove(pSession.Members.Item(0));
+		if (!IsUserInAllowList(pSession.Members.Item(0).EmailAddress)) {
+			allowList.Add(pSession.Members.Item(0));
+			SetGlobalKeyDownFrozen();
+		}
+	} else if (count > 1) {
+		;//do nothing
+	} else if (count == 0) {
+		var pUser = MsgrObj.CreateUser(SessionStack[currentSessionNum].emailAddress, MsgrObj.Services.PrimaryService);
+		if (IsUserInBlockList(pUser.EmailAddress)) 
+			blockList.Remove(pUser);
+		if (!IsUserInAllowList(pUser.EmailAddress)) {
+			allowList.Add(pUser);
+			SetGlobalKeyDownFrozen();
+		}
+	}
+}
+function ProcessBlockUnblock()
+{
+	if (SessionStack[currentSessionNum].ID == -1)
+		return false;
+
+	var pSession = null;
+	if (SessionStack[currentSessionNum] != 0) {
+		pSession = FindSession(SessionStack[currentSessionNum].ID);
+	}
+	if (pSession == null) 
+		return false;
+	var ppUsers = pSession.Members;
+	var count = ppUsers.Count;
+	if (count == 0) {
+		pSession.InviteUser(SessionStack[currentSessionNum].emailAddress);
+	}
+	var str;
+	if (count > 1) {
+		SessionStack[currentSessionNum].chatHistory += '<span class=warningContent>You cannot block participants in a multi-way conversation.</span><br>';
+		SessionStack[currentSessionNum].chatHistory = chopChatHistory(SessionStack[currentSessionNum].chatHistory);
+		txtContent.innerHTML = SessionStack[currentSessionNum].chatHistory;
+		txt.MyDoScroll("scrollToStart");
+		txt.MyDoScroll("scrollToEnd");
+		return;
+	} else {
+		var friendlyName = removeTags(MatchFriendlyName(SessionStack[currentSessionNum].friendlyName));
+		str	="<table height=100% cellSpacing=0 cellPadding=0 border=0>";
+		if (SessionStack[currentSessionNum].blocked == true) {
+			str += "<tr><td><font class=blackContent>"+ friendlyName + blockedUserStr +"</font></td></tr>"
+				+  "<tr><td height=10></td></tr>"
+				+  "<tr><td><font class=blackContent>To allow "+friendlyName+ ", so her or she can see when you are online and can send you instant messages, choose <b>Allow</b>.</font></td></tr>"
+				+  "<tr><td height=30></td></tr>"
+				+  "<tr><td align=right valign=bottom>"
+				+  "			<table><tr><td><msntv:CustomButton id=\"yesUnblockButton\" class=\"bottombarButton\" label=\"Allow\" onClick=\"UnblockUser();ShowSessionPanel(currentSessionNum);\" /></td>"
+				+  "						<td width=8></td>"
+				+  "						<td><msntv:CustomButton id=\"anchorShowSessionPanel5\" class=\"bottombarButton\" label=\"Cancel\" onClick=\"ShowSessionPanel(currentSessionNum);\" /></td></tr>"
+				+  "			</table></td></tr>";
+			PageTitle.innerText="Allow Contact";
+		} else {
+			str += "<tr><td height=10></td></tr>" 
+				+  "<tr><td><font class=blackContent>If you block <b>"+ friendlyName +"</b>, he or she won\'t be able to send you instant messages or see when you\'re online.</font></td></tr>"
+				+  "<tr><td height=30></td></tr>"
+				+  "<tr><td><font class=blackContent>To block <b>"+ friendlyName +"</b>, choose <b>Block</b>.</font></td></tr>" 
+				+  "<tr><td height=50></td></tr>"
+				+  "<tr><td align=right valign=bottom>"
+				+  "			<table><tr><td><msntv:CustomButton id=\"yesBlockButton\" class=\"bottombarButton\" label=\"Block\" onClick=\"BlockUser();ShowSessionPanel(currentSessionNum);\" /></td>"
+				+  "						<td width=8></td>"
+				+  "						<td><msntv:CustomButton id=\"anchorShowSessionPanel6\" class=\"bottombarButton\" label=\"Don't Block\" onClick=\"ShowSessionPanel(currentSessionNum);\" /></td></tr>"
+				+  "			</table></td></tr>";
+			PageTitle.innerText="Block Contact";
+		}
+		str	+="</table>";
+
+	} 
+	SubContentDiv.innerHTML=str;
+	if (currentFocusedSubPanel != "SessionPanel" || SessionStack[currentSessionNum].ID==-1)
+		return false;
+	HideTitleButtons();
+	ShowContentPanel();
+	currentFocusedSubPanel="BlockUnblockPanel";
+	if(document.all.BlockBar0)
+		document.all.BlockBar0.focus();
+	else if(document.all.yesUnblockButton)
+		document.all.yesUnblockButton.focus();
+	else if(document.all.yesBlockButton)
+		document.all.yesBlockButton.focus();
+}	
+
+
+// get an index array of users that are online, but not yet in the current conversation
+function GetOnlineListNotInSession( pSession )
+{
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	var count = contactList.Count;
+	if ( count <= 0 ) return [];
+	indexArray = new Array();
+
+	var index = 0;
+	var emailAddress;
+	for ( var i = 0 ; i < count ; i++ )
+	{
+		var state =contactList.Item(i).State; 
+		if (
+			( state != MSTATE_UNKNOWN ) &&
+			( state != MSTATE_OFFLINE )
+		   )
+		{
+			emailAddress = contactList.Item(i).EmailAddress;
+			if ( !IsUserInBlockList( emailAddress ) )
+			{
+				var alreadyIn = false;
+				if ( emailAddress == pSession.emailAddress ) alreadyIn = true;
+				for ( var k = 0 ; k < pSession.inviteeStack.length ; k++ )
+				{
+					if ( emailAddress == pSession.inviteeStack[k] ) alreadyIn = true;
+				}
+				if ( !alreadyIn )
+				{
+					indexArray[index] = i;
+					index++;
+				}
+			}
+		}
+	}
+
+	return indexArray;
+}
+
+function InviteBuddy( emailAddress )
+{
+	TVShell.Message("Invite:" + emailAddress );
+
+	// just show current session for now
+	ShowSessionPanel(currentSessionNum);
+
+	var pSession = null;
+	pSession = FindSession(SessionStack[currentSessionNum].ID);
+	// conversation was dropped due to inactivity, try to restore this session
+	if ( pSession == null ) pSession = RestoreSession( SessionStack[currentSessionNum].emailAddress );
+	// if restored, invite the selected buddy to the conversation
+	if ( pSession != null )
+	{
+		pSession.InviteUser(emailAddress);
+		disableMessageInput();
+	}
+
+	var name = GetFriendlyName( emailAddress );
+	if ( name != null )
+		name = removeTags(cutLongString( name ));
+	else
+		name = removeTags(cutLongString( emailAddress ));
+
+	var str;
+	if ( pSession != null )
+		str ='Connecting ' + name + '...';
+	else
+		str = 'Unable to invite ' + name;
+	insertSessionStatusText( str );
+}
+
+
+function ProcessInvite()
+{
+	if (SessionStack[currentSessionNum].ID == -1)
+		return false;
+
+	var OnlineArray = new Array();
+	OnlineArray = GetOnlineListNotInSession(  SessionStack[currentSessionNum] );
+	
+	var numOnline = OnlineArray.length;
+	
+	var numParticipants = SessionStack[currentSessionNum].inviteeStack.length + 1;
+		
+	str  ="<table width=100% valign=top cellspacing=0 cellpadding=0 border=0>";
+
+	if ( numParticipants < MAX_PARTICIPANTS )
+	{
+		if ( numOnline == 0 )
+		{
+			str += "<tr><td height=10></td></tr>";
+			str += "<tr><td>There are currently no other contacts online.</td></tr>";
+		}
+		else
+		{
+			str  +=	"<tr><td style=\"padding-bottom:10px; font-color:#0B1740; border-bottom:1px solid #666666; \">To invite a buddy to this conversation, choose an online contact from the list below.</td></tr>";
+		}
+	}
+	else
+	{
+		str += "<tr><td height=10></td></tr>";
+		str += "<tr><td><P>You cannot invite a fifth person to this conversation.</P><P>To start a new conversation, choose the <b>Contact List</b> tab, then choose a person from the list.</P></td></tr>";
+		numOnline = 0;		// bypass loop below
+	}
+	
+
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	for ( var i = 0 ; i < numOnline ; i++ )
+	{
+		var pUser = contactList.Item(OnlineArray[i]);
+		var img = getStatusIcon( pUser.State , false );
+		var sTxt = getStatusText( pUser.State );
+
+		TVShell.Message("index = " + OnlineArray[i] + "  email=" + pUser.EmailAddress + "  name=" + pUser.FriendlyName );
+		
+		str +="<tr><td style=\"border-bottom:1px solid #666666 \">";
+		str += "<a tabindex=0 id=InviteBar"+i+" onClick=\"InviteBuddy(\'"+ pUser.EmailAddress +"\');\">";
+   		str += "<table height=24 width=100% cellspacing=2 cellpadding=2 border=0>";
+		str +="<tr><td style=\"padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader); src:" + img + ";\"></td>";
+		str += "<td><font class=contactListContent>" +  removeTags(cutLongString(MatchFriendlyName(pUser.FriendlyName))) + "&nbsp" + sTxt + "</font></td></tr>";
+		str += "	</table></a></td></tr>";
+
+	}
+	str += "</table>";
+	
+	PageTitle.innerText="Invite another person";
+
+	InviteListDiv.innerHTML=str;
+	
+	HideTitleButtons();
+	ShowInvitePanel();
+	currentFocusedSubPanel="ProcessInvitePanel";
+	document.all.CancelInvite.focus();
+}
+
+
+function UnblockContact(emailAddress)
+{
+	previousAction = "UnblockContact";
+	var pUser = MsgrObj.CreateUser(emailAddress, MsgrObj.Services.PrimaryService);
+	if (IsUserInBlockList(emailAddress)) 
+		blockList.Remove(pUser);
+	if (!IsUserInAllowList(emailAddress)) {
+		allowList.Add(pUser);
+		SetGlobalKeyDownFrozen();
+	}
+}
+function ProcessBlockedContact(emailAddress)
+{
+	var friendlyName = FindFriendlyName(emailAddress);
+	var str	= "<table height=100% cellSpacing=0 cellPadding=0 border=0>"
+			+ "	<tr><td><font class=blackContent>"+ removeTags(friendlyName) +" is currently blocked from seeing when you are online or sending you instant messages. Blocked Contacts are listed in your contact list with a <img src=\"images/IM_icon_block.png\">&nbsp;icon or a <img src=\"images/IM_icon_block_online.png\">&nbsp;icon.</font></td></tr>"
+			+ "	<tr><td height=10></td></tr>"
+			+ "	<tr><td><font class=blackContent>To allow "+ removeTags(friendlyName)+ ", so her/she can see when you are online and can send you instant messages, choose <b>Allow</b>.</font></td></tr>"
+			+ "	<tr><td height=30></td></tr>"
+			+ "	<tr><td align=right valign=bottom>"
+			+ "			<table><tr><td><msntv:CustomButton id=\"yesUnblockButton\" class=\"bottombarButton\" label=\"Yes, allow\" onClick=\"UnblockContact(\'"+ emailAddress +"\');ShowListPanel();\" /></td>"
+			+ "						<td width=8></td>"
+			+ "						<td><msntv:CustomButton id=\"anchorShowSessionPanel5\" class=\"bottombarButton\" label=\"No, don't allow\" onClick=\"ShowListPanel();\" /></td></tr>"
+			+ "			</table></td></tr>"
+			+ "</table>";
+	SubContentDiv.innerHTML = str;
+	PageTitle.innerText="Allow Contact";
+	HideTitleButtons();
+	ShowContentPanel();
+	currentFocusedSubPanel = "BlockUnblockPanel";
+	document.all.yesUnblockButton.focus();
+}	
+
+var SessionStatusTimeout = 0;
+function ClearSessionStatus()
+{
+  if ( SessionStatusTimeout <= 0 )
+	{
+	SessionStatusBar.innerHTML=emptyStrSessionStatusBar;
+	}
+  else
+  	{
+  		SessionStatusTimeout--;
+		eval('setTimeout("ClearSessionStatus();",1000)');
+  	}
+}
+
+function EraseSessionStatus()
+{
+	SessionStatusTimeout = 0;
+	SessionStatusBar.innerHTML=emptyStrSessionStatusBar;
+}
+
+function UpdateSessionStatusBarDiv(str)
+{
+	SessionStatusBar.innerHTML=str;
+	SessionStatusTimeout = 15;
+	ClearSessionStatus();
+}
+
+function insertSessionStatusText( str )
+{
+	if ( str == null || str == "" )
+		EraseSessionStatus();
+	else
+		str ='<SPAN style="position:relative;left:5px;font-size:15px;font-weight:bold;color:#0B1740;">' + str + '</SPAN>';
+	UpdateSessionStatusBarDiv( str );
+}
+
+function ProcessAddContact(index)
+{
+	var str	 ="<table height=100% cellSpacing=0 cellPadding=0 border=0 valign=top>";
+	if (index == 0) {
+	    str	+="	<tr><td>Type the e-mail address of the person you want to add as a contact.  You can add as a contact anyone with an e-mail address that ends in ";
+
+		if (connectedIMService == IMSERVICE_INT)
+			str +="@hotmail-int.com, @msn-int.com, or @passport-int.com";
+		else if (connectedIMService == IMSERVICE_PPE)
+			str +="@hotmail-ppe.com, @msn-ppe.com, or @passport-ppe.com";
+		if (connectedIMService == IMSERVICE_PROD)
+			str +="@hotmail.com, @msn.com, @webtv.net, or @passport.com";
+
+		str += ", or anyone who has a Passport.</td></tr>";
+	}else if(index==1){
+		str	+="	<tr><td><font style=\"width:510px;\">The e-mail address " +  removeTags(currentAddContact) +  " could not be found.<font></td></tr>"
+			+ "	<tr><td>Please check to be sure the address is correct, and then try again.</td></tr>"
+			+ "	<tr><td><b>Try again</b></td></tr>";
+	}
+	if(index<2) {
+		str+="	<tr><td height=10></td></tr>"
+		   + "	<tr><td><input id=newContactInput onKeypress=\"OnKeyPressAddContact(" + index+1 + ")\" type=text style='width:420px; background-color:#0D3146; font-family:segoe tv; font-size:20px; color:#C0C6CD;'></td></tr>";
+	}
+	if(index==0){
+		str+="	<tr><td height=5></td></tr>"
+		   + "	<tr><td><table width=100% align=left>"
+		   + "				<tr><td>Example:</td>";
+
+		if (connectedIMService == IMSERVICE_INT)
+		   str+= "					<td>name@hotmail-int.com,</td><td width=200></td></tr>"
+			  + "				<tr><td></td>"
+			  + "					<td>name@msn-int.com</td><td width=200></td></tr>";
+		else if (connectedIMService == IMSERVICE_PPE)
+		   str+= "					<td>name@hotmail-ppe.com,</td><td width=200></td></tr>"
+		  	  + "				<tr><td></td>"
+			  + "					<td>name@msn-ppe.com</td><td width=200></td></tr>";
+		else if (connectedIMService == IMSERVICE_PROD)
+		   str+= "					<td>name@hotmail.com,</td><td width=200></td></tr>"
+		  	  + "				<tr><td></td>"
+			  + "					<td>name@msn.com</td><td width=200></td></tr>";
+
+		str+= "			</table></td></tr>";
+	}else if(index==1){
+		str+="	<tr><td height=10></td></tr>";
+	}
+	if(index>1){
+		TVShell.EventLog.Usage("messenger","action=addContact");
+		str+="	<tr><td><font class=\"bigTitle\">Success!</font></td></tr>"
+		   + "	<tr><td>" + removeTags(currentAddContact) + " has been added to your contact list.</td></tr>"
+		   + "	<tr><td>Choose <b>Done</b> to return to your contact list.</td></tr>"
+		   + "	<tr><td height=10></td></tr>";
+	}
+	if(index<2){
+		str +=" <tr><td height=10></td></tr>"
+			+ " <tr><td align=right valign=bottom><table cellSpacing=0 cellPadding=0 border=0>"
+		    + "				<tr><td><msntv:CustomButton id=\"addContactAdd\" class=\"bottombarButton\" label=\"Add\" onClick=\"AddContact(" + (index+1) + ")\" /></td>"
+		    + "					<td width=8></td>"
+			+ "					<td><msntv:CustomButton id=\"addContactCancel\" class=\"bottombarButton\" label=\"Cancel\" onClick=\"ShowListPanel()\" /></td></tr>"
+			+ "		   </table></td></tr>";
+	}else{
+		str +=" <tr><td align=right valign=bottom><table cellSpacing=0 cellPadding=0 border=0>"
+		    + "				<tr><td><msntv:CustomButton id=\"addContactDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ShowListPanel()\" /></td></tr>"
+			+ "		   </table></td></tr>";
+	}
+	str +="</table>";
+	SubContentDiv.innerHTML=str;
+
+	PageTitle.innerText="Add a contact";
+	currentFocusedSubPanel = "AddContactPanel";
+	HideTitleButtons();
+	ShowContentPanel();
+	if (document.all.newContactInput) {
+		document.all.newContactInput.focus();
+		document.all.newContactInput.select();
+	} else if (document.all.addContactDone)
+		document.all.addContactDone.focus();
+}
+function OnKeyPressAddContact(index)
+{
+	if( (!window.event.shiftKey) && window.event.keyCode == 13 ) { 
+		AddContact(index);
+	}
+}
+function AddContact(index)
+{
+	var emailAddress = document.all.newContactInput.value.toLowerCase();
+	emailAddress = removeUnusedSpace(emailAddress);
+	if (emailAddress == "") {
+		ProcessError(200,null);
+		return;
+	}
+	var logonName = (MsgrObj.LocalLogonName).toLowerCase();
+	if (emailAddress == logonName) {
+		ProcessError(210,null);
+		return;
+	}
+
+	if (emailAddress.length > 129) {
+		ProcessError(310,emailAddress);
+		return;
+	}
+	if (emailAddress.indexOf('$')>0 || emailAddress.indexOf('\"')>0 
+		|| emailAddress.indexOf('<')>0 || emailAddress.indexOf('>')>0 
+		|| emailAddress.indexOf('(')>0 || emailAddress.indexOf(')')>0 
+		|| emailAddress.indexOf(';')>0 || emailAddress.indexOf(' ') > 0 
+		|| emailAddress.indexOf('@') <= 0 || emailAddress.indexOf('.') <= 0) {
+		ProcessError(300,emailAddress);
+		return;
+	}  
+
+	if(IsUserInContactList(emailAddress)){
+		ProcessError(400,emailAddress);
+		return;
+	}
+	var b_correct=true;
+	if (connectedIMService == IMSERVICE_PPE)
+	{
+		if (emailAddress.indexOf("@hotmail.com") > 0 ||	
+			emailAddress.indexOf("@msn.com") > 0 ||
+			emailAddress.indexOf("@passport.com") > 0 ||
+			emailAddress.indexOf("@hotmail-int.com") > 0 ||	
+			emailAddress.indexOf("@msn-int.com") > 0 ||
+			emailAddress.indexOf("@passport-int.com") > 0 ||
+			emailAddress.indexOf("@webtv.net") > 0)
+			b_correct = false;
+	}
+	else if (connectedIMService == IMSERVICE_INT)
+	{
+		if (emailAddress.indexOf("@hotmail.com") > 0 ||	
+			emailAddress.indexOf("@msn.com") > 0 ||
+			emailAddress.indexOf("@passport.com") > 0 ||
+			emailAddress.indexOf("@hotmail-ppe.com") > 0 ||	
+			emailAddress.indexOf("@msn-ppe.com") > 0 ||
+			emailAddress.indexOf("@passport-ppe.com") > 0 ||
+			emailAddress.indexOf("@webtv.net") > 0)
+			b_correct = false;
+	}
+	else if (connectedIMService == IMSERVICE_PROD)
+	{
+		if (emailAddress.indexOf("@hotmail-ppe.com") > 0 ||	
+			emailAddress.indexOf("@msn-ppe.com") > 0 ||
+			emailAddress.indexOf("@passport-ppe.com") > 0 ||
+			emailAddress.indexOf("@hotmail-int.com") > 0 ||	
+			emailAddress.indexOf("@msn-int.com") > 0 ||
+			emailAddress.indexOf("@passport-int.com") > 0 ||
+			emailAddress.indexOf("@testdrive.webtv.net") > 0)
+			b_correct = false;
+	}
+	if (b_correct) {
+		if (contactList.Count >= 250) {
+			ProcessError(500,emailAddress);
+			return;
+		}
+		var pUser = MsgrObj.CreateUser(emailAddress, MsgrObj.Services.PrimaryService);
+		if (!IsUserInContactList(emailAddress))
+			contactList.Add(pUser);
+	} else {
+		ProcessError(700,emailAddress);
+	}
+	currentAddContact = emailAddress;
+}
+
+function OnListAddResult(hr, mList, pUser)
+{
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	if (mList == MLIST_CONTACT) {
+		if (pUser.EmailAddress == currentAddContact) {
+			if (hr == 0) {
+				ProcessAddContact(2);
+				currentAddContact = "";
+			} else {
+				var errorCode = GetErrorCode(hr);
+				TVShell.Message("OnListAddResult errorCode=" + errorCode);
+				if (errorCode == ERR_USER_NOT_FOUND) {
+					ProcessError(778, pUser.EmailAddress);
+					return;
+				} else {
+					ProcessError(700, pUser.EmailAddress);
+					return;				
+				}
+			}
+		}
+	} else if (mList == MLIST_REVERSE && !logoff && hr == 0) {
+		var count = blockList.Count;
+		var inAllowBlockList = false;
+		for (var i = 0; i < count && !inAllowBlockList; i++) {
+			if (blockList.Item(i).EmailAddress==pUser.EmailAddress) {
+				inAllowBlockList=true;
+			}
+		}
+		count = allowList.Count;
+		for (var i = 0; i < count && !inAllowBlockList; i++) {
+			if (allowList.Item(i).EmailAddress==pUser.EmailAddress) {
+				inAllowBlockList=true;
+			}
+		}
+		if (!inAllowBlockList) {
+			DrawAlertListDiv();
+			if (currentFocusedSubPanel != "ListPanel")
+				FlashContactListButton();
+			else
+				ShowListPanel();
+		}
+		return;
+	} else if (mList == MLIST_BLOCK && !logoff) {
+		ClearGlobalKeyDownFrozen();
+		if (hr == 0) {
+			for (var num = 0; num < SessionStack.length; num++) {
+				if (SessionStack[num].ID==0 && SessionStack[num].emailAddress==pUser.EmailAddress){
+					SessionStack[num].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pUser.FriendlyName))) + blockedUserStr + '<br>Select Allow if you wish to receive instant messages from ' + AddEmoticon(removeTags(MatchFriendlyName(pUser.FriendlyName)))+'.</font><br>';
+					SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+					SessionStack[num].blocked = true;
+					DrawSessionLeftMenuDiv();
+					if (num == currentSessionNum) {
+						document.all.blockUnblockButton.label=unblockButtonLabel;
+						document.all.blockUnblockButton.focus();
+					}
+				} else if (SessionStack[num].ID != 0) {
+					var pSession = FindSession(SessionStack[num].ID);
+					if(pSession != null) {
+						var ppUsers=pSession.Members;
+						var userCount=ppUsers.Count;
+						for(var k = 0; k < userCount; k++) {
+							if (ppUsers.Item(k).EmailAddress == pUser.EmailAddress) {
+								if(userCount==1){
+									SessionStack[num].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pUser.FriendlyName))) + blockedUserStr + '<br>Select Allow if you wish to receive instant messages from ' + AddEmoticon(removeTags(MatchFriendlyName(pUser.FriendlyName)))+'.</font><br>';
+									SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+									SessionStack[num].blocked = true;
+									DrawSessionLeftMenuDiv();
+									if (num == currentSessionNum) {
+										document.all.blockUnblockButton.label=unblockButtonLabel;
+										document.all.blockUnblockButton.focus();
+									}
+								} else {
+									SessionStack[num].chatHistory +='<FONT class=warningContent>Your block of '+AddEmoticon(removeTags(MatchFriendlyName(pUser.FriendlyName)))+' is not effective in this conversation</font><br>';
+									SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+								}
+								if (num == currentSessionNum) {
+									txtContent.innerHTML = SessionStack[num].chatHistory;
+									txt.MyDoScroll("scrollToStart");
+									txt.MyDoScroll("scrollToEnd");
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		SetCheckReverseListTimer();
+	}else if (mList == MLIST_ALLOW && !logoff) {
+		ClearGlobalKeyDownFrozen();
+		if (hr == 0) {
+			if (previousAction == "UnblockContact") {
+				CreateSession(pUser.EmailAddress);
+				previousAction = "";
+			} else {
+				for (var num = 0; num < SessionStack.length; num++) {
+					if (SessionStack[num].ID == 0 && SessionStack[num].emailAddress == pUser.EmailAddress) {
+						SessionStack[num].blocked = false;
+						DrawSessionLeftMenuDiv();
+						SessionStack[num].chatHistory +='<FONT warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pUser.FriendlyName)))+' is currently able to see when you are online or send you instant messages.</font><br>';
+						SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+						if (num == currentSessionNum) {
+							document.all.blockUnblockButton.label=blockButtonLabel;
+							txtContent.innerHTML = SessionStack[num].chatHistory;
+							txt.MyDoScroll("scrollToStart");
+							txt.MyDoScroll("scrollToEnd");
+							if (MessageInput.disabled == false)
+								MessageInput.focus();
+//							var textRange = MessageInput.createTextRange();
+//							textRange.collapse(false);
+//							textRange.select();
+							MessageInput.select();
+						}
+					}else if (SessionStack[num].ID != 0) {
+						var pSession = FindSession(SessionStack[num].ID);
+						if (pSession != null) {
+							var ppUsers = pSession.Members;
+							if (ppUsers.Count == 1 && ppUsers.Item(0).EmailAddress == pUser.EmailAddress) {
+								SessionStack[num].blocked = false;
+								DrawSessionLeftMenuDiv();
+								SessionStack[num].chatHistory +='<FONT class=warningContent>'+AddEmoticon(removeTags(MatchFriendlyName(pUser.FriendlyName)))+' is currently able to see when you are online or send you instant messages.</font><br>';
+								SessionStack[num].chatHistory = chopChatHistory(SessionStack[num].chatHistory);
+								if(num == currentSessionNum) {
+									document.all.blockUnblockButton.label = blockButtonLabel;
+									txtContent.innerHTML = SessionStack[num].chatHistory;
+									txt.MyDoScroll("scrollToStart");
+									txt.MyDoScroll("scrollToEnd");
+									if (MessageInput.disabled == false)
+										MessageInput.focus();
+//									var textRange = MessageInput.createTextRange();
+//									textRange.collapse(false);
+//									textRange.select();
+									MessageInput.select();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		SetCheckReverseListTimer();
+	}
+	if (!logoff && hr == 0) {
+		DrawAlertListDiv();
+		//DrawContactListDiv();
+		SetCheckDrawContactListDivTimer();
+		if (currentFocusedSubPanel == "ListPanel")
+			ShowListPanel();
+	}
+}
+function OnListRemoveResult(hr, mList, pUser)
+{
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	if(!logoff){
+		if (mList == MLIST_ALLOW || mList == MLIST_BLOCK) {
+			if (checkReverseListTimerID != 0) 
+				clearTimeout(checkReverseListTimerID);
+		}
+		//DrawContactListDiv();
+		SetCheckDrawContactListDivTimer();
+		if (currentFocusedSubPanel=="ListPanel")
+			ShowListPanel();
+		TVShell.EventLog.Usage("messenger","action=removeContact")
+	}
+
+}
+function SetCheckReverseListTimer()
+{
+	if (checkReverseListTimerID != 0) 
+		clearTimeout(checkReverseListTimerID);
+	checkReverseListTimerID = setTimeout("CheckReverseList()",5000);
+}
+function CheckReverseList()
+{		
+	allowList = MsgrObj.GetList(MLIST_ALLOW);
+	blockList = MsgrObj.GetList(MLIST_BLOCK);
+	reverseList = MsgrObj.GetList(MLIST_REVERSE);
+	for(var i=0;i< reverseList.Count;i++){
+		var in_allowblockList=false;
+		for(var j=0;j< allowList.Count;j++){
+			if(reverseList.Item(i).EmailAddress==allowList.Item(j).EmailAddress){
+				in_allowblockList=true;
+				break;
+			}
+		}
+		if (!in_allowblockList) {
+			for (var k = 0; k < blockList.Count; k++) {
+				if (reverseList.Item(i).EmailAddress == blockList.Item(k).EmailAddress) {
+					in_allowblockList = true;
+					break;
+				}
+			}
+		}
+		if (!in_allowblockList) {
+			var inaskMeLaterStack =	false;
+			for (var m = 0; m < askMeLaterStack.length && inaskMeLaterStack == false; m++) {
+				if (askMeLaterStack[m] == reverseList.Item(i).EmailAddress){
+					inaskMeLaterStack = true;
+				}
+			}
+			if (!inaskMeLaterStack) {
+				DrawAlertListDiv();
+				if (currentFocusedSubPanel=="ListPanel")
+					ShowListPanel();
+				break;
+			}
+		}
+	}
+	checkReverseListTimerID = 0;
+}
+function ProcessContactRequest(index)
+{	
+  var str="<table width=100% height=100% cellspacing=0 cellpadding=0 border=0>"
+		+ "	<tr><td><font class=blackContent>You have been added to <b>"+removeTags(contactRequestStack[index])+"</b>\'s contact list. Do you want to allow this person to see when you\'re online and send you instant messages?</font></td></tr>"
+		+ "	<tr><td height=5></td></tr>"
+		+ "	<tr><td><table cellSpacing=2 cellPadding=2 border=0>"
+		+ "				<tr><td><input id=AllowInput type=radio name=AllowBlockInput checked></td><td width=210><font class=blackContent>Yes, allow this person</font></td>"
+		+ "					<td width=20></td>"
+	    + "					<td><input id=BlockInput type=radio name=AllowBlockInput></td><td><font class=blackContent>No, block this person</font></td></tr>"
+		+ "			</table></td></tr>"
+		+ "	<tr><td height=10></td></tr>"
+		+ "	<tr><td><font class=\"blackContent\">Do you want to add <b>"+removeTags(contactRequestStack[index])+"</b> to your contact list so you can see when he/she is online and send him/her instant messages?</font></td></tr>"
+		+ "	<tr><td height=5></td></tr>"
+		+ "	<tr><td><table cellSpacing=2 cellPadding=2 border=0>"
+		+ "				<tr><td><input id=AddInput type=radio name=AddNoAddInput checked></td><td width=210><font class=blackContent>Yes, add this person</font></td>"
+		+ "					<td width=20></td>"
+		+ "					<td><input id=NoAddInput type=radio name=AddNoAddInput></td><td><font class=blackContent>No, don't add this person</font></td></tr>"
+		+ "			</table></td></tr>"
+		+ "	<tr><td height=10></td></tr>"
+		+ "	<tr><td valign=bottom><table cellSpacing=0 cellPadding=0 border=0 align=right>"
+	    + "				<tr><td><msntv:CustomButton id=\"ContactRequestAskMeLater\" class=\"bottombarButton\" label=\"Ask Me Later\" onClick=\"FinishContactRequest("+ index +","+ 0 +")\" /></td>"
+		+ "					<td width=8></td>"
+		+ "					<td><msntv:CustomButton id=\"ContactRequestDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"FinishContactRequest("+ index +","+ 1 +")\" /></td></tr>"
+		+ "			</table></td></tr>"
+		+ "</table>";
+	SubContentDiv.innerHTML=str;
+	HideTitleButtons();
+	ShowContentPanel();
+
+	PageTitle.innerText="Contact Request";
+	currentFocusedSubPanel = "ContactRequestPanel";
+	AllowInput.focus();
+}
+function FinishContactRequest(index, doNow)
+{
+	if (doNow == 1) {
+		contactList = MsgrObj.GetList(MLIST_CONTACT);
+		allowList = MsgrObj.GetList(MLIST_ALLOW);
+		blockList = MsgrObj.GetList(MLIST_BLOCK);
+		reverseList = MsgrObj.GetList(MLIST_REVERSE);
+		var pAlertUser = null;
+		for (var i = 0; i < reverseList.Count && pAlertUser == null; i++) {
+			if (reverseList.Item(i).EmailAddress == contactRequestStack[index])
+				pAlertUser = reverseList.Item(i);
+		}
+		if (AllowInput.checked) {
+			if (!IsUserInAllowList(pAlertUser.EmailAddress))
+				allowList.Add(pAlertUser);
+		}else if (BlockInput.checked) {
+			if (!IsUserInBlockList(pAlertUser.EmailAddress))
+				blockList.Add(pAlertUser);
+		}
+
+		if(AddInput.checked){
+			if (!IsUserInContactList(pAlertUser.EmailAddress))
+				contactList.Add(pAlertUser);
+		}
+	} else {
+		askMeLaterStack.push(contactRequestStack[index]);
+		DrawAlertListDiv();
+	}
+	ShowListPanel();
+}
+
+function ProcessError(errorCode,message)
+{  
+	TVShell.Message("IMPanel.html ProcessError = "+errorCode);
+	var str;
+	switch(errorCode){
+		case 0://contact List is empty
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=bigTitle>Your contact list is empty.</font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>To send an instant message to someone, you must first add them to your contact list. Choose <b>Add a Contact</b> to add someone to your list.</td></tr>"
+			  + "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=errorPanelAnchorDone class=bottombarButton label=\"Add a Contact\" onClick=\"ProcessAddContact(0);\"/></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table></td></tr>";
+			currentFocusedSubPanel = "ListPanel";
+			ShowContactListButton();
+			break;
+		case 100://contact is offline, cannot create a session
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=bigTitle><nobr>To:&nbsp;"+ removeTags(message)+"</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>You cannot send <b>"+removeTags(FindFriendlyName(message))+"</b> an instant message because he or she is currently offline.</td></tr>"
+			  + "				<tr><td height=10></td></tr>"
+			  +	"				<tr><td>Online contacts are listed in your contact list with a <span style=\"padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_block.png;\"></span>&nbsp;icon or a <span style=\"padding:0px; height:22px; width:22px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_online.png\"></span>&nbsp;icon.</td></tr>"
+			  + "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ShowListPanel()\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			currentFocusedSubPanel = "ErrorPanel";
+			HideTitleButtons();
+			break;
+		case 110://contact is not in your Allow list, cannot create a session
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=bigTitle><nobr>To:&nbsp;"+removeTags(message)+"</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td><b>"+removeTags(FindFriendlyName(message))+"</b> can not respond to your instant message because he or she is not in your Allow list.</td></tr>"
+			  + "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ShowListPanel()\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			currentFocusedSubPanel = "SessionPanel";
+			ShowConversationsButton();
+			break;
+		case 150://want to change status to Appear Offline, show warning to close all sessions
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=bigTitle><nobr>Change Status to Appear Offline</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>If you change your status to <b>Appear Offline</b>, all conversations will be closed.<br><br>Do you want to change your status to <b>Appear Offline</b>?</td></tr>"
+			  + "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Yes\" onClick=\"ChangeStatusToOffline();ShowListPanel()\" /></td>"
+			  + "					   <td width=8></td>"
+			  + "					   <td><msntv:CustomButton id=\"errorPanelAnchorCancel\" class=\"bottombarButton\" label=\"Cancel\" onClick=\"ShowListPanel()\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			currentFocusedSubPanel = "SessionPanel";
+			ShowConversationsButton();
+			break;
+		case 200://user click"add" in add user window without entering the email address
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>Type a name for the contact you want to add, and then choose <b>Add</b>.</td></tr>"
+			  + "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ProcessAddContact(0)\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;
+		case 210://user attempts to add himself/herself to his/her buddy list
+			str="<table height=100% width=520 cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>You cannot add yourself to the contact list.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ProcessAddContact(0)\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;
+		case 217://the invited user has too many sessions opened, invite fail
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td valign=top>Your buddy <b>"+ removeTags(FindFriendlyName(message)) +"</b> have opened too many active conversations. Currently you can not send instant messages to him or her. <br><br><br>Please try it again later.</td></tr>"
+			  + "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ShowListPanel()\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			ShowConversationsButton();
+			currentFocusedSubPanel = "SessionPanel";
+			break;
+		case 280://I have too many sessions opened, create session fail
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\">Too Many Active Conversations</font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>"+tooManySessionAlert+"</td></tr>"
+			  + "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ShowListPanel()\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			ShowConversationsButton();
+			currentFocusedSubPanel = "SessionPanel";
+			break;
+		case 300://user attempts to add a user with invalid alias 
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>Check the e-mail address for the contact you want to add. <nobr>E-mail</nobr> addresses look like this: ";
+
+			if (connectedIMService == IMSERVICE_INT)
+				str+="contact@msn-int.com.</td></tr>";
+			else if (connectedIMService == IMSERVICE_PPE)
+				str+="contact@msn-ppe.com.</td></tr>";
+			else if (connectedIMService == IMSERVICE_PROD)
+				str+="contact@msn.com.</td></tr>";
+
+			str+= "			</table></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ProcessAddContact(0)\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;
+		case 310://user attempts to add an email address over 129 characters
+			str="<table height=100% width=520 cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>The email address is over 129 characters. Check to be sure you have the correct e-mail address for the contact you want to add.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ProcessAddContact(0)\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;
+		case 400://user enters and email address of someone already in the contact list
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=bigTitle><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td valign=top>" + removeTags(message) + " is already on your contact list. Type another e-mail address to add a new Contact.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ProcessAddContact(0)\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;
+		case 500://user has exceeded limit in contact list, yet still attemptes to add more
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td align=left><font class=\"bigTitle\"><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td valign=top>You cannot add a contact because your contact list is full. To add a new contact, you must delete at least one person from your contact list.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ProcessAddContact(0)\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;
+		case 600://user has selected "appear offline" status, but later tries to initiate a conversation with someone
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>You cannot start a conversation while you appear offline. To start a conversation, change your status to <b>Online</b>.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ShowListPanel()\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			currentFocusedSubPanel = "SessionPanel";
+			ShowConversationsButton();
+			break;	
+		case 700://user attempts to add a user with an invalid domain 
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>This email address is incorrect. You can add a contact whose e-mail address ends in ";
+			  
+			if (connectedIMService == IMSERVICE_INT)
+				str+="@hotmail-int.com or @msn-int.com";
+			else if (connectedIMService == IMSERVICE_PPE)
+				str+="@hotmail-ppe.com or @msn-ppe.com";
+			else if (connectedIMService == IMSERVICE_PROD)
+				str+="@hotmail.com, @msn.com, or @webtv.net";
+
+			str += ", or a valid Passport."; 
+			str+=" Check to be sure you have the correct e-mail address for the contact you want to add.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ShowListPanel()\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;	
+		case 778://user enters a valid email address, but the user does not exist
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=bigTitle><nobr>Error</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>Sorry! <b>" + removeTags(message) + "</b> could not be added to your list because he or she does not have a Passport. Please send e-mail to "+ removeTags(message) + " that explains how to get a Passport.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=\"errorPanelAnchorDone\" class=\"bottombarButton\" label=\"Done\" onClick=\"ProcessAddContact(0)\" /></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="Add a contact";
+			HideTitleButtons();
+			break;	
+		case 511://local state is changed to OFFLINE, this account get login from other device
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Signed Out</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>You have been signed out of Messenger on " + ServiceShortName + " because you signed in on another device. To use Messenger on " + ServiceShortName + ", sign out of Messenger on the other device.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=errorPanelAnchorDone class=bottombarButton label=\"Sign In Again\" onClick=\"Login();\"/></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="";
+			HideTitleButtons();
+			currentFocusedSubPanel = "ErrorPanel";
+			break;
+		case 512://local state is changed to OFFLINE due to messenger server shutdown
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Signed Out</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>The Messenger service is temporarily unavailable. Please try using Messenger again later.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=errorPanelAnchorDone class=bottombarButton label=\"Sign In Again\" onClick=\"Login();\"/></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="";
+			HideTitleButtons();
+			currentFocusedSubPanel = "ErrorPanel";
+			break;
+		case 515://no active conversations
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td>You don't have any active conversations. To start a conversation, choose the <b>Contact List</b> tab above, and then choose the contact you want to have a conversation with.</td></tr>"
+			  + "			</table><td></td></tr>"
+//			  + "	<tr><td align=right valign=bottom>"
+//			  + "			<table><tr><td><msntv:CustomButton id=errorPanelAnchorDone class=bottombarButton label=\"Done\" onClick=\"ShowListPanel()\"/></td></tr>"
+//			  + "			</table></td></tr>"
+			  + "</table>";
+			ShowConversationsButton();
+			currentFocusedSubPanel = "SessionPanel";
+			break;
+		case 855://connecting animation
+			str="<table height=100% cellSpacing=0 cellPadding=0 border=0 align=center>"
+			  + "	<tr><td><img border=0 src=\"images/IM_Connecting.gif\"></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="";
+			HideTitleButtons();
+			currentFocusedSubPanel = "ErrorPanel";
+			break;
+		case 911://can not login 
+			str="<table height=100% cellspacing=0 cellpadding=0 border=0>"
+			  + "	<tr><td valign=top>"
+			  + "			<table cellspacing=0 cellpadding=0 border=0>"
+			  + "				<tr><td><font class=\"bigTitle\"><nobr>Not signed into Messenger</nobr></font></td></tr>"
+			  + "				<tr><td height=15></td></tr>"
+			  + "				<tr><td>You are not currently signed in to MSN Messenger. There may be a technical problem with the Messenger service.<br><br>To try signing into Messenger, choose <b>Try Again</b>.</td></tr>"
+			  + "			</table><td></td></tr>"
+			  + "	<tr><td align=right valign=bottom>"
+			  + "			<table><tr><td><msntv:CustomButton id=errorPanelAnchorDone class=bottombarButton label=\"Try Again\" onClick=\"Login();\"/></td></tr>"
+			  + "			</table></td></tr>"
+			  + "</table>";
+			PageTitle.innerText="";
+			HideTitleButtons();
+			currentFocusedSubPanel = "ErrorPanel";
+			break;				
+	}
+	SubContentDiv.innerHTML=str;
+	ShowContentPanel();
+	if (document.all.errorPanelAnchorDone)
+		document.all.errorPanelAnchorDone.focus(); 
+}
+function MoveEmoticonFocus(row,column,s)
+{
+	var e=window.event;
+	if(e.altKey || e.ctrlKey)
+		return;
+	switch(e.keyCode){
+		case 37://go left
+			if (column > 0) {
+				eval('anchorEmoticon'+row+(column-1)+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (MessageInput.disabled == false)
+					MessageInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 38://go up
+			if (row > 0) {
+				eval('anchorEmoticon'+(row-1)+column+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (MessageInput.disabled == false)
+					MessageInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 39://go right
+			if (column < 3) {
+				eval('anchorEmoticon'+row+(column+1)+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (MessageInput.disabled == false)
+					MessageInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 40://go down
+			if (row < 5) {
+				eval('anchorEmoticon'+(row+1)+column+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (MessageInput.disabled == false)
+					MessageInput.focus();
+			}
+			window.event.returnValue = false;
+			break;
+		case 9:// table
+			if (column < 3) {
+				eval('anchorEmoticon'+row+(column+1)+'.focus()');
+			} else if (row <5) {
+				eval('anchorEmoticon'+(row+1)+'0'+'.focus()');
+			} else {
+				EmoticonPanel.style.visibility = "hidden";
+				if (MessageInput.disabled == false)
+					MessageInput.focus();
+			}
+			window.event.returnValue = false;
+			break;	
+		case 13://enter
+			window.event.returnValue = false;
+			EmoticonPanel.style.visibility = "hidden";
+			if (MessageInput.disabled == false) {
+				MessageInput.value=MessageInput.value+s;
+				MessageInput.focus();
+			}
+			break;
+		default:
+			return;
+	}
+}
+function HideTitleButtons()
+{
+	ContactListButton.background="";
+	ContactListButton.style.color="#000000";
+	ContactListButton.style.fontWeight="normal";
+	MyStatus.background="";
+	MyStatusText.style.color="#000000";
+	MyStatusText.style.fontWeight="normal";
+	ConversationButton.background="";
+	ConversationButton.style.color="#000000";
+	ConversationButton.style.fontWeight="normal";
+}
+function ShowContactListButton()
+{
+	PageTitle.innerText="Contact list";
+	ContactListButton.background="images/IM_TabContactList.gif";
+	ContactListButton.style.color="#0F2A45";
+	ContactListButton.style.fontWeight="bold";
+	MyStatus.background="";
+	MyStatusText.style.color="#000000";
+	MyStatusText.style.fontWeight="normal";
+	ConversationButton.background="";
+	ConversationButton.style.color="#000000";
+	ConversationButton.style.fontWeight="normal";
+}
+function FlashContactListButton()
+{
+	ContactListButton.background="images/IM_TabContactListBlink.gif";
+	ContactListButton.style.color="#0F2A45";
+	ContactListButton.style.fontWeight="bold";
+}
+function ShowConversationsButton()
+{
+	PageTitle.innerText="Conversations";
+	ConversationButton.background="images/IM_TabConversation.gif";
+	ConversationButton.style.color="#0F2A45";
+	ConversationButton.style.fontWeight="bold";
+	ContactListButton.background="";
+	ContactListButton.style.color="#000000";
+	ContactListButton.style.fontWeight="normal";
+	MyStatus.background="";
+	MyStatusText.style.color="#000000";
+	MyStatusText.style.fontWeight="normal";
+}
+function FlashConversationsButton()
+{
+	ConversationButton.background="images/IM_TabConversationBlink.gif";
+	ConversationButton.style.color="#0F2A45";
+	ConversationButton.style.fontWeight="bold";
+}
+function ShowChangeStatusPanel()
+{
+	PageTitle.innerText="Change My Status";
+	MyStatus.background="images/IM_TabChangeStatus.gif";
+	MyStatusText.style.color="#0F2A45";
+	MyStatusText.style.fontWeight="bold";
+	ConversationButton.background="";
+	ConversationButton.style.color="#000000";
+	ConversationButton.style.fontWeight="normal";
+	ContactListButton.background="";
+	ContactListButton.style.color="#000000";
+	ContactListButton.style.fontWeight="normal";
+
+	currentFocusedSubPanel = "ChangeStatusPanel";
+	
+	ChangeStatusPanel.style.visibility = "visible";
+	ListPanel.style.visibility = "hidden";
+	SessionPanel.style.visibility = "hidden";
+	ContentPanel.style.visibility = "hidden";
+	EmoticonPanel.style.visibility = "hidden";
+	InvitePanel.style.visibility = "hidden";
+
+	DrawMyStatus();	
+	ChangeStatusInput[0].focus();
+
+}
+function ShowListPanel()
+{
+	if (MsgrObj.LocalState == MSTATE_OFFLINE || logoff) {
+		return;
+	}
+	ShowContactListButton();
+
+	contactList = MsgrObj.GetList(MLIST_CONTACT);
+	if (contactList.Count == 0 && contactRequestStack.length == 0) {
+		ProcessError(0,null);
+		return;
+	}
+	SaveSessionPanelInfo();
+	currentFocusedSubPanel = "ListPanel";
+
+	ListPanel.style.visibility = "visible";
+	ChangeStatusPanel.style.visibility = "hidden";
+	SessionPanel.style.visibility = "hidden";
+	ContentPanel.style.visibility = "hidden";
+	EmoticonPanel.style.visibility = "hidden";
+	InvitePanel.style.visibility = "hidden";
+
+	ListPanelScroller.MyDoScroll("scrollToEnd");
+	ListPanelScroller.MyDoScroll("scrollToStart");
+	if(document.all.AlertBar0)
+		document.all.AlertBar0.focus();
+	else if(document.all.ContactBar0)
+		document.all.ContactBar0.focus();
+}
+
+function SaveSessionPanelInfo()
+{
+	if (currentFocusedSubPanel == 'SessionPanel' && currentSessionNum != -1) {
+		if (MessageInput.disabled == false) {
+			var unSentOutMsg = MessageInput.value;
+			if (unSentOutMsg.length != 0) {
+				SessionStack[currentSessionNum].unSentOutMsg = unSentOutMsg;
+			}
+			MessageInput.value= "";
+		}
+	}
+}
+function ShowCurrentSessionPanel()
+{
+	var b_GoodSessionExist = false;
+	for (var i = 0; i < SessionStack.length; i++) {
+		if (SessionStack[i].firstVisited == true) {
+			b_GoodSessionExist = true;
+			break;
+		}
+	}
+	if (!b_GoodSessionExist) {
+		ProcessError(515,null);
+		return;
+	}
+	if (currentSessionNum != -1)
+		ShowSessionPanel(currentSessionNum);
+	else
+		ShowSessionPanel(0);
+}
+function ShowSessionPanel(num)
+{
+	ShowConversationsButton();
+	SaveSessionPanelInfo();
+	currentFocusedSubPanel = 'SessionPanel';
+	currentSessionNum = num;
+	SessionStack[num].visited = true;
+	updateWaitingCount();
+	txtContent.innerHTML = SessionStack[num].chatHistory;
+	if (MessageInput.disabled == false)	
+		MessageInput.value = SessionStack[num].unSentOutMsg;
+	SessionStack[num].unSentOutMsg = "";
+
+	txt.MyDoScroll("scrollToStart");
+	txt.MyDoScroll("scrollToEnd");
+	SessionPanel.style.visibility = "visible";
+	ChangeStatusPanel.style.visibility = "hidden";
+	ListPanel.style.visibility = "hidden";
+	ContentPanel.style.visibility = "hidden";
+	EmoticonPanel.style.visibility = "hidden";
+	InvitePanel.style.visibility = "hidden";
+
+	
+	DrawSessionTitle();
+	DrawSessionLeftMenuDiv();
+	if (SessionStack[currentSessionNum].blocked == true) {
+		document.all.blockUnblockButton.label=unblockButtonLabel;
+	} else {
+		document.all.blockUnblockButton.label=blockButtonLabel;
+	}
+//	if(SessionStack[currentSessionNum].live == false){
+//		document.all.endButton.focus();
+//	}else{
+		if (!MessageInput.disabled) {
+			MessageInput.focus();
+			if (firstEnterConversation) {
+				MessageInput.value = "Type your message here";
+				MessageInput.select();
+			}
+		}
+//	}
+}
+function ShowContentPanel()
+{
+	ContentPanel.style.visibility = "visible";
+	ChangeStatusPanel.style.visibility = "hidden";
+	EmoticonPanel.style.visibility = "hidden";
+	ListPanel.style.visibility = "hidden";
+	SessionPanel.style.visibility = "hidden";
+	InvitePanel.style.visibility = "hidden";
+//	ContentPanelScroller.MyDoScroll("scrollToEnd");
+//	ContentPanelScroller.MyDoScroll("scrollToStart");
+}
+
+function ShowInvitePanel()
+{
+	InvitePanel.style.visibility = "visible";
+	ContentPanel.style.visibility = "hidden";
+	ChangeStatusPanel.style.visibility = "hidden";
+	EmoticonPanel.style.visibility = "hidden";
+	ListPanel.style.visibility = "hidden";
+	SessionPanel.style.visibility = "hidden";
+}
+
+
+function ShowEmoticonPanel()
+{
+	if (currentFocusedSubPanel != "SessionPanel" || SessionStack[currentSessionNum].ID==-1 || SessionStack[currentSessionNum].blocked==true)
+		return false;
+	EmoticonPanel.style.visibility = "visible";
+	anchorEmoticon53.focus();
+}
+function ShowMainPanelWithURL(URL)
+{
+	PanelManagerObj.Show('main');
+	PanelManagerObj.Item('main').GotoURL(URL);
+	PanelManagerObj.Item("main").SetTravelLogFlag( "openpanel" , "impanel" );
+}
+
+
+var bScreenSaverChangesLocalState = false;
+function OnScreenSaverActivated()
+{
+	TVShell.Message("IMPANEL - Screen Saver Activated");
+	if ( !logoff && ( MsgrObj.LocalState == MSTATE_ONLINE ) )
+	{
+		bScreenSaverChangesLocalState = true;
+		MsgrObj.LocalState = MSTATE_AWAY;
+	}
+	
+}
+
+function OnScreenSaverDeactivated()
+{
+	TVShell.Message("IMPANEL - Screen Saver Deactivated");
+	if ( !logoff && bScreenSaverChangesLocalState )
+	{
+		MsgrObj.LocalState = MSTATE_ONLINE;
+	}
+	bScreenSaverChangesLocalState = false;
+}
+
+function AttachEvents()
+{
+	Sink.AttachEvent(PanelManagerObj, "OnBeforeShow", OnBeforeShow);
+	Sink.AttachEvent(PanelManagerObj, "OnAfterHide", OnAfterHide);
+	Sink.AttachEvent(MsgrObj, "OnLogonResult", OnLogonResult);
+	Sink.AttachEvent(MsgrObj, "OnNewSessionRequest", OnNewSessionRequest);
+	Sink.AttachEvent(MsgrObj, "OnListAddResult", OnListAddResult);
+	Sink.AttachEvent(MsgrObj, "OnListRemoveResult", OnListRemoveResult);
+	Sink.AttachEvent(MsgrObj, "OnUserStateChanged", OnUserStateChanged);
+	Sink.AttachEvent(MsgrObj, "OnUserFriendlyNameChangeResult", OnUserFriendlyNameChangeResult);
+	Sink.AttachEvent(MsgrObj, "OnUserJoin", OnUserJoin);
+	Sink.AttachEvent(MsgrObj, "OnTextReceived", OnTextReceived);
+	Sink.AttachEvent(MsgrObj, "OnUserLeave", OnUserLeave);
+	Sink.AttachEvent(MsgrObj, "OnUserDropped", OnUserDropped);
+	Sink.AttachEvent(MsgrObj, "OnLocalFriendlyNameChangeResult", OnLocalFriendlyNameChangeResult);
+	Sink.AttachEvent(MsgrObj, "OnLocalStateChangeResult", OnLocalStateChangeResult);
+	Sink.AttachEvent(MsgrObj, "OnInviteUser", OnInviteUser);
+	Sink.AttachEvent(MsgrObj, "OnAppInviteReceived", OnAppInviteReceived);
+	Sink.AttachEvent(MsgrObj, "OnLogoff", OnLogoff);
+	Sink.AttachEvent(MsgrObj, "OnServiceLogoff", OnServiceLogoff);
+	Sink.AttachEvent(TVShell, "OnScreenSaverActivated", OnScreenSaverActivated );
+	Sink.AttachEvent(TVShell, "OnScreenSaverDeactivated", OnScreenSaverDeactivated );
+}
+
+function DetachEvents()
+{
+	Sink.DetachEvent(MsgrObj, "OnLogonResult", OnLogonResult);
+	Sink.DetachEvent(MsgrObj, "OnNewSessionRequest", OnNewSessionRequest);
+	Sink.DetachEvent(MsgrObj, "OnListAddResult", OnListAddResult);
+	Sink.DetachEvent(MsgrObj, "OnListRemoveResult", OnListRemoveResult);
+	Sink.DetachEvent(MsgrObj, "OnUserStateChanged", OnUserStateChanged);
+	Sink.DetachEvent(MsgrObj, "OnUserFriendlyNameChangeResult", OnUserFriendlyNameChangeResult);
+	Sink.DetachEvent(MsgrObj, "OnUserJoin", OnUserJoin);
+	Sink.DetachEvent(MsgrObj, "OnTextReceived", OnTextReceived);
+	Sink.DetachEvent(MsgrObj, "OnUserLeave", OnUserLeave);
+	Sink.DetachEvent(MsgrObj, "OnUserDropped", OnUserDropped);
+	Sink.DetachEvent(MsgrObj, "OnLocalFriendlyNameChangeResult", OnLocalFriendlyNameChangeResult);
+	Sink.DetachEvent(MsgrObj, "OnLocalStateChangeResult", OnLocalStateChangeResult);
+	Sink.DetachEvent(MsgrObj, "OnInviteUser", OnInviteUser);
+	Sink.DetachEvent(MsgrObj, "OnAppInviteReceived", OnAppInviteReceived);
+	Sink.DetachEvent(MsgrObj, "OnLogoff", OnLogoff);
+	Sink.DetachEvent(MsgrObj, "OnServiceLogoff", OnServiceLogoff);
+	Sink.DetachEvent(TVShell, "OnScreenSaverActivated", OnScreenSaverActivated );
+	Sink.DetachEvent(TVShell, "OnScreenSaverDeactivated", OnScreenSaverDeactivated );
+}
+
+function RestoreAlertSettings()
+{
+	var CurrentUser = TVShell.UserManager.CurrentUser;
+
+	if ((CurrentUser.FeatureSettings & MALERT_BUDDYREQUEST) > 0)
+		MsgrObj.AlertLevel(MALERT_BUDDYREQUEST) = true;	
+	else
+		MsgrObj.AlertLevel(MALERT_BUDDYREQUEST) = false;
+			
+	if ((CurrentUser.FeatureSettings & MALERT_INVITATION) > 0)
+		MsgrObj.AlertLevel(MALERT_INVITATION) = true;
+	else
+		MsgrObj.AlertLevel(MALERT_INVITATION) = false;
+
+	if ((CurrentUser.FeatureSettings & MALERT_BUDDYONLINE) > 0)
+		MsgrObj.AlertLevel(MALERT_BUDDYONLINE) = true;
+	else
+		MsgrObj.AlertLevel(MALERT_BUDDYONLINE) = false;
+
+	if ((CurrentUser.FeatureSettings & MALERT_NEWMESSAGE) > 0)
+		MsgrObj.AlertLevel(MALERT_NEWMESSAGE) = true;	
+	else
+		MsgrObj.AlertLevel(MALERT_NEWMESSAGE) = false;
+		
+	if ((CurrentUser.FeatureSettings & MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN) > 0)
+		MsgrObj.AlertLevel(MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN) = true;	
+	else
+		MsgrObj.AlertLevel(MALERT_SUPPRESS_ALERTS_IN_FULLSCREEN) = false;	
+}
+
+function PageLoad()
+{	
+	if (PanelManagerObj.FocusedPanel.Name == 'impanel') {
+		im_bg.background = "images/IM_BG.jpg";
+		im_top.background = "images/IM_Top.jpg";
+	}
+	RestoreAlertSettings();
+	AttachEvents();
+	ResetIMPanel();
+//	Login();
+	ProcessError(855,null);
+}
+
+function PageUnload()
+{
+	DetachEvents();
+	LogOff();
+}
+
+</SCRIPT>
+</HEAD>
+<body onKeyDown="GlobalKeyDown()" onUnload="PageUnload()" onLoad="PageLoad()">
+
+<div id=ListPanel>
+	<table width=100% height=100% cellspacing=0 cellpadding=0 border=0>
+		<tr><td width=400 height=100% class=gradientContent valign=top style="padding:10px 0px 10px 0px;">
+				<div id=ListPanelScroller class=scroller style="padding:0px 24px 0px 15px;">
+					<div id=AlertListDiv valign=top ></div>
+					<div id=ContactListDiv></div>
+				</div></td>
+			<td width=160 height=100% valign=top>
+				<table cellpadding=0 cellspacing=0 border=0 style="margin:10px 15px 0px 6px;">
+					<tr><td><msntv:CustomButton id="Add_New_Contact" class="sidebarButton" style="width:139px" label="Add a Contact" onClick="ProcessAddContact(0);" /></td></tr>
+					<tr><td height=4></td></tr>
+					<tr><td><msntv:CustomButton id="Edit_A_Contact" class="sidebarButton" style="width:139px" label="Edit a Contact" onClick="ShowMainPanelWithURL('msntv:/IM/msnIMContactList.html');" /></td></tr>
+				</table></td></tr>
+	</table>
+</div>
+
+<div id=InvitePanel>
+	<table width=100% height=100% cellspacing=0 cellpadding=0 border=0>
+		<tr><td width=400 height=100% class=gradientContent valign=top style="padding:10px 0px 10px 0px;">
+				<div id=InvitePanelScroller class=scroller style="padding:0px 24px 0px 15px;">
+					<div id=InviteListDiv></div>
+				</div></td>
+			<td width=100 height=100% valign=top>
+				<table cellpadding=0 cellspacing=0 border=0 style="margin:10px 15px 0px 6px;">
+					<tr><td><msntv:CustomButton id="CancelInvite" class="sidebarButton" style="width:139px" label="Cancel" onClick="ShowSessionPanel(currentSessionNum);" /></td></tr>
+				</table></td></tr>
+	</table>
+</div>
+
+
+<div id=ContentPanel>
+	<table height=100% width=100% cellspacing=0 cellpadding=0 border=0>
+		<tr><td width=100% style="padding:15px 0px 10px 0px;">
+				<div id=ContentPanelScroller class=scroller style="padding:0px 24px 0px 10px;">
+					<div id=SubContentDiv></div>
+				</div></td></tr>
+	</table>
+</div>
+
+<div id=EmoticonPanel>
+	<table height=100% width=100% cellSpacing=0 cellPadding=0 style="background-color:#9ACAF4; border-style:solid; border-color:#E5ECF4; border-width:2px;">
+		<tr><td><table cellSpacing=0 cellPadding=0>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon00 onKeyDown="MoveEmoticonFocus(0,0,'(w)')"><img src="emoticon/emwilt.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon01 onKeyDown="MoveEmoticonFocus(0,1,'(f)')"><img src="emoticon/emrose.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon02 onKeyDown="MoveEmoticonFocus(0,2,'(8)')"><img src="emoticon/emnote.gif" height=22 width=22 border=0></a></td>
+							<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon03 onKeyDown="MoveEmoticonFocus(0,3,'(~)')"><img src="emoticon/emfilm.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon10 onKeyDown="MoveEmoticonFocus(1,0,'(&)')"><img src="emoticon/emdog.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon11 onKeyDown="MoveEmoticonFocus(1,1,'(n)')"><img src="emoticon/emthdown.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon12 onKeyDown="MoveEmoticonFocus(1,2,'(y)')"><img src="emoticon/emthup.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon13 onKeyDown="MoveEmoticonFocus(1,3,'({)')"><img src="emoticon/emhugl.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon20 onKeyDown="MoveEmoticonFocus(2,0,'(@)')"><img src="emoticon/emcat.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon21 onKeyDown="MoveEmoticonFocus(2,1,'(u)')"><img src="emoticon/emunlove.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon22 onKeyDown="MoveEmoticonFocus(2,2,'(l)')"><img src="emoticon/emlove.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon23 onKeyDown="MoveEmoticonFocus(2,3,':@')"><img src="emoticon/emangry.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon30 onKeyDown="MoveEmoticonFocus(3,0,'(a)')"><img src="emoticon/emangel.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon31 onKeyDown="MoveEmoticonFocus(3,1,'(h)')"><img src="emoticon/emshades.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon32 onKeyDown="MoveEmoticonFocus(3,2,':|')"><img src="emoticon/emdgust.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon33 onKeyDown="MoveEmoticonFocus(3,3,':p')"><img src="emoticon/emsmilep.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon40 onKeyDown="MoveEmoticonFocus(4,0,':\'(')"><img src="emoticon/emcry.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon41 onKeyDown="MoveEmoticonFocus(4,1,':(')"><img src="emoticon/emsad.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon42 onKeyDown="MoveEmoticonFocus(4,2,':$')"><img src="emoticon/emblush.gif" height=22 width=22 border=0></a></td>
+							<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon43 onKeyDown="MoveEmoticonFocus(4,3,':s')"><img src="emoticon/emconfused.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td></tr>
+					<tr height=30><td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon50 onKeyDown="MoveEmoticonFocus(5,0,':o')"><img src="emoticon/emsmileo.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon51 onKeyDown="MoveEmoticonFocus(5,1,';)')"><img src="emoticon/emwink.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon52 onKeyDown="MoveEmoticonFocus(5,2,':d')"><img src="emoticon/emsmiled.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td>
+						<td><a tabindex=0 id=anchorEmoticon53 onKeyDown="MoveEmoticonFocus(5,3,':)')"><img src="emoticon/emsmile.gif" height=22 width=22 border=0></a></td>
+						<td width=12></td></tr>
+	</table></td></tr></table>
+</div>
+		
+<div id=SessionPanel>
+	<table width=100% height=100% cellSpacing=0 cellPadding=0 border=0>
+		<tr><td width=150 valign=top>
+					<div id=SessionLeftMenu></div></td>
+			<td width=410 valign=top>
+				<table cellSpacing=0 cellPadding=0 border=0 style="margin-right:15px;">
+					<tr><td height=7></td></tr>
+					<tr><td><div id=sessionTitle></div></td></tr>
+					<tr><td><table cellspacing=0 cellpadding=0 border=0>
+								<tr><td class=gradientContent><div id=txt tabindex=0>
+																<div id=txtContent></div>
+															  </div></td></tr>
+								<tr><td height=4></td></tr>
+								<tr><td><table width=395 cellspacing=0 cellpadding=0 border=0>
+											<tr><td width=330><textarea tabindex=0 id=MessageInput name=MessageInputText class=inputText style="width:330px; height:55px; font-size:18px;font-weight:bold; font-family:segoe tv;" onKeydown="doTextKeyDown();" onkeyup="BackspaceHandler();" onblur="doOnBlur()"></textarea></td>
+												<td width=8></td>
+												<td><table cellspacing=0 cellpadding=0 border=0>
+														<tr><td><a id=emoticonButton tabindex=0 onClick="ShowEmoticonPanel()"><div style="padding:0px; height:26px; width:57px; behavior:url(#default#alphaImageLoader);src:images/IM_BtnEmoticons.png"></div></a></td></tr>
+														<tr><td height=3></td></tr>
+		 												<tr><td><a id=sendButton tabindex=0 onClick="SendMessage()"><div style="padding:0px; height:26px; width:57px; behavior:url(#default#alphaImageLoader);src:images/IM_ButtonSend.png"></div></a></td></tr>
+													</table></td></tr>
+										</table></td></tr>
+								<tr><td height=4></td></tr>
+								<tr><td height=25><table width=395 cellspacing=0 cellpadding=0 border=0>
+													<tr><td>
+														<msntv:CustomButton id="inviteButton" class="bottombarButton" label="Invite another person" style="width:208px;" onClick="ProcessInvite();" />
+														</td>
+														<td width=7></td>
+														<td>
+														<msntv:CustomButton id="blockUnblockButton" class="bottombarButton" label="Allow" style="width:90px;" onClick="ProcessBlockUnblock();" />
+														</td>
+														<td width=7></td>
+														<td>
+														<msntv:CustomButton id="endButton" class="bottombarButton" label="End" style="width:90px;" onClick="CloseMySession();" />
+														</td></tr>
+												  </table></td></tr>
+								<tr><td height=18><div id=SessionStatusBar></div></td></tr>
+							</table></td></tr>
+				</table></td></tr>
+	</table>
+</div>
+
+<div id=ChangeStatusPanel>
+	<table width=100% height=100% cellspacing=0 cellpadding=0 border=0>
+		 <tr><td width=400 height=100% class=gradientContent valign=top style="padding:15px 0px 10px 0px;">
+		 		<div id=ChangeStatusPanelScroller class=scroller style="padding:0px 24px 0px 15px;">
+		 			<table cellspacing=0 cellpadding=0 border=0>
+		 				<tr><td>Your status lets your contacts know whether you are available on Messenger.</td></tr>
+		 				<tr><td height=10></td></tr>
+		 				<tr><td>To change your status, choose one of the buttons below, and then choose <b>Save Changes</b>.</td></tr>
+		 				<tr><td height=15></td></tr>
+		 				<tr><td><table cellspacing=2 cellpadding=2 border=0>
+		 							<tr><td><input type=radio name=ChangeStatusInput></td>
+		 								<td height=22 width=19><div style="padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_online.png"></div></td>
+		 								<td>Online (appear available)</td></tr>
+		 							<tr><td><input type=radio name=ChangeStatusInput></td>
+		 								<td height=22 width=19><div style="padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_offline.png"></div></td>
+		 								<td>Offline (appear unavailable)</td></tr>
+		 							<tr><td><input type=radio name=ChangeStatusInput></td>
+		 								<td height=22 width=19><div style="padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_busy.png"></div></td>
+		 								<td>Busy (appear online but busy)</td></tr>
+		 							<tr><td><input type=radio name=ChangeStatusInput></td>
+		 								<td height=22 width=19><div style="padding:0px; height:22px; width:19px; behavior:url(#default#alphaImageLoader);src:images/IM_icon_away.png"></div></td>
+		 								<td>Away (appear online but unavailable)</td></tr>
+		 						</table></td></tr>
+		 			</table>
+		 	</div></td>
+		 	<td width=160 height=100% valign=top>
+		 		<table cellpadding=0 cellspacing=0 border=0 style="margin:15px 15px 0px 6px;">
+		 			<tr><td><msntv:CustomButton id="Save_Changes_ChangeStatus" class=sidebarButton style="width:139px;" label="Save Changes" onClick="ChangeStatus()" onKeyDown="MoveChangeStatusFocus();" /></td></tr>
+		 			<tr><td height=4></td></tr>
+		 			<tr><td><msntv:CustomButton id="Cancel_ChangeStatus" class=sidebarButton style="width:139px;" label="Cancel" onClick="ShowListPanel();" onKeyDown="MoveChangeStatusFocus();" /></td></tr>
+		 			<tr><td height=180 valign=bottom class=smallTitle>Tips: Changing your status won't sign you out of <script>document.write( ServiceShortName );</script>.</td></tr>
+		 		</table></td></tr>
+	</table>
+</div>
+
+<table width=100% height=100% cellSpacing=0 cellPadding=0 border=0>
+	<tr><td height=75>
+			<table width=100% height=100% cellSpacing=0 cellPadding=0 border=0>
+				<tr><td width=15 height=100% background="images/IM_TopLeftCorner.jpg">
+					</td>
+					<td id="im_top" height=100% background="msntv:/Images/1x1.gif">
+						<table width=100% height=100% cellSpacing=0 cellPadding=0 border=0>
+							<tr><td height=37 width=100%>
+									<table cellSpacing=0 cellPadding=0 border=0>
+										<tr><td height=10></td></tr>
+										<tr><td align=left style="font-size:21px; color:#92C2F7;">Messenger</td>
+											<td width=15></td>
+											<td id=PageTitle style="width:230px; font-size:21px; color:#F3F6F9;"></td>
+											<td width=30></td>
+											<td align=right>
+												<table height=100% cellSpacing=0 cellPadding=0 border=0 align=right>
+													<tr><td height=5></td></tr>
+													<tr><td><a tabindex=0 id=Setting onClick="ShowMainPanelWithURL('msntv:/IM/msnIMSetting.html');"><font class=headerTitle>Settings</font></a></td>
+														<td width=10></td>
+														<td><a tabindex=0 id=Help onClick="ShowMainPanelWithURL(GetPaneHelpURL(PH_topicTOC, 'MSNTV_TRS_TOC_Msgr.htm'))">
+																<table cellSpacing=0 cellPadding=0 border=0>
+																	<tr><td><font class=headerTitle>Help</font></td>
+																		<td width=4></td>
+																		<td style="padding:0px; height:20px; width:20px; behavior:url(#default#alphaImageLoader);src:url(msntv:/Shared/images/Icon_Help_RelatedLink.png);"></td></tr>
+																</table></a></td></tr>
+												</table></td></tr>
+									</table></td></tr>
+							<tr><td height=38 width=100%>
+									<table id=MainMenuTable cellSpacing=0 cellPadding=0 border=0 style="visibility:hidden;">
+										<tr><td colspan=5 height=4></td></tr>
+										<tr><td><a tabindex=0 onClick="ShowChangeStatusPanel()">
+													<table cellSpacing=0 cellPadding=0 border=0>
+														<tr><td id=MyStatus background="" style="width:260px; height:34px;" align=center>
+																<table cellSpacing=0 cellPadding=0 border=0>
+																	<tr><td id=MyStatusImg></td>
+																		<td width=3></td>
+																		<td id=MyStatusText style="font-size:16px;">My Status: Appear Offline</td></tr>
+																</table></td></tr>
+													</table></a></td>
+											<td width=6></td>
+											<td><a tabindex=0 onClick="ShowListPanel()">
+												<table cellSpacing=0 cellPadding=0 border=0>
+													<tr><td id=ContactListButton background="" style="width:120px; height:34px; font-size:16px;" align=center>Contact List<td></tr>
+												</table></a></td>
+											<td width=7></td>
+											<td><a tabindex=0 onClick="ShowCurrentSessionPanel()">
+												<table cellSpacing=0 cellPadding=0 border=0>
+													<tr><td id=ConversationButton background="" style="width:137px; height:34px; font-size:16px;" align=center>Conversations<td></tr>
+												</table></a></td></tr>
+									</table></td></tr>
+						</table>
+					</td>
+					<td width=15 height=100% background="images/IM_TopRightCorner.jpg"></td></tr>
+			</table>
+		</td></tr>
+	<tr><td><table cellSpacing=0 cellPadding=0 border=0 width=100% height=264>
+				<tr><td width=15 bgcolor=#5AAFFF></td><td id="im_bg" width=530 background="msntv:/Images/1x1.gif"></td><td width=15 bgcolor=#5AAFFF></td></tr>
+			</table></td></tr>
+	<tr><td height=1 bgcolor=#77ACE6></td></tr>
+</table>
+</BODY>
+</HTML>

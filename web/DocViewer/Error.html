@@ -1,0 +1,99 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE>File Download Error</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+</HEAD>
+
+<SCRIPT language=Javascript src="msntv:/Javascript/TVShell.js"></SCRIPT>
+<SCRIPT language=Javascript src="msntv:/Javascript/Parameters.js"></SCRIPT>
+<script language="Javascript" src="msntv:/Javascript/PanelImpl.js"></script>
+<script language=Javascript src="msntv:/Javascript/ContentPaneHelp.js"></script>
+
+<SCRIPT>
+
+	var parameters = FindParameters(TVShell.PanelManager);
+	var error = parameters.error;
+
+	function GotoConnect()
+	{
+		TVShell.PanelManager.Item('main').NoBackToMe = true;
+		LoginToService();
+	}
+
+	function GotoSettings()
+	{
+		document.location = "msntv:/Settings/ConnectionSettings.html?confirm=true"
+	}
+
+	function FriendlyErrorTitle()
+	{
+		var output = "";
+
+		if(error == "LargeFile")
+			output = "File too large";
+		else if (error == "UnsupportedContent")
+			output = "Can't open this file";
+		else if (error == "UnConnected")
+			output = "File not found";
+		else if (error == "UnknownError")
+			output = "Can't get this file";
+		
+		return output;
+
+	}
+
+	function FriendlyErrorBody()
+	{
+		var output = "";
+
+		if(error == "LargeFile")
+		{
+			output = "<P>This file is too large to show completely. ";
+			output+="To see the entire file, turn your " +ProductShortName+ " off and on, and then try viewing the file again.</P>";
+		}
+		else if (error == "UnsupportedContent")
+		{
+			output = "<P>" + ServiceShortName + " does not support the file type. ";
+			output+="To see a list of supported file types, choose <em>More Information</em>.</P>";
+		}
+		else if (error == "UnknownError")
+		{
+			output = "<P>This file is not accessible at this time.  It may have been removed, had its name changed, or is temporarily unavailable.</P>";
+		}
+		else if (error == "UnConnected")
+		{
+			output = "<P>The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. ";
+			output+="Please try again later.</P>";
+		}
+		return output;
+	}
+
+
+</SCRIPT>
+
+
+<BODY>
+
+<BODY class=fullPage>
+	<div id="icon"></div>
+	<div id="title" class="header">
+		<SCRIPT>
+			document.write(FriendlyErrorTitle());
+		</SCRIPT>
+	</div>	
+	<div id="description">
+		<SCRIPT>
+		document.write(FriendlyErrorBody());
+		</SCRIPT>
+	</div>
+	<div id="buttonBar">
+		<SCRIPT>
+			if (error == "UnsupportedContent")
+				document.write('<msntv:CustomButton label="More Information" onClick="document.location = GetPaneHelpURL(PH_specificPage,\'MSNTV_PROC_SINGLE_Email_OpenAttachFormats.htm\')" />');
+		</SCRIPT>
+		<msntv:CustomButton id=default label="Done" onClick="history.go(-1);" />
+		<script>document.all("default").focus();</script>
+	</div>
+</body> 
