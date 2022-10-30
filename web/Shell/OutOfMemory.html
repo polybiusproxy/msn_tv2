@@ -1,0 +1,48 @@
+<html xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<title>MSNTV OutOfMemory page</title>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language="Javascript" src="../Javascript/TVShell.js"></SCRIPT>
+<script>
+	function FriendlyErrorTitle()
+	{
+		return "Page Too Big";
+	}
+	
+  	function FriendlyErrorBody()
+	{
+		var str = "We're having problems showing the Web page you are trying to reach. \
+		You may be able to get to this page if you first choose <b>Power Off</b> \
+		and then come back to the page after your Player restarts.";
+		
+		return str;
+	}
+	
+	function PowerOff()
+	{
+		TVShell.PowerOff();
+	}
+    
+</script>
+</head>
+<BODY class=fullPage>
+	<div id="icon"></div>
+	<div id="title" class="header">
+		<SCRIPT>
+			document.write(FriendlyErrorTitle());
+		</SCRIPT>
+	</div>	
+	<div id="description" class="scroller">
+		<SCRIPT>
+			document.write(FriendlyErrorBody());
+		</SCRIPT>
+	</div>
+	<div id="buttonBar">
+		<msntv:CustomButton label="Power Off" onClick="PowerOff();" />
+		<msntv:CustomButton id=default label="Cancel" onClick="javascript:history.go(-1)" />
+		<script>document.all("default").focus();</script>
+	</div>
+</body> 
+</html>

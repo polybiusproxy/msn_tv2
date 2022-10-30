@@ -1,0 +1,233 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/DMRHeading.htc">
+<head>
+	<title>Video Player</title>
+	<link rel=StyleSheet type="text/css" href="../css/Base.css">	
+	<link rel=StyleSheet type="text/css" href="../css/Video.css">
+	
+
+	<script language="Javascript" src="../Javascript/TVShell.js"></script>
+	<script language="javascript" src="../Javascript/ServiceList.js"></script>
+	<script language="javascript" src="../Javascript/VKCodes.js"></script>
+	<script language="Javascript" src="../Javascript/Parameters.js"></script>
+	<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+	<script language="javascript" src="msntv:/Javascript/HomeNetworking.js"></script>
+	<script language="javascript" src="../Javascript/DMRHome.js"></script>
+	<script language="javascript" src="../Javascript/DMRCommon.js"></script>
+	<script language="javascript" src="../Javascript/DMRNavigate.js"></script>
+	<script language="javascript" src="../Javascript/DMREnumerate.js"></script>
+	<script language="Javascript" src="../Javascript/ContentPaneHelp.js"></script>
+	
+	<script language="javascript">
+		SetProgressStopFunction(DMRAbortViewer);
+		SetProgressText("Please wait while we get your folder ready.");
+		SetProgressPercent(10);
+		ShowProgressPanel();
+
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		var homeURL = "msntv:/Video/VideoHome.html";
+		var homeMediaType = "video";
+		var itemsText = "videos";
+
+		// override default color in DMRNavigate.js
+		selectedBackgroundColor = "#253C41";
+
+		// If we jumped directly to viewer, add home into back list
+		if (parameters.jump == "true") {
+			mainPanel.CreateTravelLogEntry(homeURL, "Video Home", true);
+		}
+
+		Sink.AttachEvent(TVShell.StorageManager,"OnDeviceRemove" , OnDeviceRemove);
+	</script>
+</head>
+
+<body style="behavior: url(msntv:/HTC/ScrollDelegator.htc);">
+	<table style="height:100%; width:100%;" cellpadding="0" cellspacing="0">
+		<tr>
+			<td style="height:57px;">
+				<msntv:DMRHeading id="Heading" mainTitle="Videos" subTitle="" helpTopicURL="MSNTV_TRS_TOC_Videos" imageURL="msntv:/Video/Assets/VideoDMRHeader.jpg"  />
+			</td>
+		<tr>
+			<td>
+				<table style="width:100%; height:100%;" cellspacing=0 cellpadding=0>
+					<tr>
+						<td class="content" style="width:73%; padding-top:9px; vertical-align:top;">
+							<table style="height:100%; width:100%;" cellpadding="0" cellspacing="0">
+								<tr id="viewByRow" style="display:none; height:33px;">
+									<td><div id="topLevelViewBy" class="viewerTitleText">View Videos by:</div></td>
+								</tr>
+								<tr id="topLevelNavRow" style="display:none; height:34px;">
+								<td><div id="topLevelFolderDiv"></div></td>
+								</tr>
+								<tr id="selectedCountRow" style="display:none; height: 34px;">
+								<td><div id="selectedCountField" class="countText"></div></td>
+								</tr>
+								<tr id="topSpaceRow" style="display:none; height:4px;"><td><div id=startofframe></div></td></tr>
+								<tr>
+									<td>
+										<iframe id="scrollFrame" frameborder="no" allowtransparency="true"></iframe>
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td style="background-color: #320202; width:27%; vertical-align:top; padding:9px 0px 0px 6px;">
+							<msntv:CustomButton id="playselected" class="sidebarButton" style="display:none;" label="Play Now" onClick="PlaySelected('video');" />
+							<msntv:CustomButton id="done" class="sidebarButton" label="Done" onclick="history.go(-1);"/>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+
+	<div id="playerDiv" style="position:absolute; top:0px; left:0px; visibility:hidden;">
+	</div>
+</body>
+
+<script>
+	if(StorageDeviceVN) {
+		WriteHeadingLabel(StorageDeviceVN, path,"video");
+	}
+	InitializeScrollFrame(scrollFrame);
+
+	//Use try catch to ensure that we will always dimiss the progress
+	//panel even if there's an error.
+	function Init()
+	{
+		try
+		{
+			SetProgressPercent(10);
+			if (StorageDeviceVN)
+				MountEx(StorageDeviceVN,Init1);
+			else
+				Init1();
+		}
+		catch (ex)
+		{
+			setTimeout(InitDone,10);
+		}
+	}
+
+	function Init1()
+	{
+		try
+		{
+			SetProgressPercent(20);
+			BuildArrays2(Init2, null, videoTypes , "all video" , "video" );
+		}
+		catch (ex)
+		{
+			setTimeout(InitDone,10);
+		}
+	}
+
+	function Init2()
+	{
+		try
+		{
+			SetProgressPercent(50);
+			setTimeout(Init3,10);
+		}
+		catch (ex)
+		{
+			setTimeout(InitDone,10);
+		}
+	}
+
+	function Init3()
+	{
+		try
+		{
+			if (DMRItemArray.length > 0) {
+				playselected.style.display = "inline-block";
+			}
+
+			if ( DMRItemArray.length > 1 )
+			{
+				selectedCountRow.style.display = "block";
+			}
+			
+
+			BuildTopLevelFolderDiv();
+			BuildDirectoryList(scrollFrame.document.body , "video" );
+			SetProgressPercent(75);
+			if (scrollFrame.document.all.folder0) {
+				scrollFrame.document.all.folder0.focus();
+			}
+			setTimeout(Init4,10);
+		}
+		catch (ex)
+		{
+			setTimeout(InitDone,10);
+		}
+	}
+
+	function Init4()
+	{
+		try
+		{
+			BuildPlaylistList(scrollFrame.document.body, null);
+			SetProgressPercent(90);
+
+			if (!scrollFrame.document.all.folder0) {
+				if (scrollFrame.document.all.playlist0) {
+					scrollFrame.document.all.playlist0.focus();
+				}
+				else {
+					done.focus();
+				}
+			}
+
+			setTimeout(Init5,10);
+		}
+		catch (ex)
+		{
+			setTimeout(InitDone,10);
+		}
+	}
+
+	function Init5()
+	{
+		try
+		{
+			BuildItemList(scrollFrame.document.body, "Videos", null, "right", PlayOne, false,"No videos found" );
+			SetProgressPercent(95);
+		}
+		catch (ex)
+		{
+		}
+
+		setTimeout(InitDone,10);
+	}
+
+	function InitDone()
+	{
+		try
+		{
+			var numItems = 0;
+			if ( DMRItemArray ) numItems = DMRItemArray.length;
+			if ( !bFoldersOrOtherMedia && numItems == 0 )
+			{
+				document.all.scrollFrame.tabIndex = -10001;
+			}
+			if (g_fTruncated)
+			{
+				var info=getTruncationText();
+				scrollFrame.document.all.warningCell.innerHTML=info;
+				scrollFrame.document.all.warningTable.style.display="block";
+			}
+
+			ShowArt(artURL);
+			SetProgressPercent(100);
+		}
+		catch (ex)
+		{
+		}
+
+		HideProgressPanel();
+	}
+
+	setTimeout( Init, 10 );
+</script>
+</html>

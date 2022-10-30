@@ -1,0 +1,319 @@
+<html xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<head>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<title>MSNTV error page</title>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language="Javascript" src="../Javascript/TVShell.js"></SCRIPT>
+<script>
+	var g_fTryAgain = false;
+    var INETErrors = new Array();
+
+	var INET_E_INVALID_URL = 0x800C0002 & 0x0000FFFF;
+    INETErrors[INET_E_INVALID_URL]="There's a problem with the address of the page you're looking for.";
+
+	var INET_E_NO_SESSION  = 0x800C0003 & 0x0000FFFF; 
+	//No session found.
+    INETErrors[INET_E_NO_SESSION]="We're unable to connect to the Web site. There may be something wrong with the site.";
+
+	var INET_E_CANNOT_CONNECT = 0x800C0004 & 0x0000FFFF;
+	//Unable to connect to server.
+    INETErrors[INET_E_CANNOT_CONNECT]="We're unable to connect to the Web site. There may be something wrong with the site.";
+
+	var INET_E_RESOURCE_NOT_FOUND = 0x800C0005 & 0x0000FFFF;
+	//Requested resource is not found.
+    INETErrors[INET_E_RESOURCE_NOT_FOUND]="We couldn't find the page you're looking for:";   
+
+	var INET_E_OBJECT_NOT_FOUND = 0x800C0006 & 0x0000FFFF;
+	//Requested object is not found.
+    INETErrors[INET_E_OBJECT_NOT_FOUND]="We couldn't find the page you're looking for:";   
+
+	var INET_E_DATA_NOT_AVAILABLE = 0x800C0007 & 0x0000FFFF;
+	//Requested data is not available.
+    INETErrors[INET_E_DATA_NOT_AVAILABLE]="We couldn't find the page you're looking for."; 
+	   
+	var INET_E_DOWNLOAD_FAILURE = 0x800C0008 & 0x0000FFFF;
+	//Failure occurred during download.
+    INETErrors[INET_E_DOWNLOAD_FAILURE]="There was a problem with the page. Please try again."; 
+
+	var INET_E_AUTHENTICATION_REQUIRED = 0x800C0009 & 0x0000FFFF;
+	//Requested navigation requires authentication.
+    INETErrors[INET_E_AUTHENTICATION_REQUIRED]="The page you're trying to access needs a user name and password."; 
+
+	var INET_E_NO_VALID_MEDIA = 0x800C000A & 0x0000FFFF;
+
+    //handled by WMP
+    INETErrors[INET_E_NO_VALID_MEDIA]="Required media not available or valid."; 
+
+	var INET_E_CONNECTION_TIMEOUT = 0x800C000B & 0x0000FFFF;
+	//Connection timed out.
+    INETErrors[INET_E_CONNECTION_TIMEOUT]="There may be a problem with the Web site. Please try again."; 
+
+	var INET_E_INVALID_REQUEST  = 0x800C000C & 0x0000FFFF;
+    INETErrors[INET_E_INVALID_REQUEST ]="Request is invalid."; 
+
+	var INET_E_UNKNOWN_PROTOCOL  = 0x800C000D & 0x0000FFFF;
+	//Protocol is not recognized.
+    INETErrors[INET_E_UNKNOWN_PROTOCOL]="We couldn't find the page you're looking for:"; 
+
+	var INET_E_SECURITY_PROBLEM  = 0x800C000E & 0x0000FFFF;
+	
+	//Navigation request has encountered a security issue.
+    INETErrors[INET_E_SECURITY_PROBLEM]="We are unable to access the page. You may need to contact the Web site's owner."; 
+	
+	var INET_E_CANNOT_LOAD_DATA  = 0x800C000F & 0x0000FFFF;
+	//handled by WMP
+    INETErrors[INET_E_CANNOT_LOAD_DATA]="Unable to load data from the server."; 
+
+	var INET_E_CANNOT_INSTANTIATE_OBJECT  = 0x800C0010 & 0x0000FFFF;
+    INETErrors[INET_E_CANNOT_INSTANTIATE_OBJECT]="Unable to create an instance of the object."; 
+
+	var INET_E_REDIRECT_FAILED  = 0x800C0014 & 0x0000FFFF;
+	//Attempt to redirect the navigation failed.
+    INETErrors[INET_E_REDIRECT_FAILED]="The Web page you were trying to reach has redirected you to another page. That page can't be found. "; 
+
+	var INET_E_REDIRECT_TO_DIR = 0x800C0015 & 0x0000FFFF;
+    INETErrors[INET_E_REDIRECT_TO_DIR]="Navigation redirected to a directory."; 
+
+	var INET_E_CANNOT_LOCK_REQUEST = 0x800C0016 & 0x0000FFFF;
+    INETErrors[INET_E_CANNOT_LOCK_REQUEST]="Unable to lock request with the server."; 
+
+	var INET_E_USE_EXTEND_BINDING = 0x800C0017 & 0x0000FFFF;
+	//Reissue request with extended binding.
+    INETErrors[INET_E_USE_EXTEND_BINDING]="There was a problem getting the Web page. Please try again."; 
+
+	var INET_E_TERMINATED_BIND = 0x800C0018 & 0x0000FFFF;
+	//Binding is terminated.
+    INETErrors[INET_E_TERMINATED_BIND]="There was a problem getting the Web page. Please try again."; 
+
+	var INET_E_CODE_DOWNLOAD_DECLINED = 0x800C0100 & 0x0000FFFF;
+    INETErrors[INET_E_CODE_DOWNLOAD_DECLINED]="Permission to download is declined."; 
+
+	var INET_E_RESULT_DISPATCHED = 0x800C0200 & 0x0000FFFF;
+    INETErrors[INET_E_RESULT_DISPATCHED]="Result is dispatched."; 
+
+	var INET_E_CANNOT_REPLACE_SFP_FILE = 0x800C0300 & 0x0000FFFF;
+	//Cannot replace a protected System File Protection (SFP) file.
+    INETErrors[INET_E_CANNOT_REPLACE_SFP_FILE]="There may be problems with the Web site you are trying to reach. Please try again."; 
+
+    
+	var HTTPErrors = new Array();
+	var HTTP_STATUS_BAD_REQUEST = 400; 
+	HTTPErrors[HTTP_STATUS_BAD_REQUEST]="The Web page you are looking for is currently unavailable. It may have been moved, or its name may have changed.";
+		 
+	var HTTP_STATUS_DENIED = 401; 
+	// Access denied.
+	HTTPErrors[HTTP_STATUS_DENIED]="You do not have the Web site's permission to view this page.";
+
+	var HTTP_STATUS_PAYMENT_REQ = 402;  
+	HTTPErrors[HTTP_STATUS_PAYMENT_REQ]="Payment required.";
+
+	var HTTP_STATUS_FORBIDDEN = 403   
+	//You do not have permission to view this Web site.
+	HTTPErrors[HTTP_STATUS_FORBIDDEN]="You do not have the Web site's permission to view this page.";
+
+	var HTTP_STATUS_NOT_FOUND = 404  
+	HTTPErrors[HTTP_STATUS_NOT_FOUND]="The Web page you are looking for is currently unavailable. It may have been moved, or its name may have changed.";
+
+
+	var HTTP_STATUS_BAD_METHOD = 405   
+	HTTPErrors[HTTP_STATUS_BAD_METHOD]="The Web site address is not valid. Check the address and try again.";
+
+	var HTTP_STATUS_NONE_ACCEPTABLE = 406   
+	HTTPErrors[HTTP_STATUS_NONE_ACCEPTABLE]= ServiceShortName + " cannot access this Web page.";
+	 
+	var HTTP_STATUS_PROXY_AUTH_REQ = 407 
+	//  Proxy authentication required.
+	HTTPErrors[HTTP_STATUS_PROXY_AUTH_REQ]="We can't access the page you're looking for. ";
+	
+	var HTTP_STATUS_REQUEST_TIMEOUT = 408 //   
+	HTTPErrors[HTTP_STATUS_REQUEST_TIMEOUT]="This Web site is temporarily unavailable. Please try again later.";
+
+	var HTTP_STATUS_CONFLICT = 409 //   
+	HTTPErrors[HTTP_STATUS_CONFLICT]="This Web site is temporarily unavailable. Please try again later.";
+	
+	var HTTP_STATUS_GONE = 410 //   
+	HTTPErrors[HTTP_STATUS_GONE]="The Web page you are looking for no longer exists.";
+	
+	var HTTP_STATUS_LENGTH_REQUIRED = 411 
+	//  Server refused to accept request without a length.
+	HTTPErrors[HTTP_STATUS_LENGTH_REQUIRED]="We're unable to connect to the Web site. There may be something wrong with the site. ";
+
+	var HTTP_STATUS_PRECOND_FAILED = 412 
+	//   Precondition given in request failed.
+	HTTPErrors[HTTP_STATUS_PRECOND_FAILED]="We're unable to connect to the Web site. There may be something wrong with the site. ";
+
+	var HTTP_STATUS_REQUEST_TOO_LARGE = 413 
+	//   Request entity was too large.
+	HTTPErrors[HTTP_STATUS_REQUEST_TOO_LARGE]="There was a problem. Your request may be too large for the Web site. Please try again.";
+
+	var HTTP_STATUS_URI_TOO_LONG = 414 
+	//   Request Uniform Resource Identifier (URI) too long.
+	HTTPErrors[HTTP_STATUS_URI_TOO_LONG]="The Web address you gave is too long.";
+    
+	var HTTP_STATUS_UNSUPPORTED_MEDIA = 415 
+	//  handled by WMP
+	HTTPErrors[HTTP_STATUS_UNSUPPORTED_MEDIA]="Unsupported media type.";
+
+	var HTTP_STATUS_RETRY_WITH = 449 
+	//  Retry after doing the appropriate action.
+	HTTPErrors[HTTP_STATUS_RETRY_WITH]="The Web site requires some action on your part. Please perform that action and try again.";
+
+	var HTTP_STATUS_SERVER_ERROR = 500 //  
+	HTTPErrors[HTTP_STATUS_SERVER_ERROR]= ServiceShortName + " cannot access this Web page because of problems with the page.";
+
+	var HTTP_STATUS_NOT_SUPPORTED = 501 //  
+	HTTPErrors[HTTP_STATUS_NOT_SUPPORTED]= ServiceShortName + " cannot access this Web page.";
+
+	var HTTP_STATUS_BAD_GATEWAY = 502 
+	//   Error response received from gateway.
+	HTTPErrors[HTTP_STATUS_BAD_GATEWAY]="We're unable to connect to the Web site. There may be something wrong with the site. Please try again.";
+
+	var HTTP_STATUS_SERVICE_UNAVAIL = 503 
+	// Temporarily overloaded.
+	HTTPErrors[HTTP_STATUS_SERVICE_UNAVAIL]="We're unable to connect to the Web site. There may be something wrong with the site or it may just be busy.";
+
+	var HTTP_STATUS_GATEWAY_TIMEOUT = 504 
+	//  Timed out waiting for gateway.
+	HTTPErrors[HTTP_STATUS_GATEWAY_TIMEOUT]="We're unable to connect to the Web site. There may be something wrong with the site. ";
+
+	var HTTP_STATUS_VERSION_NOT_SUP = 505 
+	//HTTP version not supported.
+	HTTPErrors[HTTP_STATUS_VERSION_NOT_SUP]="We're unable to connect to the Web site. There may be something wrong with the site.";
+
+	function FriendlyErrorTitle()
+	{
+		return "Navigation Error";
+	}
+	
+	var mainpanel=TVShell.PanelManager.Item("main");
+  	
+	function FriendlyErrorBody()
+	{
+
+		var statusCode=mainpanel.UserIntData;
+		var url=mainpanel.UserStrData;
+		var errorInfo;
+
+		if(statusCode<400 || statusCode>600)
+		{
+			statusCode = statusCode & 0x0000FFFF;
+			errorInfo=INETErrors[statusCode];
+			if(errorInfo==undefined)
+				errorInfo="Unknown Internet error."
+
+			statusCode = statusCode.toString(16);
+			var len = statusCode.length;
+			if (len == 1)
+				statusCode = "0x800c000" + statusCode;
+			else if (len == 2)
+				statusCode = "0x800c00" + statusCode;
+			else if (len == 3)
+				statusCode = "0x800c0" + statusCode;
+			else if (len == 4)
+				statusCode = "0x800c" + statusCode;
+		}
+		else
+		{
+			errorInfo=HTTPErrors[statusCode];
+			if(errorInfo==undefined)
+				errorInfo="Unknown HTTP error."
+		}
+		var htmlstr = "<p><div id=errorCodeDIV style='display:none;'>Error code: "+statusCode+"</div></p>" +
+		 "<p>" + errorInfo + "</p>"; 
+        
+		switch(parseInt(statusCode))
+		{
+		  case 0x800C0002:
+		    htmlstr +="<p><em>"+TVShell.Utilities.EscapeHTML(url)+"</em></p>"
+			htmlstr +="<p>You can correct the address below and try again.</p><p><input type=text id=URLInput value='' size=40></input></p>"
+		    g_fTryAgain=true;
+			break;
+		  case 0x800C0005:
+		  case 0x800C0006:
+		  case 0x800C000D:
+		    htmlstr +="<p><em>"+TVShell.Utilities.EscapeHTML(url)+"</em></p>"
+		    htmlstr +="<p>If there is a mistake in the address, you can correct it below and try again.</p><p><input type=text id=URLInput value='' size=40></input></p>"
+		    g_fTryAgain=true;
+		    break;
+		  case 0x800C0008:
+		  case 0x800C000B:
+		  case 0x800C0017:
+		  case 0x800C0018:
+		  case 0x800C0300:
+		  case 413:
+		  case 503:
+		    g_fTryAgain=true;
+		    break;
+		  case 502:		    
+		    htmlstr +="<p>If there is a mistake in the address, you can correct it below and try again.</p><p><input type=text id=URLInput value='' size=40></input></p>"
+		    g_fTryAgain=true;
+		    break;
+
+		  default:
+		    break; 
+		}
+
+		return htmlstr;
+	}
+
+    function TryAgain()
+	{
+		if(document.all.URLInput)
+		 location.replace(document.all.URLInput.value)
+		else 
+		 location.replace(mainpanel.UserStrData)		 
+	}
+
+    function OnLoad()
+	{
+		if(document.all.URLInput)
+		{
+			URLInput.value=mainpanel.UserStrData;
+			URLInput.select();
+			URLInput.focus();
+			tryagain.style.display="block"
+		    document.all.done.label="Cancel";
+		}
+
+		if(g_fTryAgain)
+		{
+			tryagain.style.display="block";
+		    document.all.done.label="Cancel";
+		}
+		
+
+		    
+	}
+
+	function KeyDown()
+	{   
+		if (event.altKey)
+		{
+			if(errorCodeDIV.style.display!="none")
+			  errorCodeDIV.style.display = "none";
+			else
+			  errorCodeDIV.style.display = "inline-block";			  
+		}
+	}
+</script>
+</head>
+<BODY class=fullPage onkeydown="KeyDown()" onload="OnLoad()">
+	<div id="icon"></div>
+	<div id="title" class="header">
+		<SCRIPT>
+			document.write(FriendlyErrorTitle());
+		</SCRIPT>
+	</div>	
+	<div id="description" class="scroller">
+		<SCRIPT>
+		document.write(FriendlyErrorBody());
+		</SCRIPT>
+	</div>	
+	
+	<msntv:CustomButton id="tryagain" style="position: absolute;display:none;right:95px;bottom:10px" label="Try Again" onClick="TryAgain()" />
+	<msntv:CustomButton id="done" label="Done" style="position: absolute;right:15px;bottom:10px"onClick="javascript:history.go(-1)" />
+
+	<script>document.all("done").focus();</script>
+</body> 
+</html>

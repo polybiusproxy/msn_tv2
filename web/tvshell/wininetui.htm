@@ -1,0 +1,165 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<TITLE>WININET UI</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+
+<script>
+var thisName = window.name;
+var PanelManager = TVShell.PanelManager;
+
+//error code defined in winerror.h
+var ERROR_SUCCESS=0;   
+var ERROR_CANCELLED=1223;
+
+
+//error name & error info 
+
+var errors = new Array()
+
+var  ERROR_INTERNET_INCORRECT_PASSWORD       = 12014;
+var  ERROR_INTERNET_SEC_CERT_DATE_INVALID    = 12037;
+var  ERROR_INTERNET_SEC_CERT_CN_INVALID      = 12038;
+var  ERROR_INTERNET_HTTP_TO_HTTPS_ON_REDIR   = 12039;
+var  ERROR_INTERNET_HTTPS_TO_HTTP_ON_REDIR   = 12040;
+var  ERROR_INTERNET_MIXED_SECURITY           = 12041;
+var  ERROR_INTERNET_CHG_POST_IS_NON_SECURE   = 12042;
+var  ERROR_INTERNET_POST_IS_NON_SECURE       = 12043;
+var  ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED  = 12044;
+var  ERROR_INTERNET_INVALID_CA               = 12045;
+var  ERROR_INTERNET_HTTPS_HTTP_SUBMIT_REDIR  = 12052;
+var  ERROR_INTERNET_SEC_CERT_ERRORS          = 12055;
+var  ERROR_INTERNET_SEC_CERT_NO_REV          = 12056;
+var  ERROR_INTERNET_SEC_CERT_REV_FAILED      = 12057;
+var  ERROR_HTTP_COOKIE_NEEDS_CONFIRMATION    = 12161;
+var  ERROR_INTERNET_BAD_AUTO_PROXY_SCRIPT    = 12166;
+var  ERROR_INTERNET_UNABLE_TO_DOWNLOAD_SCRIPT =12167;
+var  ERROR_HTTP_REDIRECT_NEEDS_CONFIRMATION  = 12168;
+
+
+var  DLG_FLAGS_INVALID_CA               =0x01000000
+var  DLG_FLAGS_SEC_CERT_CN_INVALID      =0x02000000
+var  DLG_FLAGS_SEC_CERT_DATE_INVALID    =0x04000000
+
+errors[0]="<p>You have been working offline with a cached page.Do you want to go online?</p>";
+  
+errors[ERROR_INTERNET_SEC_CERT_ERRORS]=
+  "<p>Information you exchanged with this site cannot be viewed or changed by others. However, there is a problem with the site's security certificates.</p>"
+
+
+errors[ERROR_INTERNET_HTTP_TO_HTTPS_ON_REDIR]=
+  "<p>You are about to be redirected to a secure website.</p>"
+
+errors[ERROR_INTERNET_HTTPS_TO_HTTP_ON_REDIR]=
+  "<p>You are about to be redirected to a non-secure website.</p>"
+
+errors[ERROR_INTERNET_INCORRECT_PASSWORD]=
+  "<p>Incorrect user name or password.Please enter user name and password again.</p>"
+
+var errorCode;
+var errorData;
+
+function SetContent()
+{
+  var errorString =PanelManager.Item(thisName).UserStrData;
+  var data=errorString.split(",");
+  errorCode=Number(data[0]);
+  errorData=Number(data[1]);
+  var content=errors[errorCode];
+  switch(errorCode)
+  {
+     case ERROR_INTERNET_SEC_CERT_ERRORS:
+	 {
+	   document.all.viewCert.style.display="inline-block";
+	   if(errorData&DLG_FLAGS_INVALID_CA)
+          content+="<p><img src='images/exclamsmall.gif'> Invalid certificate</p>";
+	   else
+	      content+="<p><img src='images/tick.gif'> Valid certificate</p>";
+	   if(errorData&DLG_FLAGS_SEC_CERT_CN_INVALID)
+	      content+="<p><img src='images/exclamsmall.gif'> The name on the security certificate is invalid or does not match the name of the site</p>";
+	   else
+	      content+="<p><img src='images/tick.gif'> Valid certificate name</p>";	      
+	   if(errorData&DLG_FLAGS_SEC_CERT_DATE_INVALID)
+	      content+="<p><img src='images/exclamsmall.gif'> Invalid certificate date</p>";
+	   else
+	      content+="<p><img src='images/tick.gif'> Valid certificate date</p>";	      
+	 }
+	   break;
+	 case ERROR_INTERNET_INCORRECT_PASSWORD:
+       content+="<p>Username: <input type=text name=username size=15 value='";
+	   content+=PanelManager.InternetData1;
+	   content+="'></p><p>Password<input type=password name=password class=inputPwd size=15 value='";
+	   content+=PanelManager.InternetData2;
+	   content+="'></p>";
+	   break;
+     case ERROR_INTERNET_HTTP_TO_HTTPS_ON_REDIR:
+     case ERROR_INTERNET_HTTPS_TO_HTTP_ON_REDIR:
+	    break;
+	 default:
+	    content="Internet error: "+errorCode;
+  }
+
+  document.all.Message.innerHTML=content;
+
+}
+
+
+function OnClickContinue()
+{
+	if (errorCode == ERROR_INTERNET_INCORRECT_PASSWORD) {
+		PanelManager.InternetData1 = document.all.username.text;
+		PanelManager.InternetData2 = document.all.password.text
+	}
+	PanelManager.CloseMessageBox(thisName, ERROR_SUCCESS);
+}
+
+function OnClickCancel()
+{
+	HideProgressPanel();
+	PanelManager.CloseMessageBox(thisName, ERROR_CANCELLED);
+}
+
+function ViewCertificate()
+{
+    PanelManager.ShowCertInfo(PanelManager.Item("WININETUI").UserIntData);
+}
+
+</script>
+</HEAD>
+
+<BODY>
+
+<table height=100% width=100%>
+	<tr >
+		<td colspan=2 align=right height=30px style="background-image:url(images/qmark.gif);background-repeat:no-repeat">
+	    </td>
+	<tr>
+		<td colspan=2 height=90% align=left valign=top>
+         <div style="width:100%;height:95%;padding-left:5px;padding-top: 0px;padding-right:15px;overflow-y:auto;behavior:url(msntv:/HTC/ScrollingDIV.htc);">
+         	<div id="Message"></div>
+         </div>
+	    </td>		
+	<tr>
+		<td height=30px align=center > 
+		  <table>
+		     <tr>
+			  <td>
+               <msntv:CustomButton label="Continue" onClick="OnClickContinue();" />
+			  </td>
+			  <td>
+               <msntv:CustomButton id="viewCert" label="Certificate" style="display:none" onClick="ViewCertificate()" />
+			  </td>
+			 </tr>
+		  </table>
+        </td>
+        <td align=center>
+         <msntv:CustomButton label="Cancel"  onClick="OnClickCancel();" />       
+	    </td>
+</table>
+</body>
+<script>
+  SetContent();
+</script>
+</html>

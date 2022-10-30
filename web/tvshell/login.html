@@ -1,0 +1,551 @@
+<html xmlns:msntv>
+
+<META http-equiv="Page-Enter" CONTENT="none" />
+
+<?import namespace="msntv" implementation="../HTC/loopingDIV.htc">
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<title>Login</title>
+
+<link rel=StyleSheet type="text/css" href="../CSS/Base.css">
+
+<style>
+body
+{
+	font-size: 18px;
+	font-family: Segoe;
+	color: #1D1D1D;
+	overflow: hidden;
+}
+
+td
+{
+	font-size: 18px;
+}
+
+td.topLinks
+{
+	font-size:	18px;
+	color: #14224B
+}
+
+
+a:visited
+{
+	color:#E6E6E6;
+}
+
+a:link
+{
+	color:#E6E6E6;
+}
+
+a:active
+{
+	color:#E6E6E6;
+}
+
+#userName0
+{
+	color:#082B84;
+	font-weight:bold;
+}
+
+#helpIcon
+{
+	position: relative;
+	top: 1px;
+	left: 4px;
+	margin-left: 4px;
+	behavior: url(#default#alphaImageLoader);
+	src: url(msntv:/Shared/images/Icon_Help_RelatedLink.png);
+	width: 20px;
+	height: 20px;
+}
+
+#password
+{
+	width:255px;
+}
+
+#savePWspan
+{
+	position: relative;
+	left: -2px;
+	color: #14224B;
+	font-size:16px;
+}
+
+.homeMediaLink
+{
+	color: #B3DAF5;
+	font-size:16px;
+}
+
+.userName
+{
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: #14224B;
+}
+
+</style>
+
+<script src="msntv:/Javascript/TVShell.js"></script>
+<script src="msntv:/Javascript/ConnectionManager.js"></script>
+<script src="msntv:/Javascript/Provisioning.js"></script>
+<script>
+
+var UserManager = TVShell.UserManager;
+
+var NextUserToWrite = 0;
+var WriteAllUser = true;
+var FakePassword = "";
+var PasswordChanged = false;
+
+if (UserManager.Count == 1)
+	UserManager.CurrentUser = 0;
+
+function GetUnreadEmails(user)
+{
+	var unreadEmails=user.getAttribute("unreadCount");
+	if(!(unreadEmails && typeof(unreadEmails)=="number" && unreadEmails>0))
+		unreadEmails=0;
+	return unreadEmails;
+}
+
+function NewEmail(user)
+{
+    if(user.getAttribute("msgLight")=="true")
+	  return true;
+	else 
+	  return false;
+}
+
+function writeNonCurrentUsersRow()
+{
+	var result = "";
+	var numUsersWritten = 0;
+	var CurrentUser = UserManager.CurrentUser;
+	var Count = UserManager.Count;
+	var userAreaWidth = 514;
+	var width = 97, gap = 42;
+	var spanLeft = 0;
+	
+	if ((WriteAllUser && Count <= 3) || (!WriteAllUser && Count <= 4)) {
+		width = 120;
+		gap = 77;
+	}
+	
+	for (var NextUserToWrite = 0; NextUserToWrite < Count; NextUserToWrite++)
+	{
+		var user = UserManager.Item(NextUserToWrite);
+		if (user != CurrentUser || WriteAllUser)
+		{
+			var userName = user.Name;
+			var imageName = user.LargeIcon;
+			
+			numUsersWritten++;
+			if (userAreaWidth - numUsersWritten * (width + gap) < 0)
+				gap = 0;	
+							
+			result += "<span id='cellTag" + (numUsersWritten - 1) + "' style='display:inline-block; position:absolute; width:" + width + gap + "px; height:127px; margin-left:" + spanLeft + "px;'>";
+			if (NextUserToWrite == 0)
+				result += writeCell(true, NewEmail(user), userName, imageName, NextUserToWrite, width);
+			else
+				result += writeCell(false, NewEmail(user), userName, imageName, NextUserToWrite, width);
+			result += "</span>";
+			spanLeft +=  width + gap;
+		}
+	}
+	return result;
+}
+
+function writeNonScrollableUserList()
+{
+	ScrollList.style.visibility = "hidden";
+	NonScrollList.style.visibility = "visible";
+	
+	var outputStr = "";
+	if (UserManager.Count > 1) {
+		outputStr += "<div><table id=topTable cellspacing=0 cellpadding=0>"
+		outputStr += "<tr><td width=18></td><td><div id='nonScrollListTable' style='overflow-x:hidden; width:514px; height:127px;'>";
+		outputStr += writeNonCurrentUsersRow();
+		outputStr += "</tr></table></td><td width=18></td></tr></table>";
+	}
+	NonScrollList.innerHTML = outputStr;
+}
+
+function writeCell(primaryUser, newEmail, name, image, num, width)
+{
+	name = TVShell.Utilities.EscapeHTML(name);
+	image = TVShell.Utilities.EscapeHTML(image);
+	
+	var anchorLeft = (width > 97) ? 25 : 15;
+	var fontStyle = primaryUser ? "font-color:#0B2B84; font-weight:bold;" : "font-color:#14224B;";
+	var email = (newEmail) ? "New mail" : "";
+	var result;
+	
+	result = "<a style='position:absolute; display:block; width:68px; height:76px; margin-left:" + anchorLeft + "px; top:0x;' onclick='switchToUser(" + num + ") ' name =" + name + " id='user" + num + "'>" +
+			 "<div style='position:absolute;  overflow:hidden; margin-left: -5px; width:" + width + "px; height:76px; top:3px;'>" + 
+				"<span style='behavior:url(#default#alphaImageLoader); src:url(" + image + "); width:68px;height:76px;'></span>" +
+			 "</div></a>" + 
+			 "<div style='position:absolute; width:" + width + "px; height:19px; top:79px;'>" + 
+				"<span class=userName id='userName" + num + "' style='text-align:center;width:" + width + "px;" + fontStyle + "'>" + name + "</span>" + 
+			 "</div>" +
+			 "<div style='position:absolute; width:" + width + "px; top:99px;'>" +
+				"<span id='newemailIcon" + num + "' style='text-align:center; font-size:16px; color:#3C3C3C; width:" + width + "px;'>" + email + "</span>" +
+			 "</div>";			 
+	return result;
+}
+
+function writeScrollableUserList()
+{	
+	ScrollList.style.visibility = "visible";
+	NonScrollList.style.visibility = "hidden";
+		
+	var CurrentUser = UserManager.CurrentUser;
+	var Count = UserManager.Count;
+		
+	if (!WriteAllUser)
+		UserList.ClearAll();
+		
+	for (var NextUserToWrite = 0; NextUserToWrite < Count; NextUserToWrite++)
+	{
+		var user = UserManager.Item(NextUserToWrite);
+		if (user != CurrentUser || WriteAllUser)
+		{
+			var userName = user.Name;
+			var imageName = user.LargeIcon;
+			var cellHtml;
+			
+			if (NextUserToWrite == 0)
+				cellHtml = writeCell(true, NewEmail(user), userName, imageName, NextUserToWrite, 97);
+			else
+				cellHtml = writeCell(false, NewEmail(user), userName, imageName, NextUserToWrite, 97);
+			UserList.AddCellHTML(cellHtml, 139, 127);
+		}
+	}
+}
+
+function writeOtherUsersArea()
+{
+	var Count = UserManager.Count;
+	var scrollable = true;
+	
+	OtherUsers.style.visibility = "visible";
+	
+	if ((WriteAllUser && Count <= 4) || (!WriteAllUser && Count <= 5))
+		scrollable = false;
+
+	if (scrollable) {
+		writeScrollableUserList();
+		if (WriteAllUser)
+			UserList.focus();
+	}
+	else {
+		writeNonScrollableUserList();
+		if (WriteAllUser)
+			document.all.user0.focus();
+	}
+}
+
+function writeMainUserArea()
+{
+	mainUser.style.visibility = "visible";
+			
+	var largeIcon = TVShell.Utilities.EscapeHTML(UserManager.CurrentUser.LargeIcon);
+	if (largeIcon.lastIndexOf(".png") != -1)
+		userIcon.innerHTML = "<span style='behavior: url(#default#alphaImageLoader); src:url(" + largeIcon + ");width:142px;height:158px;'></span></td>";
+	else
+		userIcon.innerHTML = "<img src=" + largeIcon + "></td>";
+	    
+	if (currentUserIsPrimary())
+		userEmail.style.color = "#082B84";
+	else
+		userEmail.style.color = "#14224B"
+
+	userEmail.innerHTML = TVShell.Utilities.EscapeHTML(UserManager.CurrentUser.EMail);	
+	if (NewEmail(UserManager.CurrentUser))
+		emailIcon.innerHTML = "New mail";
+	else
+		emailIcon.innerHTML = "&nbsp;";
+       
+	var pwl = UserManager.CurrentUser.PasswordLength;
+
+	if (pwl > 0)
+	{
+		FakePassword = "";
+		for (var i = 0; i < pwl; i++)
+			FakePassword += "¤";
+		document.all.password.value = FakePassword;
+		document.all.rememberPW.checked = UserManager.CurrentUser.SavePassword;
+		document.all.savePWspan.style.visibility= "visible";
+		document.all.signInButton.disabled = false;
+		document.all.signInButton.focus();
+	}
+	else {
+		document.all.savePWspan.style.visibility= "hidden";
+		document.all.signInButton.disabled = true;
+		document.all.password.value = "";
+		document.all.rememberPW.checked = false;
+		document.all.password.focus();
+	}
+	document.all.forgot.style.visibility = "visible";
+}
+
+function switchToUser(userNum)
+{
+	if (userNum >= 0 && userNum < UserManager.Count)
+	{
+		forgot.style.visibility = "visible";
+		WriteAllUser = false;
+		UserManager.CurrentUser = userNum;
+		writeMainUserArea();
+		setTimeout("writeOtherUsersArea()", 1);
+	}
+}
+
+function signIn()
+{
+	if (signInButton.disabled)
+		return;
+
+	TVShell.BuiltinServiceList.Remove("home::target");
+	var e = UserManager.CurrentUser.ServiceList.Add("home::target");
+	e.URL = "home::home";
+			
+	var dirty = false;
+	if (document.all.password.value != FakePassword)
+	{
+		UserManager.CurrentUser.Password = document.all.password.value;
+		dirty = true;
+	}
+
+	if (UserManager.CurrentUser.SavePassword != document.all.rememberPW.checked)
+	{
+		UserManager.CurrentUser.SavePassword = document.all.rememberPW.checked;
+		dirty = true;
+	}
+	
+
+	LoginToService("connection::login");
+
+	if (dirty)
+		UserManager.Save();
+}
+
+function passwordKeyUp(pw)
+{
+	document.all.savePWspan.style.visibility = (pw.value.length > 0) ? "visible" : "hidden";
+	document.all.signInButton.disabled = (pw.value.length == 0);
+}
+
+function rememberPasswd()
+{
+	var pwdChecked = document.all.rememberPW.checked;
+	if ( pwdChecked == false && pwdChecked != UserManager.CurrentUser.SavePassword )
+	{
+		UserManager.CurrentUser.SavePassword = pwdChecked;
+		UserManager.Save();
+	}
+}
+
+function currentUserIsPrimary()
+{
+	return (UserManager.Item(0) == UserManager.CurrentUser);
+}
+
+function accessOfflineApp(url)
+{
+	if (canAccessOfflineApp()) {
+		document.location = url;
+	}
+	else {
+		NotProvisionedMessageBox(url,"");
+	}
+}
+
+function OnUserAttributeModified(user, attributeName)
+{
+	if(attributeName=="msgLight")
+	{
+		for(i=0;i<UserManager.Count;i++)
+		{ 
+	      if(UserManager.Item(i).EMail==user.EMail)
+		  {
+		    var obj=document.all("newemailIcon"+i);
+		    if(obj)
+			{   
+				if(NewEmail(user))
+					obj.innerHTML = "New mail";
+				else
+					obj.innerHTML = "&nbsp;";
+			}
+		  }
+		}
+		
+		var currentUser = UserManager.CurrentUser;
+		if (currentUser && NewEmail(currentUser))
+			emailIcon.innerHTML = "New mail";
+		else
+			emailIcon.innerHTML = "&nbsp;";
+	}
+}
+
+function hideMainUserArea()
+{
+	mainUser.style.visibility = "hidden";
+}
+
+function hideOtherUsersArea()
+{
+	OtherUsers.style.visibility = "hidden";
+	ScrollList.style.visibility = "hidden";
+	NonScrollList.style.visibility = "hidden";
+}
+
+function OnLoad()
+{
+	if (UserManager.CurrentUser) {
+		forgot.style.visibility = "visible";
+		WriteAllUser = false;
+		writeMainUserArea();
+		if (UserManager.Count == 1)
+			hideOtherUsersArea();
+		else
+			writeOtherUsersArea();
+	}
+	else {
+		forgot.style.visibility = "hidden";
+		hideMainUserArea();
+		writeOtherUsersArea();
+	}
+}
+
+TVShell.PanelManager.Item("main").ClearTravelLog();
+TVShell.PanelManager.Item("main").RefreshEnabled=false;
+
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+Sink.AttachEvent(TVShell.UserManager, "OnUserAttributeModified", OnUserAttributeModified);
+
+
+
+</script>
+
+</head>
+
+<body bgcolor="#B6D9F0" class=stretchyBackground stretchyBackground="images/signinbggraphics.jpg" onunload="TVShell.PanelManager.Item('main').RefreshEnabled=true;" onload="OnLoad();">
+
+<div id="mainUser" style="visibility:hidden; position:absolute; top:60px;left:5px;right:15px;">
+	<form name=theForm action="javascript:signIn();">
+		<table cellpadding="0" cellspacing="0" width="100%" height="100%">
+			<tr>
+			    <td id="userIcon" width=142 height=158 valign=top>
+			    </td>
+				<td width=10></td>
+				<td valign=top>
+					<table cellspacing=0 cellpadding=0 width="100%">
+						<tr><td height=10></td></tr>
+						<tr>
+							<td valign=top>
+								<span id="userEmail" class=ellipsis style="font-size:18px;font-weight:bold; width:370px;"></span>
+			  				</td>
+			  			</tr>
+			  			<tr><td height=4></td></tr>
+			  			<script>
+			  				document.write('<tr><td valign=top id="emailIcon" style="font-size:16px;color:#1D1D1D;">');
+			  				if (UserManager.CurrentUser && NewEmail(UserManager.CurrentUser))
+								document.write('New mail');
+							else
+								document.write('&nbsp;');
+							document.write('</td></tr>');
+			  			</script>
+			  			<tr><td height=5></td></tr>
+			  			<tr>
+							<td valign=top>Type your password</td>
+						</tr>
+						<tr><td height=5></td></tr>
+						<tr>
+							<td valiagn=top>
+								<input type=password style="width:284px; height:26px;" NAME="Password1" id=password class=inputPwd onkeyup="passwordKeyUp(this)">
+			    				<msntv:CustomButton submitFormName="theForm" id=signInButton label="Sign In"style="width:82px;vertical-align:bottom;margin-bottom:3px;margin-left:4px;margin-right:0px;"/>
+			  				</td>
+						</tr>
+						<tr><td height=2></td></tr>
+						<tr>
+							<td valign=top
+								<span id=savePWspan><input type=checkbox id=rememberPW onclick="rememberPasswd()">&nbsp;Save password so I don't need to retype it</span></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>
+
+<div id=OtherUsers style="visibility:hidden; position:absolute; top:220px; bottom:45px; left: 5px; right: 5px;">
+	<table cellpadding="0" cellspacing="0" width="100%" height="100%">
+		<tr>
+			<td valign=top style="padding-left:18;">Choose a name to sign in</td>
+		</tr>
+		<tr>
+			<td height=127>
+				<div id="ScrollList" style='position:absolute; width:550px; height:127px; top:29px;'>
+					<msntv:loopingDIV id="UserList" divWidthPX="550" scrollIncrementPX="60" InternalGutterWidth="18" gutterPX="0" cellGapPX="42" />
+				</div>
+				<div id="NonScrollList" style='position:absolute; width:550px; height:127px; top:29px;'></div>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<div id="Offline" style="position:absolute; top:378px; left:0px; right:0px; padding:0px;">
+	<table cellpadding="0" cellspacing="0" height="100%">
+		<tr>
+			<td width=24></td>
+			<td style="color:#E6E6E6;font-size:16px;">My home network</td>
+			<td width=15></td>
+			<td width=42><a href="javascript:accessOfflineApp('msntv:/Photo/PhotoHome.html')"><div id="photo" style="padding:0px; height:42px; width:42px; behavior:url(#default#alphaImageLoader); src:images/Photo.png"></div></a></td><td width=5></td>
+			<td class=homeMediaLink>Photos</td>
+			<script>
+				if (UNDER_NT || TVShell.Property("MusicFeature")) {
+					document.write('\
+						<td width=30></td>\
+						<td width=42><a href="javascript:accessOfflineApp(\'msntv:/Music/MusicHome.html\')"><div id="music" style="padding:0px; height:42px; width:42px; behavior:url(#default#alphaImageLoader); src:images/Music.png"></div></a></td><td width=5></td>\
+						<td class=homeMediaLink>Music</td>');
+				}
+				if (UNDER_NT || TVShell.Property("VideoFeature")) {
+					document.write('\
+						<td width=30></td>\
+						<td width=42><a href="javascript:accessOfflineApp(\'msntv:/Video/VideoHome.html\')"><div id="video" style="padding:0px; height:42px; width:54px; behavior:url(#default#alphaImageLoader); src:images/IconSignInVideo.png"></div></a></td><td width=5></td>\
+						<td class=homeMediaLink>Videos</td>');
+				}
+				if (UNDER_NT || TVShell.Property("GameFeature")) {
+					document.write('\
+						<td width=30></td>\
+						<td width=42><a href="javascript:accessOfflineApp(\'msntv:/Game/GameHome.html\')"><div id="game" style="padding:0px; height:42px; width:54px; behavior:url(#default#alphaImageLoader); src:images/Game2.png"></div></a></td><td width=5></td>\
+						<td class=homeMediaLink>Games</td>');
+				}
+			</script>
+		</tr>
+	</table>
+</div>
+
+<div id="banner" style="position:absolute; top:0px; width:560px; height:60px;">
+	<table height=60 cellpadding="8" cellspacing="0" width="100%">
+	<tr>
+		<td width="103"><IMG style="margin-bottom:6px;" src=images/MSNTVlogoSignin.gif></td>
+		<td align="right" class=topLinks ><a href="ForgotPassword.html"
+    		id=forgot style="visibility:hidden">Forgot your password?</a></td>
+		<td width=58 class=topLinks ><a href=msntv:/Settings/Settings.html id=settings>Settings</a></td>
+		<td width="70" class=topLinks ><A href=msntv:/Help/MSNTV_OFFLINE_TOC_main.htm id=help style="display:inline-block;position:relative;top:-1px;" >Help<SPAN id=helpIcon></SPAN></A></td>
+  </tr>
+</table>
+</div>
+	
+</body>
+</html>

@@ -1,0 +1,56 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="msntv:/HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc">
+<HEAD>
+<TITLE>Welcome</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="msntv:/Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT language="Javascript" src="../Javascript/Panels.js"></SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="msntv:/CSS/Settings.css">
+</HEAD>
+
+<SCRIPT>
+	cancelDemoTimeOut = 10;	// in seconds
+
+function init()
+{
+	setTimeout(startDemo, cancelDemoTimeOut*1000);
+}
+
+function startDemo()
+{
+	var thisPanelName = "DemoPanel";
+	var thisPanel = TVShell.PanelManager.Item(thisPanelName);
+	var demoURL = "file:" + TVShell.Patcher.DemoURL;
+	if (thisPanel) {
+		TVShell.Message("DemoStart.html: start demo at "+demoURL);
+		TVShell.ScreenSaver.Enable = false;
+		location.replace(demoURL);
+		/*var dp = new Panel("demoflash", demoURL,
+								  SYSTEM_PANEL_TYPE, POPUP_PANEL_STYLE,80,0,false);
+           dp.start = new Rectangle(0, 0, TVShell.DeviceControl.ScreenWidth, TVShell.DeviceControl.ScreenHeight);
+		   dp.modal = true;
+		   AddPanel(TVShell.PanelManager, dp);
+	      // PanelManager.Item("updatepan").UserStrData=info;
+	       TVShell.PanelManager.Show("demoflash");*/
+	}
+}
+</SCRIPT>
+
+<BODY onload="init()">
+	<msntv:SettingsHeading label="Welcome" />
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:GotoSignOn();" class=buttonBarButton id="default" label="Cancel" />
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description>
+			Welcome to the RM4100 Retail Demo.
+			<P>
+			This demo will begin in  
+			<SCRIPT> document.write(cancelDemoTimeOut); </SCRIPT>
+			seconds.
+		</DIV>
+	</DIV>
+</BODY>

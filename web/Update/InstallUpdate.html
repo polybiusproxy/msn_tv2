@@ -1,0 +1,207 @@
+<HTML xmlns:msntv>
+
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc"> 
+	<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc"> 
+	<?IMPORT namespace="msntv" implementation="../HTC/Progress.htc"> 
+
+<head>
+	<TITLE>Install Update</TITLE>
+
+
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/TVShell.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ServiceList.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+	<style type="text/css">
+@import url(msntv:/CSS/Base.css);
+
+body {
+	background-image: none;
+	font-size: 18px;
+	color: #07214D;
+	margin: 15px;
+}
+
+a:link {
+	color: #14224B;
+}
+a:visited {
+	color: #14224B;
+}
+a:active {
+	color: #14224B;
+}
+a:hover {
+	color: #14224B;
+}
+
+td 
+{
+	font-size: 18px;
+	color: #1D1D1D;
+}
+
+.sidebarButton {
+	font-size: 16px;
+	color: #002157;
+	width: 100%;
+	text-align: left;
+	margin: 0px 0px 4px 0px;
+}
+
+.bottombarButton {
+	font-size: 16px;
+	color: #002157;
+	text-align: center;
+	margin: 0px 0px 0px 8px;
+}
+
+.topGradient {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 0%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.heading {
+	font-size: 21px;
+	line-height: 23px;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: center;
+	padding-left: 8px;
+	color: #F2F2F2;
+}
+
+.subHeading {
+	padding: 0px 8px;
+	color: #000000;
+}
+
+.content {
+	font-size: 18px;
+	color: #1D1D1D;
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #678CCD;
+	starttransparency: 65%;
+	endtransparency: 65%;
+	angle: 0;
+}
+
+.sidebar {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 65%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.linkText 
+{
+	font-size: 18px;
+	color: #14224B;
+}
+
+#Buttons {
+	visibility: hidden;
+	position: absolute;
+	left: 0px;
+	top: 267px;
+	width: 152px;
+	height:43px;
+}
+
+
+#progress {
+	width: 340px;
+	height: 8px;
+	color: #ff0000;
+	image: url(msntv:/Shared/Images/ProgressBarCustomFill.png);
+}
+
+
+
+</style>
+	<script>
+	var Countdown = 0;
+	var DelayTimeoutID = 0;
+	var RebootDelay = 30;
+
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+	function ShowStatus(msg)
+	{
+		document.all.UpdateStatus.innerText = msg;
+	}
+		
+	function Reboot()
+	{
+		TVShell.Reboot();
+		return true;
+	}
+		
+	function timerUpdate()
+	{
+		clearTimeout(DelayTimeoutID);
+		Countdown = Countdown - 1;
+		ShowStatus("Will begin installation in " + Countdown + " seconds.");
+		if ( Countdown == 0 ) {
+			document.all["progress"].percentComplete = 100;
+			Reboot();
+		} else {
+			document.all["progress"].percentComplete = ((RebootDelay-Countdown)*100)/RebootDelay;
+			DelayTimeoutID = setTimeout("timerUpdate()", 1000);
+		}
+	}
+
+	function StartCountdown()
+	{
+		Sink.AttachEvent(TVShell,                   "OnPowerOff",            Reboot);
+		TVShell.ScreenSaver.Enable = false;
+		Countdown = RebootDelay;
+		DelayTimeoutID = setTimeout("timerUpdate()", 1000);
+	}
+
+	</script>
+	<LINK REL="StyleSheet" TYPE="text/css" HREF="msntv:/Shared/CSS/SynchMan.css">
+
+</HEAD>
+<BODY onload="StartCountdown()">
+	<SCRIPT>
+	OpenSettingsTable( "Ready to install update" , "" , "" );
+	</SCRIPT>
+	<DIV id="buttonBar">
+		<msntv:CustomButton onclick="Reboot()" class="buttonBarButton" id="Off" label="Install Now" />
+	</DIV>
+	<DIV id="nonScrollArea">
+		<DIV class="description">
+					The update has completed downloading. 
+					Your <SCRIPT>document.write(ProductShortName);</SCRIPT> will now install the update, 
+					which takes about 3 minutes. Nothing will be visible on the screen during the installation although
+					the front panel lights will flash. When the installation is finished your 
+					<SCRIPT>document.write(ProductShortName);</SCRIPT> 
+					will restart and the Sign-in page will be displayed.
+					<br><br>
+					<font color=#ccffff>
+					<EM>Do not power off or unplug your <SCRIPT>document.write(ProductShortName);</SCRIPT> until this process is complete.</EM> </font>
+					<br>
+		</DIV>
+		<div style="position:absolute;top:320px" id="progressbar" class="progress">
+			<msntv:progressbar id="progress" name="Automatic Restart"></msntv:progressbar>
+		</div>
+		<div style="position:absolute;top:200px" id="Message" class="description">
+		
+		</div>
+		<div style="position:absolute;top:270px" id="UpdateStatus" class="description">
+			
+		</div>
+	</DIV>
+	<SCRIPT>
+	CloseSettingsTable();
+	</SCRIPT>
+</BODY>
+
+

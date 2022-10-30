@@ -1,0 +1,1068 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="msntv:/HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/MediaToolbar.htc">
+<?import namespace="msntv" implementation="../HTC/SlideshowPromo.htc">
+<?import namespace="msntv" implementation="../HTC/MSNSlideShow.htc"> 
+<?import namespace="msntv" implementation="../HTC/RecentMedia.htc"> 
+<head>
+	<title>Video Home</title>
+	<link rel=StyleSheet type="text/css" href="../css/Base.css">	
+	<link rel=StyleSheet type="text/css" href="../css/Video.css">
+	<style type="text/css">
+
+	.OfflineNormal 
+	{
+		font-family: Segoe TV; 
+		font: 17px bold; 
+		color: #eba206;
+	}
+
+	.OfflineBold 
+	{
+		font-family: Segoe TV; 
+		font: 26px bold; 
+		color: #fccd6a;
+	}
+
+	.OfflineLinks
+	{
+		font-family: Segoe TV; 
+		font: 18px bold; 
+		color: #e6e6e6;
+	}
+
+	#BBLeftDivId
+	{
+		position: absolute;
+		top: 33px;
+		left: 0px;
+		width: 238px;
+		height: 306px;
+		background: url(msntv:/Video/Assets/VideoHomeBBSlideB.jpg);
+	}
+
+	#BBRightDivId
+	{
+		position: absolute;
+		top: 33px;
+		left: 240px;
+		width: 320px;
+		height: 306px;
+		background: url(msntv:/Video/Assets/VideoHomeBBSlide.jpg);
+	}
+
+	#NBRightDivId
+	{
+		position: absolute;
+		top: 45px;
+		left: 240px;
+		width: 320px;
+		height: 306px;
+	}
+
+	.OfflineNBRightDivNormal 
+	{
+		font-family: Segoe TV; 
+		font: 18px bold; 
+		color: #e6e6e6;
+	}
+
+	.OfflineNBRightDivLinks
+	{
+		position:relative;
+		top:4px;
+		left:-4px;
+		font-family: Segoe TV; 
+		font: 18px bold; 
+		color: #e6e6e6;
+	}
+
+	.OfflineNBRightDivEm
+	{
+		color: #eba206;
+	}
+
+	body
+	{
+		font-family: Segoe TV;
+		overflow: hidden;
+		margin: 0px;
+		padding: 0px;
+		font-size: 18px;
+		color: white;
+		background: url(msntv:/Video/Assets/VideoHomeTop.jpg);
+		filter: blendTrans(duration=0.01); 
+	}
+
+	div
+	{
+		border: 0;
+		margin: 0px;
+		padding: 0 ;
+	}
+
+	table
+	{
+		padding: 0 0 0 0;
+		margin: 0px;
+		border-spacing: 0;
+		border: 0;
+	}
+
+	td
+	{
+		padding: 0px;
+		color: white;
+	}
+
+	.Hidden
+	{
+		display: none;
+	}
+
+	.Visible
+	{
+		display: block;
+	}
+
+	<!--                                                      -->
+	<!--                                                      -->
+	<!-- Titlebar                                             -->
+	<!--                                                      -->
+	<!--                                                      -->
+	#TitleDivId 
+	{
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 560;
+		height: 33;
+
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+	}
+
+	#videoHelp
+	{
+		padding: 0;
+		color: #F2F2F2;
+	}
+
+	#videoHelpIcon
+	{
+		margin-left: 4px;
+		margin-right: 8px;
+		behavior: url(#default#alphaImageLoader);
+		src: url(msntv:/Shared/images/Icon_Help_RelatedLink.png);
+	}
+
+	.mainTitle 
+	{
+		font-size:21px;
+		font-family: Segoe TV;
+		xfont-family:Segoe;
+		color: #ffb6b6;
+	}
+	.subTitle 
+	{
+		font-size:21px;
+		font-family: Segoe TV;
+		color: #f2f2f2;
+	}
+	<!--                                                      -->
+	<!--                                                      -->
+	<!-- Home Network Discovery                               -->
+	<!--                                                      -->
+	<!--                                                      -->
+	#HNDivId 
+	{
+		position: absolute; 
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		left: 0;
+		top: 33px;
+		width: 238px;
+
+		behavior: url(msntv:/HTC/RecentMedia.htc);
+	}
+	.HNFullHeight 
+	{
+		display: block;
+		height: 306px;
+	}
+	.HNNormalHeight
+	{
+		display: block;
+		height: 148px;
+	}
+	<!--                                                      -->
+	<!--                                                      -->
+	<!-- Cinema Now Promo                                     -->
+	<!--                                                      -->
+	<!--                                                      -->
+	.#SSDivId
+	{
+		position: absolute;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+	}
+	.SSLowerLeft
+	{
+		display: block;
+		top: 181px;
+		left: 0px;
+		width: 238px;
+		height: 158px;
+		autoStart: false;
+	}
+	.SSFullHeight
+	{
+		display: block;
+		left: 0;
+		top: 33px;
+		width: 238px;
+		height: 306px;
+		autoStart: false;
+	}
+	<!--                                                      -->
+	<!--                                                      -->
+	<!-- MSN Slide Port                                       -->
+	<!--                                                      -->
+	<!--                                                      -->
+	#cvpTable
+	{
+		width:100%;
+		overflow: hidden;
+	}
+	.CVPNormal 
+	{
+		display: block;
+		left: 241;
+		top: 33;
+		width: 319;
+		height: 306px;
+	}
+	<!--                                                      -->
+	<!--                                                      -->
+	<!-- Media Toolbar                                        -->
+	<!--                                                      -->
+	<!--                                                      -->
+	#ToolDivId 
+	{
+		position: absolute; 
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		height: 22px;
+	}
+	.ToolDivHnNOffline
+	{
+		display: block;
+		top: 370px;
+		left: 45px;
+		width: 500px;
+	}
+	.ToolDivHnNOnline
+	{
+		display: block;
+		top: 352px;
+		left: 45px;
+		width: 500px;
+	}
+	.ToolDivHnYOffline
+	{
+		display: block;
+		top: 370px;
+		left: 15px;
+		width: 530px;
+	}
+	.ToolDivHnYOnline
+	{
+		display: block;
+		top: 352px;
+		left: 15px;
+		width: 530px;
+	}
+	#ToolDivBgId 
+	{
+		position: absolute; 
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		top: 339;
+		left: 0px;
+		width: 560px;
+	}
+	.ToolDivBgOffline
+	{
+		display: block;
+		height: 81px;
+		background: url(msntv:/Video/Assets/VideoHomeNavbarOffline.jpg);
+	}
+	.ToolDivBgOnline
+	{
+		display: block;
+		height: 45px;
+		background: url(msntv:/Video/Assets/VideoHomeNavbarOnline.jpg);
+	}
+</style>
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<script language="Javascript" src="../Javascript/parameters.js"></script>
+<script language="javascript" src="../Javascript/DMRCommon.js"></script>
+<script language="javascript" src="../Javascript/DMRHome.js"></script>
+<script language="Javascript" src="../Javascript/DMREnumerate.js"></script>
+<script language="Javascript" src="../Javascript/ContentPaneHelp.js"></script>
+<script language="Javascript" src="../Javascript/ConnectionManager.js"></script>
+<script language="Javascript" src="../Javascript/DiplomaSettings.js"></script>
+<script language="Javascript" src="../Javascript/ProgressPanel.js"></script>
+<script language="Javascript" src="msntv:/Javascript/SigninPanel.js"></script>
+
+<script language="Javascript">
+var V_NONE= 'Hidden';
+var V_SHOW= 'Visible';
+var C_PAR = "Parent";
+var C_KID = "Kid";
+
+var MT_HN    = 2;
+var MT_BB_L  = 3;
+var MT_BB_R  = 4;
+var MT_NB_R  = 5;
+var MT_SS    = 6;
+var MT_VP    = 7;
+
+var FT_SS  = 2;
+var FT_VP   = 3;
+var ST_OFF_NB = "NBOffline";
+var ST_OFF_BB = "BBOffline";
+
+var forceFullOnlineState = null;
+function GetFullOnlineState()
+{
+	if (forceFullOnlineState)
+		return forceFullOnlineState;
+
+	var res = GetOnlineState();
+
+	if (res == ST_OFF)
+		res = GetWanConnectionType() == CONN_BB ? ST_OFF_BB : ST_OFF_NB;
+
+	return res;
+}
+
+if ( GetFullOnlineState() == ST_ON_BB )
+{
+	var old = TVShell.UserManager.CurrentDiplomaSettings;
+	if ( (old & MDIPLOMA_VIDEOHOMETOUR) == 0 )
+		document.location = "msntv:/Video/CustomDiploma.html";
+}
+
+//////////////////////////////////////////////////////////////////////
+//
+// The following SYTLE_TABLE controls what controls are displayed and where.
+// The correct entry is picked based on whether the user:
+//   o) has a home network, 
+//   o) has a broadband or narrowband connection
+//   o) is online or offline.
+//
+//////////////////////////////////////////////////////////////////////
+var STYLE_TABLE= [
+  //                  HNDivId,      BBLeftDiv, BBRightDiv,  NBRightDivId, SSDivId,       CVP
+  [ HN_Y, ST_ON_NB, 'HNFullHeight',   V_NONE,    V_NONE,    V_SHOW,        V_NONE,        V_NONE ],
+  [ HN_Y, ST_ON_BB, 'HNNormalHeight', V_NONE,    V_NONE,    V_NONE,       'SSLowerLeft', 'CVPNormal' ],
+  [ HN_Y, ST_OFF_NB,'HNFullHeight',   V_NONE,    V_NONE,    V_SHOW,        V_NONE,        V_NONE ],
+  [ HN_Y, ST_OFF_BB,'HNFullHeight',   V_NONE,    V_SHOW,    V_NONE,        V_NONE,     V_NONE ],
+
+  [ HN_N, ST_ON_NB, V_NONE,           V_NONE,    V_NONE,    V_SHOW,        V_NONE,		V_NONE ],
+  [ HN_N, ST_ON_BB, V_NONE,           V_NONE,    V_NONE,    V_NONE,       'SSFullHeight','CVPNormal' ],
+  [ HN_N, ST_OFF_NB,V_NONE,           V_NONE,    V_NONE,    V_SHOW,        V_NONE,		V_NONE ],
+  [ HN_N, ST_OFF_BB,V_NONE,           V_SHOW,    V_SHOW,    V_NONE,        V_NONE,     V_NONE ]
+];
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// The following FEED_TABLE controls what data feeds to use for each
+// control. The correct entry is picked based on whether the user:
+//   o) has a home network, 
+//   o) has a broadband or narrowband connection
+//   o) is online or offline.
+//
+//////////////////////////////////////////////////////////////////////
+//
+//The following feeds are described in the video spec
+//
+var TEST_FEED_URL="file:/web/Media/Assets/TestFeed.xml";
+
+var CN_FEED =["home::backendproxy","?mid=MSNTV&ds=64&guid=&feature=videohomepage_cn1"];
+
+//Offline URLs to use for the slideshow promo HTCs.
+
+// The MSN slide port feeds
+var VP_FEED = ["home::backendproxy","?contentType=userPlaylist&mid=Apollo&ds=64&feature=videohomepage_msnv1"];//["","playlist.js"];
+
+//The offline URLs to use for the MSN slide port.
+var OFFLINE_VIDEO_URL = "";
+
+var STYL_CNFH="FullHeightLeftSlideshowPromoStyleSheet.xsl";
+var STYL_BL="BottomLeftSlideshowPromoStyleSheet.xsl";
+
+var FEED_TABLE = [
+  //HN?, ON/OFF,        SS-FEED,          VID-FEED
+  [HN_Y, ST_ON_NB, 		null,			   	null ],
+  [HN_Y, ST_ON_BB, [CN_FEED,STYL_BL],    	VP_FEED],
+  [HN_Y, ST_OFF_NB,		null,			   	null ],
+  [HN_Y, ST_OFF_BB,		null,			   	null ],
+  [HN_N, ST_ON_NB, 		null,			  	null ],
+  [HN_N, ST_ON_BB, [CN_FEED,STYL_CNFH],  	VP_FEED],
+  [HN_N, ST_OFF_NB,		null,			  	null ],
+  [HN_N, ST_OFF_BB,		null,			  	null ],
+];
+
+var forceHasVisitedHomeNetwork = null;
+function GetHasVisitedHomeNetwork()
+{
+	if (forceHasVisitedHomeNetwork)
+		return forceHasVisitedHomeNetwork;
+
+	var res= GetHomeNetworkStatus() == HN_Y
+	    && TVShell.MediaHistory != null 
+	    && TVShell.MediaHistory.Count('video') > 0 ? HN_Y : HN_N;
+	return res;
+}
+
+function ToFeedURL( nm, feed, defURL )
+{
+	var url = null;
+	if ( feed && feed.length ) 
+	{
+		var serviceName = feed[0];
+	
+		if ( serviceName && serviceName != "" ) {
+			var entry = TVShell.ActiveServiceList.Item(serviceName);
+			if (entry && entry.URL) {
+			    var now = new Date();
+				var hr = ( now.getHours() > 9 ? "" + now.getHours() : "0" +now.getHours());
+				var min = ( now.getMinutes() > 9 ? ":" + now.getMinutes() : ":0" +now.getMinutes());
+				url = entry.URL + feed[1] + "&time=" + hr + min;
+			} else if ( entry == null ) {
+				Warn( "MISSING SERVICE ENTRY '" + serviceName + "'" );
+			} else {
+				Warn( "MISSING URL IN SERVICE ENTRY '" + serviceName + "'" );
+			}
+		} else {
+			url = feed[1];
+		}
+	}
+
+	if ( !url )
+		url = defURL;
+	return url;
+}
+
+function SetNavEntries()
+{
+	var toolbar = document.all.toolbarId;
+
+	toolbar.removeAllTools();
+	var onlineState = GetFullOnlineState();
+	if ( onlineState == ST_ON_BB || onlineState ==  ST_OFF_BB )
+	{
+		toolbar.addTool( 'MSN&nbsp;Video', 'home::videoplus', '' );
+		//toolbar.addToolWithScript( 'CinemaNow', 'GotoCinemaNow()' );
+	}
+}
+
+function GetStyleEntry( hnState, onlineState )
+{
+	for (var i = 0 ; i < STYLE_TABLE.length; i++)
+	{
+		if ( STYLE_TABLE[i][0] == hnState && STYLE_TABLE[i][1] == onlineState )
+		{
+			return STYLE_TABLE[i];
+		}
+	}
+	Warn( "CAN'T FIND STYLE ENTRY FOR hnState="
+            +hnState + " onlineState=" + onlineState );
+	return STYLE_TABLE[STYLE_TABLE.length - 1];//Use the last entry
+}
+
+function GetFeedSubEntry( nm, feedEntry, idx )
+{
+	var res = feedEntry !=null && feedEntry.length != null && feedEntry.length > idx? feedEntry[idx] : null;
+
+	return res;
+}
+
+function GetFeedEntry( hnState, onlineState )
+{
+	for (var i = 0 ; i < FEED_TABLE.length; i++)
+	{
+		if ( FEED_TABLE[i][0] == hnState
+			 && FEED_TABLE[i][1] == onlineState )
+		{
+			return FEED_TABLE[i];
+		}
+	}
+
+	Warn( "CAN'T FIND FEED ENTRY FOR hnState="
+	      + hnState + " onlineState=" + onlineState );
+	return FEED_TABLE[FEED_TABLE.length - 1];
+}
+
+var forceAdultState = null;
+function GetAdultState()
+{
+	if ( forceAdultState )
+		return forceAdultState;
+
+	var userType = C_KID;
+	var curUser = TVShell.UserManager.CurrentUser;
+
+	if ( curUser && curUser.IsAuthorized )
+	{
+		try {
+			userType = TVShell.PolicyManager && TVShell.PolicyManager.IsKidsAccount() ? C_KID :C_PAR;
+		} catch (ex) {
+			try {
+				var	entry = TVShell.ActiveServiceList.Item("contentfilter::root");
+				Debug( "Content filtering = " + (entry?entry.URL:"no entry"));
+				userType = entry && entry.URL ?  C_KID : C_PAR;
+			} catch (ex) {
+				Warn( 'UNABLE TO FIND PolicyManager.IsKidsAccount' );
+				userType = C_KID;
+			}
+		}
+	}
+
+	return userType;
+}
+
+function SetMode( hnState, onlineState )
+{
+	//Setup the tool entries first before configuring the layout
+	//as the layout changes depending upon how many tools there are.
+	SetNavEntries();
+
+	Layout( hnState, onlineState );
+
+	var feed = GetFeedEntry( hnState, onlineState );
+	if ( document.all.cvpTable.style.display != "none" )
+	{
+		document.all.CVP.SetDataSource(
+			ToFeedURL("PlaylistURL", feed[FT_VP],OFFLINE_VIDEO_URL) );
+		setTimeout( function() {
+				document.all.CVP.LoadPlaylist();
+				}, 1 );
+	}
+
+	document.all.SSPromo.sourceURL = ToFeedURL("SSURL",GetFeedSubEntry("SS:0",feed[FT_SS],0),TEST_FEED_URL);
+	ssURL = GetFeedSubEntry("SS:1",feed[FT_SS],1);
+	ssURL = ssURL ? ssURL : STYL_BL;
+
+	document.all.SSPromo.stylesheetURL = ssURL;
+	var nextSlide = (TVShell.videoHomePageCurrentIndex? TVShell.videoHomePageCurrentIndex: 0);
+	document.all.SSPromo.startIndex = nextSlide;
+	document.all.SSPromo.open();
+
+	var autoStart = GetStyle(document.all.SSDivId.className).autoStart;
+	
+	if ( autoStart == "true" )
+	{
+		setTimeout( function() {
+				document.all.SSPromo.play();
+				}, 1 );
+	}
+	else
+	{
+		setTimeout( function() {
+				document.all.SSPromo.pause();
+				}, 1 );
+	}
+}
+
+function UseOnlineMediaToolbar()
+{
+	//GetOnlineState() != ST_OFF
+	return TVShell.PanelManager.Item("statusbar")!= null
+		&& TVShell.PanelManager.Item("statusbar").State == 0;
+}
+
+function Layout( hnState, onlineState )
+{
+	var hnDiv = document.all.HNDivId;
+	var bbDivL = document.all.BBLeftDivId;
+	var bbDivR = document.all.BBRightDivId;
+	var nbDivR = document.all.NBRightDivId;
+	var ssDiv = document.all.SSDivId;
+	var toolDiv = document.all.ToolDivId;
+	var toolDivBg = document.all.ToolDivBgId;
+
+	var style = GetStyleEntry( hnState, onlineState );
+	hnDiv.className =  style[MT_HN];
+
+	bbDivL.className = style[MT_BB_L];
+	bbDivR.className = style[MT_BB_R];
+	nbDivR.className = style[MT_NB_R];
+
+	ssDiv.className = style[MT_SS];
+
+	CVPSetStyle( style[MT_VP] );
+
+	var toolbar = document.all.toolbarId;
+	toolDivBg.className =
+		GetOnlineState() != ST_OFF ? 'ToolDivBgOnline' :'ToolDivBgOffline';
+
+	if (toolbar.numCells > 2)
+	{
+		toolbar.itemStyle="height: 25px; font-family: Segoe TV; font: 18px bold; color:  #e6e6e6;padding: 0;overflow-y:hidden;margin: 0;";
+		toolbar.extraInterCellPadding="102";
+		toolDiv.className =
+			UseOnlineMediaToolbar() ? 'ToolDivHnYOnline' :'ToolDivHnYOffline';
+	}
+	else
+	{
+		toolbar.itemStyle="height: 25px; font-family: Segoe TV; font: 18px bold; color:  #e6e6e6;padding: 0;overflow-y:hidden;margin: 0;";
+		toolbar.extraInterCellPadding="155";
+		toolDiv.className =
+			UseOnlineMediaToolbar() ? 'ToolDivHnNOnline' :'ToolDivHnNOffline';
+	}
+
+	toolbar.open();//This does a refresh as well.
+}
+
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+var linkNum = 0;
+
+function SetDefaultFocus()
+{
+	try
+	{
+		if ( document.all.cvpTable.style.display != "none" )
+			document.all.CVP.FocusOnPlay();
+		else
+			document.all["ToolItem-Devices"].focus();
+	}
+	catch(ex)
+	{
+		try
+		{
+			document.all["ToolItem-Devices"].focus();
+		}
+		catch(ex2)
+		{
+		}
+	}
+}
+
+var foundRules = new Object();
+function GetStyle( tag )
+{
+	var rule = foundRules[tag];
+	if ( rule )
+		return rule != "-" ? rule : null;
+
+	var style;
+	var classForm = "." + tag;
+	var idForm = "#" + tag;
+	for (var i = 0; i < document.styleSheets.length; i++)
+	{
+		style = document.styleSheets[i];
+		for ( var j in style.rules )
+		{
+			if ( style.rules[j].selectorText == tag 
+			     ||style.rules[j].selectorText == classForm 
+			     ||style.rules[j].selectorText == idForm ) {
+				foundRules[tag] = style.rules[j].style;
+				return foundRules[tag];
+			}
+		}
+	}
+	foundRules[tag] = "-";
+	return null;
+}
+
+function CVPSetStyle( tag )
+{
+	var style = GetStyle( tag );
+	var CVP = document.all.CVP;
+	var cvpTable = document.all.cvpTable;
+
+	if ( style )
+	{
+		if (tag != V_NONE)
+		{
+			var CVP_x = parseInt(style.left);
+			var CVP_y = parseInt(style.top);
+			var CVP_w = parseInt( style.width );
+			var CVP_h = parseInt( style.height );
+			cvpTable.style.display = 'block';
+			Debug( "CVP.SetDimensions(left=" + CVP_x +", top=" + CVP_y
+			       + ", width=" + CVP_w + ", height=" + CVP_h
+				   + ")" );
+			CVP.SetDimensions( CVP_x, CVP_y, CVP_w, CVP_h );
+		} else {
+			cvpTable.style.display = 'none';
+			Debug( "cvpTable.style.display = none" );
+		}
+	}
+	else 
+	{
+		Warn( "	CVPSetStyle(" +tag + "): error style not found" );
+	}
+}
+
+function Warn(msg)
+{
+	TVShell.Message( "VideoHome.html: WARNING! " + msg );
+}
+
+function Debug(msg)
+{
+	TVShell.Message( "VideoHome.html:" + msg );
+}
+
+if (!UNDER_CE)
+	GetStyle('NBRightDivId').top = 30;
+
+function OnLoad()
+{
+	document.all.videoHelp.href = GetDMRHelpURL("MSNTV_TRS_TOC_Videos");
+	document.all.CVP.Init( "n"/*y=ie, n=not*/);
+
+	document.all.TitleDivId.style.display = 'block';
+	document.body.style.display = 'block';
+
+	SetMode( GetHasVisitedHomeNetwork(), GetFullOnlineState() );
+
+	setTimeout(SetDefaultFocus,500);
+
+	// update unc online state and shares. Note: Only the media toolbar
+	// cares about the changes and it attaches its own event handlers.
+	setTimeout(SynchronizeShares,1000);
+}
+
+function handleMSNPlaylistLoad()
+{
+	CVP.Start();
+}
+
+function handleMSNSlideHTCError(message, code)
+{
+}
+
+function handleMSNClickPlay(params)
+{
+	ShowVideoWithParams(params);
+}
+
+function ShowVideoWithParams(params)
+{
+	var	entry = TVShell.ActiveServiceList.Item("home::videoplus");
+	
+	if (entry && entry.URL) {
+		var url = entry.URL + "?WanProvider=BYOAEN&" + params;
+		GotoURL(url); 
+	} else {
+		alert( "Unable to connect MSN Video" );
+	}
+}
+
+function truncate( text )
+{
+	var MAX = 31;
+	var MIN = 20;
+	if (text.length > MAX )
+	{
+		var o = text;
+		for (var j=MAX-3;j>MIN;j--)
+		{
+			if (text.charAt(j) == ' ')
+				break;
+		}
+		text = text.substring(0,j) + "...";
+		TVShell.Message( 'VideoHome.html: truncated "' + o + '" to "'+text+'"');
+	}
+	return text;
+}
+
+function handleTransition()
+{
+	var SSPromo = document.all.SSPromo;
+	TVShell.videoHomePageCurrentIndex =
+		(SSPromo.currentIndex+1) < SSPromo.numItems ? 
+			SSPromo.currentIndex + 1 : 0;
+
+	var text = SSPromo.all['promoTextSpan'];
+
+	if ( text == null ) 
+		return;//There is no promo text to truncate.
+
+	var isArray = false;
+	try { if (text.length != null && text.length > 0) isArray = true; } catch (ex) {}
+	if ( isArray == false )
+	{
+		text.innerText = truncate(text.innerText);
+	}
+	else
+	{
+		for (var i = 0; i < text.length; i++)
+		{
+			text[i].innerText = truncate(text[i].innerText);
+		}
+	}
+}
+
+function ToCinemaNowURL( url )
+{
+	var str = "contentfiltering=" + (GetAdultState()==C_KID? "on" : "off");
+	url = url + (url.indexOf("?")>= 0 ? "&" : "?") + str;
+	return url;
+}
+ 
+
+function GotoCinemaNow()
+{
+	var entry = TVShell.ActiveServiceList.Item('home::cinemanow');
+	if (entry && entry.URL)
+	{
+		var url = ToCinemaNowURL(entry.URL);
+		//We add a service entry for the full cinemanow url so that we
+		//can use GotoTarget() function.
+		var serviceName = "cinemanow::fullurl";
+		var entry = TVShell.BuiltinServiceList.Add(serviceName);
+		entry.URL = url;
+		GotoTarget( serviceName, "", true );
+	}
+}
+ 
+function handleSlideEvent()
+{
+	if ( event.param0 == "GotoURL" )
+	{
+		var url = event.param1;
+		if ( url.indexOf("cinemanow") > 0)
+			url = ToCinemaNowURL(url);
+
+		if (url)
+			GotoURL(url);
+		else 
+			GotoTarget("Video::Home", "", true);
+	}
+	else if ( event.param0 == "ShowVideo" )
+		ShowVideoWithParams("i=" + encodeURIComponent(event.param1) );
+	else
+		alert( "Unhandled Slide Event . param0='" +event.param0 + "'" );
+}
+
+//This is for debugging purposes.
+
+var forceIndex = null;
+var T=[
+	[ ST_ON_BB, HN_Y ],
+	[ ST_ON_BB, HN_N ],
+
+	[ ST_ON_NB, HN_Y ],
+	[ ST_ON_NB, HN_N ],
+
+	[ ST_OFF_BB,HN_Y ],
+	[ ST_OFF_BB,HN_N ],
+
+	[ ST_OFF_NB,HN_Y ],
+	[ ST_OFF_NB,HN_N ]
+];
+
+function nextModeAndOnline() 
+{
+	if (forceIndex == null || (++forceIndex) >= T.length )
+	{
+		forceIndex=0;
+	}
+	return T[forceIndex];
+}
+
+function DoLayout() 
+{
+	var nextState=T[forceIndex];
+	forceFullOnlineState = nextState[0];
+	forceOnlineState = (nextState[0] == ST_OFF_BB || nextState[0]== ST_OFF_NB? ST_OFF : nextState[0]);
+	forceHomeNw = nextState[1];
+
+	UpdateLayoutText();
+	SetMode( GetHasVisitedHomeNetwork(), GetFullOnlineState() );
+}
+
+function UpdateLayoutText()
+{
+	var os = GetFullOnlineState();
+	if ( os == ST_ON_NB )
+		os="NB On";
+	else if ( os == ST_OFF_NB )
+		os="NB Off";
+	else if ( os == ST_ON_BB )
+		os = "BB On";
+	else if ( os == ST_OFF_BB )
+		os = "BB Off";
+
+	var hn = ( GetHomeNetworkStatus() == HN_Y ? "HN_Y" : "HN_N" );
+
+	document.all.layout.innerText = ' ' + os + ' ' + hn;
+}
+
+function NextLayout() 
+{
+	if (forceIndex == null || (++forceIndex) >= T.length )
+	{
+		forceIndex=0;
+	}
+	DoLayout();
+}
+
+function PrevLayout() 
+{
+	if (forceIndex == null || (--forceIndex) < 0 )
+	{
+		forceIndex=T.length - 1;
+	}
+	DoLayout();
+}
+
+devpasswd= [68,69,86,77,79,68,69];
+devpasswdi=-1;
+function HandleKey()
+{
+	if ( event.keyCode == devpasswd[devpasswdi+1] )
+	{
+		devpasswdi++;
+	}
+	else if ( devpasswdi < 0 || event.keyCode != devpasswd[devpasswdi] )
+	{
+		devpasswdi = -1;
+	}
+
+	if ( (devpasswdi+1) == devpasswd.length ) 
+	{
+		document.all.devId.style.display='block';
+		UpdateLayoutText();
+	}
+}
+
+</script>
+			
+<body topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 onload="OnLoad();" >
+
+<table id='cvpTable' cellspacing=0 cellpadding=0 class='Hidden' >
+<tr>
+<td>
+	<msntv:MSNSlideShow
+				ID='CVP' 
+				TextColor=ff9a9a
+				BrandTextColor=817476
+				SlideCount='5' 
+				SlideInterval='15000' 
+
+				OnLoadPlaylist="handleMSNPlaylistLoad()" 
+				OnClickPlay="handleMSNClickPlay(window.event.guids)" 
+				OnError="handleMSNSlideHTCError(window.event.message,window.event.code)" 
+	/>
+
+</td></tr></table>
+<div id='HNDivId' app='video' class='Hidden'></div>
+
+<div id='BBLeftDivId' class='Hidden'>
+</div>
+
+<div id='BBRightDivId' class='Hidden'>
+</div>
+
+<div id='NBRightDivId' class='Hidden'>
+<div style='padding-left: 25;padding-top:10;'>
+<table cellpadding='0' cellspacing='0' height='300'>
+  <tr>
+   <td valign='top'>
+<span class='OfflineNBRightDivNormal'>
+Videos over dial-up are often<br/>
+slow and choppy. (To play<br/>
+smoothly, videos need a faster<br/>
+connection.)<br/>
+</span>
+  </td>
+  </tr>
+  <tr>
+   <td valign='top'>
+<span class='OfflineNBRightDivNormal'>
+If you want to play videos using<br/>
+dial-up, here are a few hints:<br/>
+</span>
+  </td>
+  </tr>
+  <tr height='8'><td> </td></tr>
+  <tr>
+   <td valign='top'>
+<ul>
+<li><span class='OfflineNBRightDivLinks'>When a Web page asks you to choose a 
+player, choose <em><br/>
+<span class='OfflineNBRightDivEm'>Windows Media</span></em>.</span>
+<li style='padding-top: 8;'><span class='OfflineNBRightDivLinks'>If you're asked for your connection speed,
+choose <em><br/>
+<span class='OfflineNBRightDivEm'>dial-up</span></em> or <em><span class='OfflineNBRightDivEm'>56k</span></em>.</span>
+</ul>
+    </td>
+  </tr>
+</table>
+</div>
+</div>
+
+<div id='SSDivId' class='Hidden' >
+    <msntv:slideShowPromo  id='SSPromo'
+			idOfElementWithPromoClickHandler='promoLink'
+			styleSheetURL='BottomLeftSlideshowPromoStyleSheet.xsl'
+			sourceURL=''
+			autoAdvanceInterval='15'
+			autoStart='false'  
+			onTransition='handleTransition();'
+			onSlideEvent='handleSlideEvent();'
+		    sourceUnavailableText="We're currently unable to connect to CinemaNow. Please try again later."
+		    stylesheetUnavailableText="We're currently unable to display previews of CinemaNow. Please try again later."
+		     />
+</div>
+<div id='TitleDivId' class='ToolDivHnYOffline'>
+	<table style='width:100%;' cellspacing=0 cellpadding=0>
+		<tr>
+			<td style='height:30px;'>
+				<table style='width:100%;height:100%;' cellspacing=0 cellpadding=0>
+					<tr>
+						<td style='text-align:left; padding-left:15px; width: 400px;height: 28px;'>
+							<font class='mainTitle'>Video</font>
+							<font class='subTitle'>&nbsp;Home</font>
+						</td>
+						<td style='text-align:right; padding-right:10px;'>
+						  <a id='videoHelp' href='' >Help <span id='videoHelpIcon'></span></a>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<div id='ToolDivBgId' class='ToolDivBgOffline'><!-- 45 -->
+</div>
+
+<div id='ToolDivId' ><!-- 45 -->
+	<msntv:mediaToolbar toolbarWidth='560' divWidthPX='560' id='toolbarId' 
+	     application="video"  useArrows="false"
+		 isScrollable="false"
+		 extraInterCellPadding="102"
+		 itemWidth='155'
+		 divAlign='left'
+		 itemStyle='height: 25px; font-family: Segoe TV; font: 18px bold; color: #e6e6e6; padding: 0;overflow-y:hidden;margin: 0;'
+		 />
+</div>
+
+<span id='devId' style='color: white; display: none; position: absolute; top: 0; left: 140px;' ><font size=1>Layout<a onClick='PrevLayout()'>&lt;&lt;P&gt;&gt;</a><a onClick='NextLayout()' >&lt;&lt;N&gt;&gt;</a> :<span id='layout'></span></font></span>
+
+	</body>
+</html>

@@ -1,0 +1,139 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?import namespace="msntv" implementation="../HTC/ScrollList.htc">
+<HEAD>
+<TITLE>Pick Certificate</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<style>
+
+.CertSpan {
+	width:200px;
+	overflow:hidden;
+	text-overflow:ellipsis; 
+	white-space:nowrap;
+	color:#333333;
+	font-size:12pt;
+}
+
+
+#certList {
+	position: absolute;
+	width: 100%;
+	height: 165px;
+	rowheight:22px;
+}
+
+</style>
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script language=Javascript src="../Javascript/parameters.js"></script>
+
+
+<script>
+
+var NETUI_PICK_CERTIFICATE_PARAMFILE_FULLPATH= "\\Temp\\NetUIPickCertificateParamFile";
+
+var IDOK=1;
+var IDCANCEL=2;
+var thisName = window.name;
+var PanelManager = TVShell.PanelManager;
+var paramStr=TVShell.ReadFile(NETUI_PICK_CERTIFICATE_PARAMFILE_FULLPATH);
+
+var certsEscaped=paramStr.split(" ");
+var len=certsEscaped.length;
+var certificates=new Array();
+var i=0;
+for(i=0;i<len;i++)
+    certificates[i]=unescape(certsEscaped[i]);
+
+
+var selectedIndex=0;
+
+function  OnClickRow(index)
+{
+  if(index>=0) {
+     document.all.selectedIndex.value=index;
+     TVShell.ViewCertificateDetails(index);//pass index as the ID to retrieve the certificate
+  }
+}
+
+function OnMouseOver()
+{
+   event.srcElement.parentElement.parentElement.style.backgroundColor="white";
+}
+
+function OnMouseOut()
+{
+   event.srcElement.parentElement.parentElement.style.backgroundColor="transparent";
+}
+
+function SetContent()
+{
+
+	var countRow =certificates.length/2;
+	var certList=document.all.certList;
+    
+    if(countRow>0){
+		for(i=0; i<countRow; i++)
+		{
+			var cellObj;
+			certList.InsertRow();
+			certList.InsertCellHTML("<a  href=# onclick=OnClickRow("+i+") onmouseover='OnMouseOver()' onmouseout='OnMouseOut()' onfocus='selectedIndex="+i+"' onblur='selectedIndex=-1'><span class=CertSpan id='certFNameSpan"+i+"'>"
+									 +  certificates[2*i] + "</span></a>");
+			cellObj=certList.InsertCellHTML("<span class=CertSpan>"+certificates[2*i+1]+"</span>");
+		}
+	}
+    else{
+
+		certList.InsertRow();
+		certList.InsertCellHTML("No certificate available!");
+	}
+
+	
+	var oTable = certList.ScrollListTable;
+	oTable.border = "1px";
+}
+
+
+</script>
+</HEAD>
+
+<BODY onLoad="SetContent()">
+
+<table height=100% width=100%>
+	<tr >
+	    <td align=left ><img src="images/certificate.gif">
+		</td>
+		<td id=title style="color:dddddd"> Pick A Certificate
+		</td>	
+		<td align=right height=30px >
+	    </td>
+	<tr width=100%>
+		<td colspan=3 width=100% height=90% align=left valign=top style="color:black;">
+	      <table width=100%>
+		     <tr>
+			    <td width=46%> Subject:
+				 </td>
+				<td> Issuer:
+				 </td>
+		     </tr>
+		     <tr width=100%>
+			    <td colspan=2 width=100%>
+					<msntv:scrollList id="certList" />
+				</td>
+		     </tr>
+		  </table>
+	    </td>	
+	<tr>
+	   <td colspan=3 align=center>
+	    <table><tr>
+		   <td align=left> Select a certificate for details.
+		   </td>
+		   <td align=right>
+			 <msntv:CustomButton label="Close"  onClick="PanelManager.CloseMessageBox(thisName,IDCANCEL)" />   
+			 <input type=hidden id="selectedIndex">    
+			</td>
+		 </tr></table>
+		</td>
+</table>
+</body>
+</html>

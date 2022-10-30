@@ -1,0 +1,61 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<TITLE>URLMONIKER ZONE ALERT</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script>
+var thisName = window.name;
+var PanelManager = TVShell.PanelManager;
+
+var ZALERT_NO=0;
+var ZALERT_YES=1;
+var ZALERT_YESPERSIST =2;
+var persist=0;
+
+function SetContent()
+{
+  document.all.Message.innerText=PanelManager.Item(thisName).UserStrData;
+}
+
+function CheckPersist()
+{
+ if(persist==1)
+    PanelManager.CloseMessageBox(thisName,ZALERT_YESPERSIST);
+ else
+    PanelManager.CloseMessageBox(thisName,ZALERT_YES);
+}
+</script>
+</HEAD>
+</body>
+<BODY>
+
+<table height=100% width=100%>
+	<tr >
+		<td colspan=3 align=right height=30px style="background-image:url(images/qmark.gif);background-repeat:no-repeat">
+			<img src="images/MSNTVlogoSignin.gif">
+	    </td>
+	<tr>
+		<td colspan=3 height=90% align=left valign=top style="color:black;">
+         <div style="width:100%;height:95%;padding-left:5px;padding-top: 0px;padding-right:15px;overflow-y:auto;behavior:url(msntv:/HTC/ScrollingDIV.htc);">
+         	<div id="Message"></div>
+         </div>
+	    </td>		
+	<tr>
+	    <td height=30px width=50% align=left > 
+		 <font color=blue>Do not ask again if click YES:</font>
+
+		 <input type=checkbox onClick="persist=(persist?0:1);">
+		</td>
+		<td align=center > 
+        <msntv:CustomButton label="Yes" onClick="CheckPersist();" />
+        </td>
+        <td align=center >
+         <msntv:CustomButton label="No"  onClick="PanelManager.CloseMessageBox(thisName,ZALERT_NO)" />       
+	    </td>
+</table>
+</body>
+<script>
+  SetContent();
+</script>
+</html>

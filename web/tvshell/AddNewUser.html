@@ -1,0 +1,87 @@
+<HTML xmlns:msntv>
+<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc">
+<TITLE>Add new user</TITLE>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT>
+var FakePassword = "";
+
+function passwordFocus()
+{
+	var textRange = document.all.password.createTextRange();
+	textRange.collapse(false);
+	textRange.select();
+}
+
+function passwordKeyUp(pw)
+{
+	document.all.continueButton.disabled = (pw.value.length == 0);
+}
+
+function addNewUser()
+{
+	if (document.all.password.value != FakePassword)
+	{
+		TVShell.UserManager.CurrentUser.Password = document.all.password.value;
+		TVShell.UserManager.Save();
+	}
+	LoginToService("connection::adduser");
+}
+</SCRIPT>
+
+<LINK REL=StyleSheet TYPE="text/css" HREF="msntv:/Shared/CSS/Settings.css">
+</HEAD>
+
+<BODY>
+<SCRIPT>OpenSettingsTable( "Add new user" , "" , "" , true );</SCRIPT>
+
+	<DIV id=buttonBar>
+		<msntv:CustomButton href="javascript:addNewUser()" class=buttonBarButton id=continueButton label="Continue" />
+		<msntv:CustomButton href="javascript:history.go(-1)" class=buttonBarButton id="default" label="Cancel" />
+	</DIV>
+
+	<DIV id=nonScrollArea>
+		<DIV class=description>
+			<P> In order to add a new user, you will be signing in with primary account.
+			</P>
+			<P></P>
+			<table cellpadding="0" cellspacing="0" width="100%">
+			  <tr>
+			    <td valign=bottom height=42 style="font-size:21px;font-weight:bold">
+				<SCRIPT>
+					TVShell.UserManager.CurrentUser = 0;
+					document.write("<EM>" + TVShell.UserManager.CurrentUser.EMail + "</EM>");
+				</SCRIPT>
+				</td>
+			  </tr>
+			  <tr>
+			    <td height="55" valign="top" style="line-height:24pt;">Type your password<BR>
+					<form name=theForm action="javascript:addNewUser();" ID="Form1">
+			    		<input type=password onfocus="passwordFocus()" onkeyup="passwordKeyUp(this)" onfocus="this.select();" id=password class=inputText>
+			    	</form>
+					<SCRIPT>
+						var pwl = TVShell.UserManager.CurrentUser.PasswordLength;
+						if (pwl > 0)
+						{
+							for (var i = 0; i < pwl; i++)
+								FakePassword += "¤";	// an un-typeable (I think) character
+							document.all.password.value = FakePassword;
+							document.all.continueButton.focus();
+						}
+						else
+						{
+							document.all.continueButton.disabled = true;
+							document.all.password.focus();
+						}
+					</SCRIPT>
+			  	</td>
+			  </tr>
+			  </table>
+		</DIV>
+	</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+	
+</BODY>
+</HTML>

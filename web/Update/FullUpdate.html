@@ -1,0 +1,621 @@
+<HTML xmlns:msntv>
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc"> 
+	<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc"> 
+	<?IMPORT namespace="msntv" implementation="../HTC/Progress.htc"> 
+	<head>
+	<TITLE>Full Update</TITLE>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/TVShell.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/Wireless.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ConnectionManager.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ServiceList.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+	<style type="text/css">
+@import url(msntv:/CSS/Base.css);
+
+body {
+	background-image: none;
+	font-size: 18px;
+	color: #07214D;
+	margin: 15px;
+}
+
+a:link {
+	color: #14224B;
+}
+a:visited {
+	color: #14224B;
+}
+a:active {
+	color: #14224B;
+}
+a:hover {
+	color: #14224B;
+}
+
+td 
+{
+	font-size: 18px;
+	color: #1D1D1D;
+}
+
+.sidebarButton {
+	font-size: 16px;
+	color: #002157;
+	width: 100%;
+	text-align: left;
+	margin: 0px 0px 4px 0px;
+}
+
+.bottombarButton {
+	font-size: 16px;
+	color: #002157;
+	text-align: center;
+	margin: 0px 0px 0px 8px;
+}
+
+.topGradient {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 0%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.heading {
+	font-size: 21px;
+	line-height: 23px;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: center;
+	padding-left: 8px;
+	color: #F2F2F2;
+}
+
+.subHeading {
+	padding: 0px 8px;
+	color: #000000;
+}
+
+.content {
+	font-size: 18px;
+	color: #1D1D1D;
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #678CCD;
+	starttransparency: 65%;
+	endtransparency: 65%;
+	angle: 0;
+}
+
+.sidebar {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 65%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.linkText 
+{
+	font-size: 18px;
+	color: #14224B;
+}
+
+
+
+#Buttons {
+	visibility: hidden;
+	position: absolute;
+	left: 0px;
+	top: 267px;
+	width: 152px;
+	height:43px;
+}
+
+
+#progress {
+	width: 500px;
+	height: 8px;
+	color: #ff0000;
+	image: url(msntv:/Shared/Images/ProgressBarCustomFill.png);
+}
+
+
+
+</style>
+	<script>
+		var updater;
+		var bootrom;
+		var pdTimeoutID; 
+		var downloadStartTime;
+		var updatePath = "";
+		var updateServer = "";
+		var updateHash = "";
+		var updateType = "";
+		var idleInterval = 100;
+		var serverPathDelim = "";
+		var LoopTestURL = "";
+		var LoopIteration = 0;
+
+		// DeviceControl
+		var LED_Off 		= 0;
+		var LED_On			= 1;
+		var LED_BlinkSlow	= 2;
+		var LED_BlinkMedium	= 3;
+		var LED_BlinkFast	= 4;
+		
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		var updateInProgress = false;
+		var pdCount = 0;
+		var currentDisplayedPercentDone = 0;
+		var timeRemainingString = "";
+		var lastUpdatedTime = new Date();
+		var buildNumberText = "";
+		var disasterRecoveryURL = "http://headwaiter.msntv.msn.com/syncserver/";
+		updater = new ActiveXObject("MSNTV.UpdateDownload");
+		bootrom = new ActiveXObject("MSNTV.BootRom");
+		var SystemInfo = TVShell.SystemInfo;
+		
+		
+	
+		function ShowMessage(msg)
+		{
+			if ( msg != document.all.Message.innerText ) {
+				document.all.Message.innerText = msg;
+			}
+		}
+		
+		function ShowStatus(msg)
+		{
+			if ( document.all.UpdateStatus != null ) {
+				if ( msg != document.all.UpdateStatus.innerText ) {
+					document.all.UpdateStatus.innerText = msg;
+					TVShell.Message("FullUpdate status :" + msg);
+				}
+			}
+		}
+		
+		function Prepare()
+		{
+		
+			if ( !updater.UpdateCapable ) {
+				var msg = "<br><br><b>This " + ProductShortName + " can not update from the application. 128MB DRAM is required for client based full updates.";
+				document.all.updateTable.innerHTML = msg;
+			} else if ( updater.RebootRequired ) {
+				var msg2 = "<br><br><b>The " + ProductShortName + " must be restarted before update can be used. Select the <b>Restart</b> button to do that now.<br><br><p><input onclick='return Reboot();' type=button size=30 value=Restart name=restart></P>";
+				document.all.updateTable.innerHTML = msg2;
+			}
+		}
+		
+		function Reboot()
+		{
+			TVShell.Reboot();
+			return true;
+		}
+		
+		function Cancel()
+		{
+			TVShell.Message("Update cancelled");
+					
+			if ( updateInProgress ) {
+				updater.CancelDownload();
+				updateInProgress = false;
+				document.all["progress"].percentComplete = 0;
+			}
+			TVShell.ConnectionManager.WANDisconnect();
+			TVShell.ConnectionManager.WANCause = "";
+			CancelFullUpdate();
+			
+			if ( LoopTestURL != "" ) {
+				if ( confirm('Do you want to also cancel the update loop test?') ) {
+					CancelLoopTest();
+				}
+			}
+			var mainPanel = TVShell.PanelManager.Item('main');
+			mainPanel.NoBackToMe = true;
+			GotoSignOn();
+			return true;
+		}
+		
+		function CancelFullUpdate()
+		{
+			bootrom.Read();
+			bootrom.UpdateURL = "";
+			bootrom.Hash = "";
+			bootrom.Flush();
+		}
+		
+		
+		
+		function UpdateFailed(result)
+		{
+			TVShell.DeviceControl.PlaySound("Error");
+			TVShell.ConnectionManager.WANDisconnect();
+			TVShell.ConnectionManager.WANCause = "";
+			updater.CancelDownload();
+			var mainPanel = TVShell.PanelManager.Item('main');
+			mainPanel.NoBackToMe = true;
+			document.location = "msntv:/Update/UpdateError.html?err=" + result;
+		}
+		
+		
+		var UpdateError_Timeout = 20;
+		
+
+		var noProgressTimeout = 5 * 60 * 1000;	// show timeout error if we get no progress change for over 5 minutes
+		
+		var lastProgressStartTime = 0;
+		var lastProgress = 0;
+		
+		function UpdateIdle()
+		{
+			
+			var pd = updater.PercentDone;
+			
+			
+			if ( pd == lastProgress ) {
+				if ( lastProgressStartTime == 0 ) {
+					lastProgressStartTime = new Date().getTime();
+				} else {
+					if ( (new Date().getTime()-lastProgressStartTime) > noProgressTimeout ) {
+						TVShell.Message("No progress in update for " + noProgressTimeout/1000 + " seconds");
+						UpdateFailed(UpdateError_Timeout);
+						return;		
+					}
+				}
+			} else {
+				lastProgress = pd;
+				lastProgressStartTime = 0;
+			}
+
+			pdCount += 1;
+			{
+				if ( !CheckConnection() ) {
+					TVShell.Message("UpdateIdle lost connection - retrying");
+					idleInterval = 500;
+					clearTimeout(pdTimeoutID);
+					pdTimeoutID=setTimeout("UpdateIdle()", idleInterval);
+					updater.CancelDownload();
+					return;
+				} else {
+					idleInterval = 1;
+				}
+			
+				if ( !updateInProgress ) {
+					TVShell.Message("No update in progress");
+					return false;
+				}
+				if ( pd == 100 ) {
+					var result = updater.DownloadResult;
+					TVShell.ConnectionManager.WANDisconnect();
+					TVShell.ConnectionManager.WANCause = "";
+					if ( result == 0 ) {
+						ShowStatus("Update download successful");
+						if ( updater.InstallUpdate() ) {
+							if ( LoopTestURL != "" ) {
+								LoopTestIterationCompleted();
+							}
+							CancelFullUpdate();
+							TVShell.Url = "msntv:/Update/InstallUpdate.html";
+						} else {
+							UpdateFailed(updater.DownloadResult);
+						}
+					} else {
+						UpdateFailed(result);
+					}
+					updateInProgress = false;
+					return false;
+				} else {
+					if ( pd > 0 && currentDisplayedPercentDone != pd ) {
+						var now = new Date();
+						if ( (now.getTime() - lastUpdatedTime.getTime()) > 60000 ) {
+							var elapsedTime = now.getTime() - downloadStartTime.getTime();
+							var timePerHundredth = elapsedTime / pd;
+							var timeRemaining = (timePerHundredth * (100-pd));
+				
+							if ( timeRemaining >= 60000  ) {
+								var minutesRemaining = 2 + Math.floor(timeRemaining/60000);
+								if ( minutesRemaining > 120 ) {
+									var hoursRemaining = Math.floor(minutesRemaining/60);
+									minutesRemaining -= hoursRemaining*60;
+									timeString = "Approx. 1 hour and " + minutesRemaining + " minutes remaining";
+							
+								} else if ( minutesRemaining > 60 ) {
+									minutesRemaining -= 60;
+									timeRemainingString = "Approx. 1 hour and " + minutesRemaining + " minutes remaining";
+								} else {
+									timeRemainingString = "Approx. " + minutesRemaining + " minutes remaining";
+								}
+							}
+							lastUpdatedTime = now;
+						}
+						
+						if ( updater.BuildNumber != 0 ) {
+							var version = updater.VersionNumber;
+							TVShell.Message("Version from build is " + version);
+							if ( version == 0 ) {
+								version = SystemInfo.Version;
+							} else {
+								
+								var major = version >> 16;
+								var minor = version & 0xffff;
+								version = major + "." + minor;
+							}		
+							buildNumberText = version + "." + updater.BuildNumber + ".0";
+						}
+						var pdString = pd;
+						if ( pd < 0 ) {
+							pdString = " 0";
+						}
+						if ( pd >= 100 ) {
+							pdString = "99";
+						}
+						if ( pd < 9 ) {
+							pdString = " " + pd;
+						}
+						document.all["progress"].percentComplete = pd;
+						ShowMessage(pdString + "% done " + timeRemainingString);
+						
+						if ( LoopTestURL != "" ) {
+							buildNumberText = buildNumberText + " test loop " + LoopIteration;
+						
+						}
+						ShowStatus("Updating to " + buildNumberText);
+					}
+				}
+			}
+			clearTimeout(pdTimeoutID);
+			pdTimeoutID=setTimeout("UpdateIdle()", idleInterval);
+			return true;
+		}
+		
+		
+
+		function CheckConnection()
+		{
+		
+			TVShell.Message("FullUpdate.htm: CheckConnection " + updateInProgress);
+			var netStatus = "";
+			var UsingWireless = (TVShell.ConnectionManager.WirelessAdapter == TVShell.ConnectionManager.WANAdapter);
+			
+			if ( UsingWireless ) {
+	//			CheckWirelessConnection("msntv:/Update/FullUpdate.html","");
+			//	var netStatus = TVShell.ConnectionManager.WANAdapter.CheckStatus();
+			//	if ( netStatus == ConnectError_NoLine ) {
+			//		return true;
+			//	}
+			}
+			
+			netStatus = TVShell.ConnectionManager.WANAdapter.CheckStatus();
+			TVShell.Message("FullUpdate.htm: state: " + TVShell.ConnectionManager.WANState + " status: " + netStatus);
+			if ( TVShell.ConnectionManager.WANState == ConnectState_Connected ) {
+				if ( netStatus == ConnectError_NoError ) {
+					return true;
+				} 
+			}
+
+			if ( netStatus != 1 && netStatus != 0 && !updateInProgress ) {
+				netStatus = TVShell.ConnectionManager.WANAdapter.CheckStatus();
+				TVShell.Message("FullUpdate.htm: wanstate " + TVShell.ConnectionManager.WANState + " netStatus " + netStatus);
+				var msg = "Your " + ProductShortName + " is unable to connect to " + ServiceShortName + " to complete the software update. You can try to connect again or cancel the update.";
+				var can = TVShell.PanelManager.CustomMessageBox(msg, "Cannot connect", "Try Again;Cancel", 0, "");
+				if ( can ) {
+					Cancel();
+				}
+				document.location = "msntv:/Update/FullUpdate.html";
+				return false;
+			}			// something happened to the connection
+			ShowStatus("Checking connection...");
+			TVShell.Message("FullUpdate.htm: state: " + TVShell.ConnectionManager.WANState);
+			TVShell.Message("FullUpdate.htm: status: " + netStatus);
+			
+			return false;
+		}
+	
+		function StartUpdate()
+		{
+			var updateURL = "";
+			
+			if ( !CheckConnection() ) {
+				clearTimeout(pdTimeoutID);
+				pdTimeoutID=setTimeout("StartUpdate()", 500);
+				return;
+			}
+			
+			TVShell.Message("FullUpdate: StartUpdate");
+			ShowStatus("");
+			ShowMessage("");
+			
+			if ( updateInProgress ) {
+				TVShell.Message("Update already in progress");
+				return false;
+			}
+			
+			if ( LoopTestURL != "" ) {
+				TVShell.Message("In LoopTest for " + LoopTestURL);
+				updateHash = "";
+				updateURL = LoopTestURL;
+			} else {
+				if ( bootrom.UpdateURL != "" && bootrom.Hash != "" ) {
+					updateURL = bootrom.UpdateURL;
+					updateHash = bootrom.Hash;
+					TVShell.Message("This is a full update from " + updateURL);
+				} else {
+					updateURL = disasterRecoveryURL;
+					updateHash = "";
+					TVShell.Message("No update specified, doing disaster recovery " + updateURL);
+				}
+			}
+			if ( updateURL.indexOf("http://") == 0 ) {
+				updateServer = updateURL.substring(7);
+			} else {
+				updateServer = updateURL;
+			}
+			var startOfPath = updateServer.indexOf("/");
+			if ( startOfPath != -1 ) {
+				updatePath = updateServer.substring(startOfPath);
+				updateServer = updateServer.substring(0,startOfPath);
+			} else {
+				updatePath = "";
+			}
+			TVShell.Message("Path is " + updatePath);
+			updateInProgress = true;
+			timeRemainingString = "";
+			downloadStartTime = new Date();
+			lastUpdatedTime = downloadStartTime;
+			if ( updateHash == "" ) {
+				updateType = "Disaster Recovery";
+				TVShell.Message(updateType);
+			} else {
+				updateType = "Full";
+			}
+			if ( updateServer.charAt(updateServer.length-1) != '/' ) {
+				serverPathDelim = "/";
+			}
+			idleInterval = 1;
+			
+			TVShell.Message(updateServer + updatePath)
+			updater.StartDownload(updateServer,updatePath,updateHash,false);
+			ShowMessage("Connecting to update server");
+			pdTimeoutID=setTimeout("UpdateIdle()", idleInterval);
+		}
+		
+		function LoadPage()
+		{
+		
+			var mainPanel = TVShell.PanelManager.Item('main');
+			mainPanel.NoBackToMe = true;
+			mainPanel.ClearTravelLog("msntv:/");
+
+			TVShell.ScreenSaver.Enable = false;
+			LoopTestCheck();
+			
+			if ( !updater.UpdateCapable || updater.RebootRequired ) {
+				// box not in proper state to start update this should not happen 
+				ShowStatus("Update requires " + ProductShortName + " to be restarted");
+				return false;
+			}
+			if ( TVShell.ConnectionManager.WANAdapter == null ) {
+				ShowStatus("No network connection is available.");
+				return false;
+			}
+			if ( TVShell.ConnectionManager.WANAdapter == TVShell.ConnectionManager.ModemAdapter ) {
+				ShowStatus("Update cannot be completed over a dialup connection.");
+				return false;
+			}
+			
+			
+			
+			
+			// WANConnect doesn't wait long enough for wireless association
+			// this kind of works, but it gives you the new confirmation dialog which is annoying
+			// WANConnect should wait for wireless association instead
+			
+//			var UsingWireless = (TVShell.ConnectionManager.WirelessAdapter == TVShell.ConnectionManager.WANAdapter);
+//			
+//			if ( UsingWireless ) {
+//				var netStatus = TVShell.ConnectionManager.WANAdapter.CheckStatus();
+//				if ( netStatus == ConnectError_NoLine ) {
+//					// not associated wait for wireless, then reload page
+//					CheckWirelessConnection("msntv:/Update/FullUpdate.html","");
+//				return true;
+//				}
+//			}
+
+
+
+			TVShell.ConnectionManager.WANDisconnect();
+			TVShell.ConnectionManager.WANCause = "";
+
+			updateInProgress = false;
+			bootrom.Read();			
+			TVShell.ConnectionManager.WANConnect("FullUpdate");
+			setTimeout("WaitForWANConnect();", 500);
+			return true;	
+		}
+
+		var WaitIterations = 0;
+		
+		function WaitForWANConnect()
+		{
+			if (WaitIterations < 20 && ConnectState_Connected != TVShell.ConnectionManager.WANState) {
+				WaitIterations++;
+				setTimeout("WaitForWANConnect();", 500);
+			} else {
+				StartUpdate();
+			}
+		}
+		
+		// the following three functions are for internal QA testing
+		function CancelLoopTest()
+		{
+			TVShell.Message("Loop test canceled after " + LoopIteration + " iterations.");
+			if ( LoopTestURL ) {
+				LoopTestURL = "";
+				var PersistentProperties = TVShell.Property("Persistent/");
+				PersistentProperties.Add("UpdateLoopTestMode", 0);
+				PersistentProperties.Save();
+			}
+		}
+		
+		function LoopTestIterationCompleted()
+		{
+			var PersistentProperties = TVShell.Property("Persistent/");
+			LoopIteration = parseInt(LoopIteration) + 1;
+			PersistentProperties.Add("UpdateLoopIteration", LoopIteration);
+			PersistentProperties.Save();
+		}
+		
+		function LoopTestCheck()
+		{
+			var PersistentProperties = TVShell.Property("Persistent/");
+			
+			
+			if ( PersistentProperties("UpdateLoopTestMode") && PersistentProperties("UpdateLoopTestMode") != 0 ) {
+				if ( updater.RebootRequired ) {
+					TVShell.Message("Loop test requires reboot");
+					TVShell.Reboot();
+				}
+				LoopTestURL = PersistentProperties("UpdateLoopURL");
+				LoopIteration = parseInt(PersistentProperties("UpdateLoopIteration"),10);				
+				TVShell.Message("Update Loop Test iteration " + LoopIteration + " from " + LoopTestURL);
+			}
+		}
+		
+
+	</script>
+	<LINK REL="StyleSheet" TYPE="text/css" HREF="msntv:/Shared/CSS/SynchMan.css">
+
+</HEAD>
+
+<BODY>
+	<SCRIPT>OpenSettingsTable( ProductShortName + " software update" , "" , "" );</SCRIPT>
+	<DIV id="buttonBar">
+		<!-- <msntv:CustomButton onclick="StartUpdate();" class="buttonBarButton" id="Off" label="Try Again" />
+		-->
+		<msntv:CustomButton onclick="Cancel();" class="buttonBarButton" id="Off" label="Cancel" />
+	</DIV>
+	<DIV id="nonScrollArea">
+		<DIV class="description">
+					Your <SCRIPT>document.write(ProductShortName);</SCRIPT> software update is now being received.
+					<br>Please wait until the update has been completely received. If you cancel, then the update
+					will need to be downloaded again from the beginning.
+		</DIV>
+		<div style="position:absolute;top:160px" id="progressbar" class="progress">
+			<msntv:progressbar id="progress" name="Update Progress"></msntv:progressbar>
+		</div>
+		<div style="position:absolute;top:200px" id="Message" class="description">
+		
+		</div>
+		<div style="position:absolute;top:270px" id="UpdateStatus" class="description">
+			
+		</div>
+	</DIV>
+	<SCRIPT>
+	CloseSettingsTable();
+	LoadPage();
+	
+	</SCRIPT>
+</BODY>

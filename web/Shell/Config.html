@@ -1,0 +1,180 @@
+<!--
+	One time initialization of shell. Control is handed to Shell.html for
+	duration of application.
+-->
+<HTML>
+<HEAD>
+<!--	Work around htmpost timeout issue in IE by including TVShell.js content below.
+<SCRIPT language=Javascript src="../Javascript/TVShell.js"></SCRIPT>
+-->
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/TaskScheduler.js"></SCRIPT>
+<SCRIPT>
+	//
+	// TVShell.js
+	//
+	var TVShell = new ActiveXObject("MSNTV.TVShell");
+
+	//
+	// Add extensions to the TVShell object
+	//
+	var ObjectList = TVShell.Property("ObjectModel\\");
+	if (ObjectList) {
+		var i;
+		for (i = 0; i < ObjectList.Count; i++) {
+			var Name = ObjectList.Tag(i);
+			TVShell.CreateProperty(Name, ObjectList.Item(Name));
+		}
+	}
+
+	// panel types
+	SYSTEM_PANEL_TYPE	= 0
+	APP_PANEL_TYPE		= 1
+	ALERT_PANEL_TYPE	= 2
+
+	// panel styles
+	STATIC_PANEL_STYLE	= 0
+	SLIDING_PANEL_STYLE	= 1
+	POPUP_PANEL_STYLE	= 2
+
+	TVShell.Message("MSNTV: Config.html starting...\n");
+
+	// Initialize the main panel
+
+	TVShell.PopupWhitelistURL = "msntv:/Shell/PopupControl.xml";
+	
+	TVShell.RedirectListURL = "msntv:/Shell/RedirectControl.xml";
+
+	var PanelManager;
+	var MainPanel;
+
+	PanelManager = TVShell.PanelManager;
+	PanelManager.Restore();
+	
+	// reset the layout mode to force-fit
+	PanelManager.LayoutMode = 2;
+
+	PanelManager.CreatePanel("main", "msntv:/Shell/empty.html", 50, false);
+
+	MainPanel = PanelManager.Item("main");
+
+    MainPanel.History.RecentSize = 18;
+    MainPanel.History.TypedSize = 64;
+	MainPanel.PanelType = APP_PANEL_TYPE;
+	MainPanel.Transition = STATIC_PANEL_STYLE;
+	MainPanel.RefreshEnabled = true;
+	MainPanel.LogMSNDomainExit = true;
+	MainPanel.Zoomable = true;
+
+	if (TVShell.SystemInfo.Flavor != "release" && TVShell.SystemInfo.Flavor != "ppe") {
+		//
+		// Secret codes available in non-retail build flavors:
+		//
+		TVShell.AddSecretCode(93288); // Service Selection Page
+
+		TVShell.AddSecretCode(10000); // Power-on for nightly update
+		TVShell.AddSecretCode(10001); // Power-on for nightly email check at anchor time
+		TVShell.AddSecretCode(10002); // Power-on for nightly email check at non-anchor time
+
+		TVShell.AddSecretCode(6145539);	// crash the system
+		TVShell.AddSecretCode(3932397); // update loop test
+		
+		var TestSupport  = new ActiveXObject("MSNTV.TestSupport"); 
+        if(TestSupport.EndlessTour == true || TestSupport.AutoBox == true){
+			TVShell.Message("Tourist/Automation Box: Setting AutoPowerOn to true");
+			TVShell.AutoPowerOn = true;
+		}
+	}
+	TVShell.AutoPowerOn = true;
+
+	//
+	// Secret codes available in all build flavors:
+	//
+	TVShell.AddSecretCode(411);
+	TVShell.AddSecretCode(32768);	// Erase all files and reboot
+	TVShell.AddSecretCode(7264);	// Clear the MSNIA local POP connector if currently a MSNIA customer (clear tellyscript)
+
+	TVShell.AddSecretCode(80211);	// advanced wireless network settings
+
+	// bootrom secret codes for TMM factory
+
+	TVShell.AddSecretCode(2021);	// bootrom custumer test page
+	TVShell.AddSecretCode(8086);	// bootrom factory test page
+
+	// we will want these secret codes also . . .
+	// TVShell.AddSecretCode(????);		// Reset phone settings only
+	// TVShell.AddSecretCode(12357);	// Clear dialing options, clear tellyscript and send user back through scriptless, 
+									// turn on audible dialing for diagnostic purposes.
+
+	//
+	// Screen Savers
+	//
+	var ScreenSaver = TVShell.ScreenSaver;
+	var Saver;
+
+	Saver = ScreenSaver.Add("Blank");
+	Saver.URL = "msntv:/Settings/ScreenSaver/Blank.html";
+	Saver.Description = "Blank";
+
+	Saver = ScreenSaver.Add("Prereg");
+	Saver.URL = "msntv:/Settings/ScreenSaver/Prereg.html";
+	Saver.Description = "Pre-registration text";
+
+	Saver = ScreenSaver.Add("Butterfly");
+	Saver.URL = "msntv:/Settings/ScreenSaver/Butterfly.html";
+	Saver.Description = "Flying Butterfly";
+
+	Saver = ScreenSaver.Add("Photo");
+	Saver.URL = "msntv:/Settings/ScreenSaver/Photo.html";
+	Saver.Description = "Photo slides";
+
+	//
+	// Assume prereg screen saver
+	//
+	ScreenSaver.CurrentSaver = "Prereg";
+
+	//
+	// Restore the user's settings, if present
+	//
+	ScreenSaver.Restore();
+	
+	var scheduler=TVShell.TaskScheduler;
+	
+	scheduler.Restore();
+	
+	//reschedule recurring event mail check
+    var index;
+	var task;
+	var mailcheck=null;
+    for(index=0;index<scheduler.Count;index++)
+	{
+	  task=scheduler.Item(index)
+	  if(task.Caller== "NightlyEmailCheck" && task.Once==0)
+	    mailcheck=task;
+	}
+	if(mailcheck)
+	{
+        RemoveAllOccurrence("NightlyEmailCheck", scheduler,false);
+		ScheduleAllOccurrence(mailcheck,scheduler);
+	}
+	
+	
+	{
+		var rom = new ActiveXObject("MSNTV.BootRom");
+
+		rom.Read();
+		if (  rom.UpdateURL != "" && rom.Hash != "" ) {
+			var updater = new ActiveXObject("MSNTV.UpdateDownload");
+			if ( updater.UpdateCapable && !updater.RebootRequired ) {
+				TVShell.Message("FullUpdate required after reboot: Setting AutoPowerOn to true");
+				TVShell.AutoPowerOn = true;
+			}
+		}
+	}
+
+
+	// On to the main shell loop.
+	document.location = "Shell.html";
+</SCRIPT>
+
+</HEAD>
+</HTML>

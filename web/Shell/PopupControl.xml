@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<popupcontrol>
+	<whitelist>
+		<entry url="http://www.windowsmedia.com/" />
+		<entry url="http://launchcast.launch.yahoo.com/radio/" />
+		<entry url="http://entertainment.msn.com/radio/" />
+		<entry url="http://betavideo.my.msn.com/" />
+		<entry url="http://radio.launch.yahoo.com/radio/" />
+		<entry url="http://abogusurl/bogus" />
+	</whitelist>
+	<blacklist>
+		<entry url="http://cgi5.ebay.com/ws2/" />
+		<entry url="http://cgi5.ebay.com/ws/" />
+		<entry url="http://albums.photo.epson.com/j/" />
+		<entry url="https://reg.mci.com/service" />
+		<entry url="https://lb22.resources.hewitt.com/" />
+		<entry url="https://nrtp.jetnet.aa.com/NonRev2App/" />
+		<entry url="http://www.naturemade.com/UserAccount/uar_acct_bank.asp" />
+	</blacklist>
+	<targetblacklist>
+		<entry url="https://sales.geico.com/stallerPage.html" />
+	</targetblacklist>
+	<targetwhitelist>
+		<entry url="http://www.bankcardcenter.net/stlk" />
+	</targetwhitelist>
+</popupcontrol>
+

@@ -1,0 +1,116 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<TITLE>NetUI Certificate Details</TITLE>
+<link rel="StyleSheet" type="text/css" href="../CSS/Dialog.css">
+<script language=Javascript src="../Javascript/TVShell.js"></script>
+<script language=Javascript src="../Javascript/parameters.js"></script>
+<style>
+.bottombarButton {
+	font-size: 16px;
+	text-align: center;
+	margin: 0px 0px 0px 8px;
+}
+</style>
+<script>
+
+var NETUI_GET_DRIVER_NAME_PARAMFILE_FULLPATH= "\\Temp\\NetUIGetDriverNameParamFile";
+var PCCARDTYPE_USB=0x80000000;
+
+var IDOK=1;
+var IDCANCEL=2;
+var thisName = window.name;
+var PanelManager = TVShell.PanelManager;
+
+
+var namedParams=FindParametersFromFile(NETUI_GET_DRIVER_NAME_PARAMFILE_FULLPATH);
+
+function SetContent()
+{
+  if(namedParams["Caption"])
+     document.all.Caption.innerText=namedParams["Caption"];
+  if(namedParams["CommandText"])
+     document.all.CommandText.innerText=namedParams["CommandText"];
+  if(namedParams["DriverName"])
+     document.all.DriverName.value=namedParams["DriverName"];
+}
+
+function TrimSpace(data)
+{
+  var len=data.length;
+  var begin;
+  var end;
+  for(begin=0;begin<len;begin++)
+      if(data.charAt(begin)!=' ')
+         break;
+  for(end=len-1;end>begin;end--)
+      if(data.charAt(end)!=' ')
+         break;
+  return data.substring(begin,end+1);
+}
+
+function OnClickOK()
+{
+ var data=TrimSpace(document.all.DriverName.value);
+  
+ if(document.all.DriverName.value)
+      data="DriverName "+escape(document.all.DriverName.value);
+ else
+      data="";
+
+ TVShell.WriteFile(NETUI_GET_DRIVER_NAME_PARAMFILE_FULLPATH,data);
+ PanelManager.CloseMessageBox(thisName,IDOK);
+}
+
+</script>
+</HEAD>
+
+<BODY onLoad="SetContent()">
+
+<table height=100% width=100% cellspacing=0 cellpadding=0>
+	<tr >
+	  <td height=30>
+	   <table width=100% cellspacing=0 cellpadding=0>
+	    <tr>
+			<td align=left><img width=30 height=30 src="images/usb.gif">
+			</td>
+			<td id=Caption  style="color:#222222"> 
+			</td>
+		</tr>
+		</table>
+	  </td>
+	</tr>
+
+	<tr >
+	  <td id=CommandText>
+	  </td>
+	</tr>
+
+	<tr width=100%>
+		<td width=100% height=10% align=left valign=top style="color:black;">
+	      <table cellspacing=0 cellpadding=0>
+		     <tr>
+			    <td>Driver Name: </td>
+			    <td width=2%>
+			    </td>
+		  		<td><input type=text id=DriverName size=29></td>
+		     </tr>
+		  </table>
+	    </td>	
+	</tr>
+	<tr>
+	   <td align=center>
+	    <table><tr>
+		   <td align=center>	    
+			 <msntv:CustomButton label="OK"   class="bottombarButton" id=OkBtn onClick="OnClickOK()" />       
+		   </td>
+		   <td align=center>
+			 <msntv:CustomButton label="Close"   class="bottombarButton" id=CancelBtn onClick="PanelManager.CloseMessageBox(thisName,IDCANCEL)" />       
+			</td>
+		 </tr>
+		 </table>
+		</td>
+	</tr>
+</table>
+</body>
+</html>

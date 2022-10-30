@@ -1,0 +1,75 @@
+<HTML xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE>Demo Panel</TITLE>
+
+	<SCRIPT language=Javascript src="../Javascript/TVShell.js"></SCRIPT>
+
+	<SCRIPT>
+		var RetailDemoURL = "msntv:/Shell/DemoStart.html";
+
+		function SetRetailDemoMode(mode)
+		{
+			if (mode == "on") {
+				TVShell.Property.Add("RunStart", RetailDemoURL);
+				TVShell.Message("Retail demo enabled");
+			} else {
+				var entry = TVShell.Property("RunStart");
+				if (entry && entry == RetailDemoURL)
+					TVShell.Property.Remove("RunStart");
+			}
+		}
+
+		function OnSecretCode(secretCode)
+		{
+			TVShell.Message("DemoPanel.html: processing SecretCode " + secretCode);
+			switch (secretCode) {
+				case 31158:
+				{
+					TVShell.Message("DemoPanel.html: secret code enable retail demo");
+
+					var PersistentProperties = TVShell.Property("Persistent/");
+					PersistentProperties.Add("RetailDemoMode", 1);
+					PersistentProperties.Save();
+
+					SetRetailDemoMode("on");
+
+					break;
+				}
+				case 61185:
+				{
+					TVShell.Message("DemoPanel.html: secret code disable retail demo");
+
+					var PersistentProperties = TVShell.Property("Persistent/");
+					PersistentProperties.Add("RetailDemoMode", 0);
+					PersistentProperties.Save();
+
+					SetRetailDemoMode("off");
+
+					break;
+				}
+			}
+		}
+
+		TVShell.AddSecretCode(31158);	// enable retail demo
+		TVShell.AddSecretCode(61185);	// disable retail demo
+
+		var PersistentProperties = TVShell.Property("Persistent/");
+
+		var RetailDemoMode = PersistentProperties("RetailDemoMode");
+
+		if (RetailDemoMode == 1)
+			SetRetailDemoMode("on");
+		else
+			SetRetailDemoMode("off");
+
+		//
+		// Wire up Javascript Event handlers
+		//
+		var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+		Sink.AttachEvent(TVShell,                   "OnSecretCode",          OnSecretCode);
+	</SCRIPT>
+</HEAD>
+<BODY>
+</BODY>

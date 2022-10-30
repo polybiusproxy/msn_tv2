@@ -1,0 +1,258 @@
+<HTML xmlns:msntv>
+<?import namespace="msntv" implementation="../HTC/CustomButton.htc">
+<HEAD>
+<TITLE >Find</TITLE>
+<link rel=StyleSheet type="text/css" href="../CSS/Panel.css">
+<script language="Javascript" src="../Javascript/TVShell.js"></script>
+<script language="Javascript" src="../Javascript/PanelImpl.js"></script>
+<SCRIPT LANGUAGE="JavaScript" src="findinc.js"></SCRIPT>
+<SCRIPT LANGUAGE="JavaScript">
+
+var g_fFindStartPoint = true;
+var PanelManager = TVShell.PanelManager;
+var panel=PanelManager.Item("find");
+var MainPanel=PanelManager.Item("main");
+var FIND_PANEL_HEIGHT = 157;
+var g_targetChanged=true;
+
+function loadBdy()
+{
+    //
+    //  Bind events to controls. This is done here to load the dialog
+    //  quicker.
+    //
+	txtFindText=document.all.txtFindText;
+   
+//    txtFindText.focus();
+//    txtFindText.select();
+	btnFind.disabled=true;	
+} 
+
+
+function OnKeyUp()
+{
+	if(txtFindText.value)
+	  btnFind.disabled=false;
+	else
+	  btnFind.disabled=true;
+}
+
+
+
+function OnChange()
+{
+    g_targetChanged=true;
+	g_countFound=0;
+
+}
+
+function OnBeforeShow(name)
+{
+   if(name=="find")
+   {
+	targetWindowOfDocument=null;
+	messageTD.innerHTML="Type the word or phrase you'd like to find on this page and then choose <b>Continue</b>.";
+    document.all.radDirectionDown.click();
+
+	//unselect selected text if there is already highlighted text from last time
+	if(targetDocument)
+	    targetDocument.execCommand("Unselect", false);
+	if(g_docLastFound)
+	    g_docLastFound.execCommand("Unselect", false);
+	
+	
+	btnFind.label="Continue";
+	btnNewWord.style.display="none";
+	txtFindText.style.display="block";
+	btnFind.style.display="inline-block";
+	if(txtFindText.value=="")
+	   btnFind.disabled=true;
+	else 
+	   btnFind.disabled=false;
+
+    targetDocument=null;
+	g_docLastFound=null;
+    g_fFrameset = false; 
+    g_arrFrames = new Array(); 
+    g_fSearchTopFrame = false; 
+    g_fFollowIframes = true;
+    g_fError = false;
+
+    g_docSearch=null ; 
+    
+    g_rngWorking=null;   
+    g_rngFoundText=null; 
+    g_fFoundText = false; 
+
+    g_targetChanged=true;
+	g_countFound=0;
+	targetWindowOfDocument=MainPanel.Document.parentWindow;
+    targetDocument=MainPanel.Document;
+    findOption.style.display='none';
+	btnPrevious.style.display="none";
+	findMain.style.display='block';
+   }
+}
+
+function OnAfterShow(name)
+{
+   if(name=="find"){
+     MainPanel.Height;
+	 MainPanel.EndRect(MainPanel.X,MainPanel.Y,MainPanel.Width,MainPanel.Height-FIND_PANEL_HEIGHT);
+	 txtFindText.focus();
+	 if(txtFindText.value)
+	   txtFindText.select();
+	    
+   }
+
+}
+function OnBeforeHide(name)
+{
+   if(name=="find"){
+	 MainPanel.EndRect(MainPanel.X,MainPanel.Y,MainPanel.Width,MainPanel.Height+FIND_PANEL_HEIGHT);
+   }
+
+}
+
+var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+Sink.AttachEvent(TVShell.PanelManager, "OnBeforeShow", OnBeforeShow);
+Sink.AttachEvent(TVShell.PanelManager, "OnAfterShow", OnAfterShow);
+Sink.AttachEvent(TVShell.PanelManager, "OnBeforeHide", OnBeforeHide);
+
+
+
+function DoFind()
+{
+
+   if(txtFindText.value && txtFindText.value!=""){ 
+
+      if(g_targetChanged){
+	    g_countFound=0;
+	    if(g_docLastFound)
+		  g_docLastFound.execCommand("Unselect", false);
+	    if(g_docSearch)
+		  g_docSearch.execCommand("Unselect", false);
+		g_docLastFound=null;
+		g_fFrameset = false; 
+		g_arrFrames = new Array(); 
+		g_fSearchTopFrame = false; 
+		g_fFollowIframes = true;
+		g_fError = false;
+		g_docSearch=null ; 
+    	g_rngWorking=null;   
+		g_rngFoundText=null; 
+		g_fFoundText=false;
+
+		//restart from the beginning
+		g_fFindStartPoint=true;
+	  }
+	
+      DoSearch()
+   }
+   else
+      txtFindText.focus();
+}
+
+function DoClick()
+{
+ if(txtFindText.value){
+  document.all.btnFind.focus();
+  document.all.btnFind.click();
+ }
+}
+
+
+function NewWord()
+{
+
+	messageTD.innerHTML="Type the word or phrase you'd like to find on this page and then choose <b>Continue</b>.";
+    txtFindText.style.display="block";
+	btnFind.label="Continue";
+	btnCancel.label="Cancel";
+    btnNewWord.style.display="none";
+	btnPrevious.style.display="none";
+	btnFind.style.display="inline-block";
+	txtFindText.focus();
+	txtFindText.select();
+	g_targetChanged=true;
+    document.all.radDirectionDown.checked=true;
+}
+
+</SCRIPT>
+</HEAD>
+
+<BODY ID=bdy onload="loadBdy()">
+<div id=findMain >
+<table cellpadding=0 cellspacing=0 style="height:90%;width:100%;margin-top:0px;">
+	<tr >
+	 <td class="heading" align=left style="height:30px;padding:0px;" >	 
+	   Find a word
+	 </td>
+	</tr>
+	<tr>
+	 <td style="height:10px">
+	 </td>
+	</tr>
+	<tr>
+      <td id="messageTD" align=left style="font-size:18px; line-height:20px;">
+        Type the word or phrase you'd like to find on this Web page and then choose <b>Continue</b>.
+	  </td>
+    </tr>
+	<tr>
+	 <td style="height:10px">
+	 </td>
+	</tr>
+    <tr>
+	  <td align=left>
+	  <table  width=100% cellpadding=0 cellspacing=0><tr>
+		  <td style="height:34px;text-align:left;">
+				<INPUT type=text id=txtFindText class=inputText size=30 style="display:none;" onchange="OnChange()"  onclick="DoClick()" onkeyup="OnKeyUp()">
+		  </td>
+		  <td style="text-align:right;" align=right>	 
+				<msntv:CustomButton id=btnPrevious label="Find Previous"  class="bottombarButton" onClick="document.all.radDirectionUp.click();DoSearch()" />
+				<msntv:CustomButton id=btnFind label="Continue"  class="bottombarButton" onClick="document.all.radDirectionDown.click();DoFind()" />
+	  			<msntv:CustomButton id=btnNewWord label="New Word"  class="bottombarButton" onClick="NewWord()" />
+				<msntv:CustomButton id=btnCancel label="Cancel"  class="bottombarButton" onClick="PanelManager.Hide(window.name);" />
+		  </td>
+	  </tr></table>
+	  </td>
+   </tr>
+
+</table>  		
+</div>
+<div  id=findOption style="display:none;">
+<table cellpadding=0 cellspacing=0 style="height:90%;width:100%;margin-top:0px">
+	<tr >
+	 <td align=left colspan=2 style="font-size:14pt;font-weight:bold;width:200px;">	 
+	   Find Options
+	 </td>
+	 <td align=right style="font-size:14pt;font-weight:bold;">	 
+	     <a href=# id=backToMain onClick="findOption.style.display='none';findMain.style.display='block'; toOption.focus()"><u>Back</u></a>
+	 </td>
+	</tr>
+	<tr>
+	 <td  align=left nowrap>
+	   Search Direction:
+	 </td>
+	 <td align=left nowrap colspan=2>
+	   <INPUT id=radDirectionUp type=radio name=radDirection> Up &nbsp;&nbsp;&nbsp;
+	   <INPUT id=radDirectionDown type=radio CHECKED name=radDirection> Down
+     </td>
+	</tr>
+    <tr >
+	  <td align=left nowrap>
+	    Search Pattern:
+	  </td>
+      <td align=left>
+        <INPUT id=chkWholeWord type=checkbox value="ON">
+	     Match whole word only.
+	  </td>
+        <td align=left>
+       <INPUT type=checkbox id=chkMatchCase value="ON">
+	    Match case.
+	  </td>
+  </tr>
+</table>  
+</div>		
+</BODY>
+</HTML>

@@ -1,0 +1,269 @@
+<HTML xmlns:msntv>
+
+	<?IMPORT namespace="msntv" implementation="../HTC/CustomButton.htc"> 
+	<?IMPORT namespace="msntv" implementation="../HTC/SettingsHeading.htc"> 
+	<?IMPORT namespace="msntv" implementation="../HTC/Progress.htc"> 
+
+<head>
+	<TITLE>Update Error</TITLE>
+
+
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/TVShell.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/ServiceList.js"></SCRIPT>
+	<SCRIPT LANGUAGE="Javascript" SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+	<style type="text/css">
+@import url(msntv:/CSS/Base.css);
+
+body {
+	background-image: none;
+	font-size: 18px;
+	color: #07214D;
+	margin: 15px;
+}
+
+a:link {
+	color: #14224B;
+}
+a:visited {
+	color: #14224B;
+}
+a:active {
+	color: #14224B;
+}
+a:hover {
+	color: #14224B;
+}
+
+td 
+{
+	font-size: 18px;
+	color: #1D1D1D;
+}
+
+.sidebarButton {
+	font-size: 16px;
+	color: #002157;
+	width: 100%;
+	text-align: left;
+	margin: 0px 0px 4px 0px;
+}
+
+.bottombarButton {
+	font-size: 16px;
+	color: #002157;
+	text-align: center;
+	margin: 0px 0px 0px 8px;
+}
+
+.topGradient {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 0%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.heading {
+	font-size: 21px;
+	line-height: 23px;
+	font-weight: bold;
+	text-align: left;
+	vertical-align: center;
+	padding-left: 8px;
+	color: #F2F2F2;
+}
+
+.subHeading {
+	padding: 0px 8px;
+	color: #000000;
+}
+
+.content {
+	font-size: 18px;
+	color: #1D1D1D;
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #678CCD;
+	starttransparency: 65%;
+	endtransparency: 65%;
+	angle: 0;
+}
+
+.sidebar {
+	behavior: url(#default#gradient);
+	startColor: #FFFFFF;
+	endcolor: #FFFFFF;
+	starttransparency: 65%;
+	endtransparency: 100%;
+	angle: 90;
+}
+
+.linkText 
+{
+	font-size: 18px;
+	color: #14224B;
+}
+
+#Buttons {
+	visibility: hidden;
+	position: absolute;
+	left: 0px;
+	top: 267px;
+	width: 152px;
+	height:43px;
+}
+
+
+#progress {
+	width: 340px;
+	height: 8px;
+	color: #ff0000;
+	image: url(msntv:/Shared/Images/ProgressBarCustomFill.png);
+}
+
+
+
+</style>
+	<script>
+	var Countdown = 0;
+	var DelayTimeoutID = 0;
+	var RebootDelay = 30;
+
+	var Sink = new ActiveXObject("MSNTV.MultipleEventSink");
+
+	function ShowStatus(msg)
+	{
+		document.all.UpdateStatus.innerText = msg;
+	}
+	
+	var UpdateError_Timeout = 20;
+	
+	function UpdateErrorString(errCode)
+	{
+		var msg = "";
+		var UpdateError_NoError = 0;
+		var UpdateError_ServerNotFound = 1;
+		var UpdateError_NoPackageFound = 2;
+		var UpdateError_InvalidPackage = 3;
+		var UpdateError_PackageTooLarge = 4;
+		var UpdateError_DownloadIncomplete = 5;
+		var UpdateError_InstallFailed = 6;
+		var UpdateError_DownloadFailed = 7;
+		var UpdateError_InternetOpenFailed = 8;
+		var UpdateError_InternetConnectFailed = 9;
+		var UpdateError_HTTPFailed = 10;
+		var UpdateError_RedirectFailed = 11;
+		var UpdateError_PackageDecodeFailed = 12;
+
+		if ( errCode == UpdateError_ServerNotFound ) {
+			msg =  "The update server could not be found.";
+		} else if ( errCode == UpdateError_NoPackageFound ) {
+			msg =  "The update server did not have an update available.";
+		} else if ( errCode == UpdateError_InvalidPackage ) {
+			msg =  "The update on the server is not ready.";
+		} else if ( errCode == UpdateError_PackageTooLarge ) {
+			msg =  "The update on the server is too large to download.";
+		} else if ( errCode == UpdateError_DownloadFailed || 
+				errCode == UpdateError_InternetOpenFailed || 
+				errCode == UpdateError_InternetConnectFailed ||
+				errCode == UpdateError_HTTPFailed ||
+				errCode == UpdateError_RedirectFailed || 
+				errCode == UpdateError_PackageDecodeFailed || 
+				errCode == UpdateError_DownloadIncomplete ) {
+			msg =  "Unable to complete downloading the update.";
+		} else if ( errCode == UpdateError_Timeout ) {
+			msg =  "Timed out receiving the update.";
+		} else  {
+			msg = errCode;
+		}
+		return msg;
+	}
+		
+	function TryAgain()
+	{
+		var mainPanel = TVShell.PanelManager.Item('main');
+		mainPanel.NoBackToMe = true;
+		mainPanel.ClearTravelLog("msntv:/Update/FullUpdate.html");
+		document.location = "msntv:/Update/FullUpdate.html";
+		return true;
+	}
+		
+	function Settings()
+	{
+		document.location = "msntv:/Settings/ConnectionSettings.html";
+		return true;
+	}
+
+	function Cancel()
+	{
+		CancelFullUpdate();
+		TVShell.PanelManager.Item('main').NoBackToMe = true;
+		GotoSignOn();
+		return true;
+	}
+
+	function KeyDown()
+	{
+		if (event.altKey)
+			ErrorCode.style.visibility = "visible";
+	}
+		
+	function CancelFullUpdate()
+	{
+		var bootrom = new ActiveXObject("MSNTV.BootRom");
+		bootrom.Read();
+		bootrom.UpdateURL = "";
+		bootrom.Hash = "";
+		bootrom.Flush();
+	}
+
+	</script>
+	<LINK REL="StyleSheet" TYPE="text/css" HREF="msntv:/Shared/CSS/SynchMan.css">
+
+</HEAD>
+<BODY onkeydown="KeyDown()">
+	<SCRIPT>
+	TVShell.ScreenSaver.Enable = true;
+	var params = location.href.split("?");
+	var errCode = 0;
+	if ( params && params.length > 1 && params[1].indexOf("err=") == 0 ) {
+		errCode = params[1].substring(params[1].indexOf("=")+1);
+	}
+	TVShell.Message("errCode passed in was " + errCode);
+	OpenSettingsTable( "Update was unsuccessful" , "" , "" );
+	</SCRIPT>
+	<DIV id="buttonBar">
+		<msntv:CustomButton onclick="Settings()" class="buttonBarButton" id="Settings" label="Settings" />
+		<msntv:CustomButton onclick="TryAgain()" class="buttonBarButton" id="TryAgain" label="Try Again" />
+		<msntv:CustomButton onclick="Cancel()" class="buttonBarButton" id="Cancel" label="Cancel" />
+	</DIV>
+	<DIV id="nonScrollArea">
+		<DIV class="description">
+				
+			Your <SCRIPT>document.write(ProductShortName);</SCRIPT> was not able to complete 
+			the software update. This may be because of a problem contacting the service. You
+			can try to start the update again, or check your settings to make sure your 
+			<SCRIPT>document.write(ProductShortName);</SCRIPT> is able to connect with your
+			broadband connection.
+	
+					
+			<br>
+		</DIV>
+		<div style="position:absolute;top:140px" id="Message" class="description">
+		</div>
+		<div style="position:absolute;top:180px" id="UpdateStatus" class="description">
+		</div>
+		<div style="position:absolute;top:300px" id="ErrorCode" class="description">
+		
+		</div>
+	</DIV>
+	<SCRIPT>
+	ShowStatus( UpdateErrorString(errCode));
+	ErrorCode.style.visibility = "hidden";
+	ErrorCode.innerText = "Error #" + errCode;
+	CloseSettingsTable();
+	</SCRIPT>
+</BODY>
+
+

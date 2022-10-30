@@ -1,0 +1,222 @@
+<html xmlns:msntv>
+<?import namespace="msntv" implementation="msntv:/HTC/CustomButton.htc">
+<?IMPORT namespace="msntv" implementation="msntv:/HTC/SettingsHeading.htc">
+<LINK REL=StyleSheet TYPE="text/css" HREF="msntv:/CSS/Settings.css">
+<HEAD>
+<TITLE>
+Service Selection
+</TITLE>
+
+<SCRIPT language=Javascript src="../Javascript/TVShell.js"></SCRIPT>
+<SCRIPT language=Javascript src="../Javascript/ServiceList.js"></SCRIPT>
+<SCRIPT language=Javascript src="../Javascript/ConnectionManager.js"></SCRIPT>
+<SCRIPT language=Javascript src="../Javascript/MSNTVService.js"></SCRIPT>
+<SCRIPT LANGUAGE=Javascript SRC="../Javascript/SettingsTemplate.js"></SCRIPT>
+
+
+<SCRIPT>
+	function SetAndRegister()
+	{
+		SetService();
+		
+		//
+		// Remove previous Service list entries and store the chosen prereg URL.
+		// The default prereg URL lives in the BuiltInServiceList which is filled
+		// in by InitializeServiceList(), but the TVShell.ServiceList value here
+		// will override that one.
+		//
+		TVShell.ServiceList.Clear();
+
+		var prereg = TVShell.ServiceList("connection::prereg");
+
+		TVShell.Message("Old prereg: "+prereg.URL+", new URL: "+document.all.URL.value);
+
+		if (prereg.URL != document.all.URL.value) {
+			prereg.URL = document.all.URL.value;
+			prereg.Description = document.all.Name.value;
+			TVShell.ServiceList.Save();
+		}
+
+		document.location = 'msntv:/Registration/pages/Welcome.html'
+	}
+
+	function SetAndSignOn()
+	{
+		var login = TVShell.ServiceList.Add("connection::login");
+		login.URL = document.all.URL.value;
+
+		var home = TVShell.BuiltinServiceList.Add("SignOn");
+		home.URL = "msntv:/TVShell/login.html";
+		home.KeyCode = VK_BROWSER_HOME;
+		home.Description = document.all.Name.value;
+
+		TVShell.ServiceList.Save();
+
+		GotoSignOn(true);
+
+		return false;
+	}
+
+	function ServiceMenuChange()
+	{
+		var ServiceMenu = document.all.ServiceSetting.value;
+
+		if (ServiceMenu == "Custom") {
+			document.all.Name.disabled = false;
+			document.all.Number.disabled = false;
+			document.all.BackupNumber.disabled = false;
+			document.all.User.disabled = false;
+			document.all.Password.disabled = false;
+			document.all.URL.disabled = false;
+			document.all.ServerEnv.disabled = false;
+
+			document.all.Name.value = "Custom";
+		} else {
+			for (i = 0; i < MSNTVServiceList.length; i++)
+				if (MSNTVServiceList[i].Name == ServiceMenu) {
+					ServiceSettings = MSNTVServiceList[i];
+
+					document.all.Name.disabled = true;
+					document.all.Number.disabled = true;
+					document.all.BackupNumber.disabled = true;
+					document.all.User.disabled = true;
+					document.all.Password.disabled = true;
+					document.all.URL.disabled = true;
+					document.all.ServerEnv.disabled = true;
+
+					document.all.Name.value = ServiceSettings.Name;
+					document.all.Number.value = ServiceSettings.Number;
+					document.all.BackupNumber.value = ServiceSettings.BackupNumber;
+					document.all.User.value = ServiceSettings.User;
+					document.all.Password.value = ServiceSettings.Password;
+					document.all.URL.value = ServiceSettings.URL;
+					document.all.ServerEnv.value = ServiceSettings.ServerEnv;
+
+					break;
+				}
+		}
+	}
+
+	function SetService()
+	{
+		var ServiceMenu = document.all.ServiceSetting.value;
+		var ServiceSettings;
+
+		if (ServiceMenu == "Custom") {
+			ServiceSettings = new MSNTVService(document.all.Name.value,
+											   document.all.Number.value,
+											   document.all.BackupNumber.value,
+											   document.all.User.value,
+											   document.all.Password.value,
+											   document.all.ServerEnv.value,
+											   document.all.URL.value);
+		} else {
+			for (i = 0; i < MSNTVServiceList.length; i++)
+				if (MSNTVServiceList[i].Name == ServiceMenu) {
+					ServiceSettings = MSNTVServiceList[i];
+					break;
+				}
+		}
+
+		// Create signup connector, etc.
+		SetMSNTVService(ServiceSettings);
+	}
+
+	function HandleKey()
+	{
+	
+		var e=window.event;
+  
+		if (e.altKey || e.ctrlKey || e.shiftKey)
+			return;
+
+		if (e.keyCode == 13)
+			SetAndRegister(); 
+	}
+
+</SCRIPT>
+
+</HEAD>
+
+<BODY>
+
+<SCRIPT>OpenSettingsTable( "Service Selection" , "" , "" );</SCRIPT>
+
+<DIV id=sideBar>
+	<msntv:CustomButton style="display:inline-block" label="Register"     onclick="SetAndRegister();"/>		
+	<msntv:CustomButton style="display:inline-block" label="Go to SignOn" onclick="SetAndSignOn();"/>
+	<msntv:CustomButton style="display:inline-block" label="Settings"     onclick="document.location='msntv:/Settings/Settings.html'"/>
+	<msntv:CustomButton style="display:inline-block" label="Tricks"       onclick="document.location='msntv:/Test/Tricks.html'"/>
+	<msntv:CustomButton style="display:inline-block" label="Help"         onclick="document.location='msntv:/Help/Contents.html'"/>
+</DIV>
+
+<DIV id=scrollArea>
+	<DIV class=description>
+		<table>
+			<tr>
+				<TD>
+					MSNTV Service:
+				<TD>
+					<SELECT id=ServiceSetting onchange='ServiceMenuChange();'>
+						<SCRIPT>
+							var prereg = TVShell.ServiceList("connection::prereg");
+							TVShell.Message("prereg description = "+prereg.Description);
+							TVShell.Message("prereg URL = "+prereg.URL);
+							for (i = 0; i < MSNTVServiceList.length; i++)
+								if (MSNTVServiceList[i].Name == prereg.Description)
+									document.write("<option value="+MSNTVServiceList[i].Name+" selected>"+MSNTVServiceList[i].Name);
+								else
+									document.write("<option value="+MSNTVServiceList[i].Name+">"+MSNTVServiceList[i].Name);
+							if (prereg.Description == "Custom")
+								document.write("<option value=Custom selected>Custom");
+							else
+								document.write("<option value=Custom>Custom");
+						</SCRIPT>
+					</SELECT>
+			<TR>
+				<TD>Service URL:
+				<TD>
+					<INPUT type="hidden" id="Name">
+					<INPUT type="text" id="URL" onKeyUp="HandleKey();" SIZE=34 disabled>
+			<TR>
+				<TD COLSPAN=2>
+				<HR>
+				<I>MSNIA Settings</I>
+			<TR>
+				<TD>Number:
+				<TD>
+					<INPUT TYPE="text" id="Number" onKeyUp="HandleKey();" SIZE=34 disabled>
+					<INPUT TYPE="hidden" id="BackupNumber">
+
+			<TR>
+				<TD>User:
+				<TD>
+					<INPUT TYPE="password" id="User" onKeyUp="HandleKey();" SIZE=34 disabled>
+
+			<TR>
+				<TD>Password:
+				<TD>
+					<INPUT TYPE="password" id="Password" onKeyUp="HandleKey();" SIZE=34 disabled>
+
+			<TR>
+				<TD>Service:
+				<TD>
+					<INPUT TYPE="text" id="ServerEnv" onKeyUp="HandleKey();" SIZE=34 disabled>
+
+			<SCRIPT>
+				var prereg = TVShell.ServiceList("connection::prereg");
+
+				if (prereg.Description == "Custom") {
+					document.all.URL.value = prereg.URL;
+					document.all.Name.value = prereg.Description;
+				}
+
+				ServiceMenuChange();
+			</SCRIPT>
+</TABLE>
+</DIV>
+</DIV>
+<SCRIPT>CloseSettingsTable();</SCRIPT>
+
+</BODY>
+</HTML>
